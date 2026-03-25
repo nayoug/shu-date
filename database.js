@@ -1,8 +1,11 @@
 const initSqlJs = require('sql.js');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 
-const dbPath = path.join(__dirname, 'shu.db');
+const dbPath = process.env.DB_PATH
+  ? path.resolve(process.env.DB_PATH)
+  : path.join(__dirname, 'shu.db');
 let db = null;
 
 // 初始化数据库
@@ -130,6 +133,7 @@ async function initDatabase() {
 // 保存数据库
 function saveDatabase() {
   if (db) {
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
     const data = db.export();
     fs.writeFileSync(dbPath, Buffer.from(data));
   }

@@ -187,6 +187,50 @@ function calculateMatchScore(myProfile, theirProfile) {
   return Math.round(finalScore * 100) / 100;
 }
 
+function formatMatchResult(candidate, score) {
+  return {
+    user_id: candidate.user_id,
+    email: candidate.email,
+    name: candidate.name,
+    my_grade: candidate.my_grade,
+    gender: candidate.gender,
+    height: candidate.height,
+    campus: candidate.campus,
+    interests: candidate.interests,
+    score
+  };
+}
+
+function getCurrentWeekMatch(userId) {
+  const weekNumber = getWeekNumber();
+
+  const match = dbModule.prepare(`
+    SELECT
+      CASE WHEN m.user_id_1 = ? THEN u2.id ELSE u1.id END AS user_id,
+      CASE WHEN m.user_id_1 = ? THEN u2.email ELSE u1.email END AS email,
+      CASE WHEN m.user_id_1 = ? THEN u2.name ELSE u1.name END AS name,
+      CASE WHEN m.user_id_1 = ? THEN p2.my_grade ELSE p1.my_grade END AS my_grade,
+      CASE WHEN m.user_id_1 = ? THEN p2.gender ELSE p1.gender END AS gender,
+      CASE WHEN m.user_id_1 = ? THEN p2.height ELSE p1.height END AS height,
+      CASE WHEN m.user_id_1 = ? THEN p2.campus ELSE p1.campus END AS campus,
+      CASE WHEN m.user_id_1 = ? THEN p2.interests ELSE p1.interests END AS interests,
+      m.score AS score
+    FROM matches m
+    JOIN users u1 ON u1.id = m.user_id_1
+    JOIN users u2 ON u2.id = m.user_id_2
+    JOIN profiles p1 ON p1.user_id = u1.id
+    JOIN profiles p2 ON p2.user_id = u2.id
+    WHERE m.week_number = ? AND (m.user_id_1 = ? OR m.user_id_2 = ?)
+    LIMIT 1
+  `).get(
+    userId, userId, userId, userId,
+    userId, userId, userId, userId,
+    weekNumber, userId, userId
+  );
+
+  return match || null;
+}
+
 /**
  * 为用户计算匹配列表
  * @param {number} userId - 用户ID
@@ -201,7 +245,7 @@ function findMatches(userId) {
 
   // 获取所有其他用户资料
   const allProfiles = dbModule.prepare(`
-    SELECT u.id, u.email, u.name, p.*
+    SELECT u.id AS user_id, u.email, u.name, p.*
     FROM users u
     JOIN profiles p ON u.id = p.user_id
     WHERE u.id != ? AND u.verified = 1
@@ -217,18 +261,7 @@ function findMatches(userId) {
   // 计算每个候选人的匹配分数
   const scored = candidates.map(candidate => {
     const score = calculateMatchScore(myProfile, candidate);
-    return {
-      user_id: candidate.id,
-      email: candidate.email,
-      name: candidate.name,
-      my_grade: candidate.my_grade,
-      major: candidate.major,
-      gender: candidate.gender,
-      height: candidate.height,
-      campus: candidate.campus,
-      interests: candidate.interests,
-      score: score
-    };
+    return formatMatchResult(candidate, score);
   });
 
   // 按分数降序排序
@@ -248,6 +281,21 @@ function getTopMatches(userId, topN = 5) {
   return matches.slice(0, topN);
 }
 
+function getMatchesForDisplay(userId, topN = 10) {
+  const currentWeekMatch = getCurrentWeekMatch(userId);
+  if (currentWeekMatch) {
+    return {
+      matches: [currentWeekMatch],
+      source: 'weekly'
+    };
+  }
+
+  return {
+    matches: getTopMatches(userId, topN),
+    source: 'live'
+  };
+}
+
 /**
  * 保存本周匹配结果到数据库
  */
@@ -262,7 +310,7 @@ function saveWeeklyMatches() {
 
   // 获取所有已填写问卷的用户
   const users = dbModule.prepare(`
-    SELECT u.id, u.email, u.name
+    SELECT u.id, u.email, u.name, p.my_grade
     FROM users u
     JOIN profiles p ON u.id = p.user_id
     WHERE u.verified = 1
@@ -292,8 +340,26 @@ function saveWeeklyMatches() {
       matched.add(user.id);
       matched.add(bestMatch.user_id);
 
-      results.push({ user: user.email, match: bestMatch.email, score: bestMatch.score });
+      results.push({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          my_grade: user.my_grade
+        },
+        match: {
+          id: bestMatch.user_id,
+          email: bestMatch.email,
+          name: bestMatch.name,
+          my_grade: bestMatch.my_grade
+        },
+        score: bestMatch.score
+      });
     }
+  }
+
+  if (results.length === 0) {
+    return { success: false, message: '暂无满足条件的匹配结果', results: [] };
   }
 
   return { success: true, message: `匹配完成，共 ${results.length} 对`, results };
@@ -309,6 +375,7 @@ function getWeekNumber() {
 module.exports = {
   findMatches,
   getTopMatches,
+  getMatchesForDisplay,
   saveWeeklyMatches,
   calculateMatchScore
 };

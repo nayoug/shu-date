@@ -6,8 +6,11 @@
 const initSqlJs = require('sql.js');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 
-const dbPath = path.join(__dirname, 'shu.db');
+const dbPath = process.env.DB_PATH
+  ? path.resolve(process.env.DB_PATH)
+  : path.join(__dirname, 'shu.db');
 
 async function generateTestData() {
   const SQL = await initSqlJs();

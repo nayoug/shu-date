@@ -1,10 +1,22 @@
 const express = require('express');
 const session = require('express-session');
+const crypto = require('crypto');
 const path = require('path');
 require('dotenv').config();
 
 let dbModule;
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
+const ADMIN_EMAILS = new Set(
+  (process.env.ADMIN_EMAILS || 'admin@shu.edu.cn')
+    .split(',')
+    .map(email => email.trim().toLowerCase())
+    .filter(Boolean)
+);
+
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
 
 // 中间件配置
 app.set('view engine', 'ejs');
@@ -15,7 +27,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'xin_yousuo_shu_secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: isProduction,
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  }
 }));
 
 // 登录中间件
@@ -25,11 +42,48 @@ function isLoggedIn(req, res, next) {
     if (user) {
       const profile = dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(user.id);
       req.user = { ...user, hasProfile: !!profile };
-      req.isAdmin = user.email === 'admin@shu.edu.cn';
+      req.isAdmin = ADMIN_EMAILS.has((user.email || '').toLowerCase());
       return next();
     }
   }
   res.redirect('/login');
+}
+
+function normalizeEmail(email = '') {
+  return email.trim().toLowerCase();
+}
+
+function generateToken(size = 24) {
+  return crypto.randomBytes(size).toString('hex');
+}
+
+function ensureCsrfToken(req) {
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = generateToken(16);
+  }
+
+  return req.session.csrfToken;
+}
+
+function requireValidCsrf(req, res, next) {
+  if (req.body?.csrfToken && req.session.csrfToken === req.body.csrfToken) {
+    return next();
+  }
+
+  return res.redirect('/admin?msg=' + encodeURIComponent('请求无效，请刷新页面后重试') + '&type=error');
+}
+
+function regenerateSession(req) {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate(error => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
 }
 
 // ============ 路由 ============
@@ -37,16 +91,19 @@ function isLoggedIn(req, res, next) {
 // 首页
 app.get('/', (req, res) => {
   let user = null;
+  let isAdmin = false;
   if (req.session.userId) {
     const u = dbModule.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
     if (u) {
       const profile = dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(u.id);
       user = { ...u, hasProfile: !!profile };
+      isAdmin = ADMIN_EMAILS.has((u.email || '').toLowerCase());
     }
   }
   res.render('index', {
     title: '首页',
     user: user,
+    isAdmin,
     message: req.query.msg,
     messageType: req.query.type
   });
@@ -60,9 +117,9 @@ app.get('/login', (req, res) => {
 
 // 发送登录验证码
 app.post('/login', async (req, res) => {
-  const { email } = req.body;
+  const email = normalizeEmail(req.body.email);
 
-  if (!email.toLowerCase().endsWith('@shu.edu.cn')) {
+  if (!email.endsWith('@shu.edu.cn')) {
     return res.render('login', {
       title: '登录',
       message: '只能使用 @shu.edu.cn 结尾的学校邮箱',
@@ -72,10 +129,10 @@ app.post('/login', async (req, res) => {
   }
 
   // 检查用户是否存在
-  let user = dbModule.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
+  let user = dbModule.prepare('SELECT * FROM users WHERE email = ?').get(email);
 
   // 生成登录验证码
-  const loginCode = Math.random().toString(36).substring(2, 10);
+  const loginCode = generateToken(24);
   const expireTime = new Date(Date.now() + 10 * 60 * 1000);
 
   if (user) {
@@ -84,8 +141,8 @@ app.post('/login', async (req, res) => {
   } else {
     // 自动注册新用户（默认已验证）
     dbModule.prepare('INSERT INTO users (email, login_code, login_code_expire, verified) VALUES (?, ?, ?, 1)')
-      .run(email.toLowerCase(), loginCode, expireTime.toISOString());
-    user = dbModule.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
+      .run(email, loginCode, expireTime.toISOString());
+    user = dbModule.prepare('SELECT * FROM users WHERE email = ?').get(email);
   }
 
   // 发送登录邮件
@@ -97,20 +154,29 @@ app.post('/login', async (req, res) => {
     res.render('login', {
       title: '登录',
       message: '验证码已发送到你的邮箱，点击邮件中的链接即可登录',
-      messageType: 'success'
+      messageType: 'success',
+      email
     });
-  } else {
-    // 邮件发送失败时显示验证码（开发/测试模式）
+  } else if (result.simulated && !isProduction) {
     res.render('login', {
       title: '登录',
-      message: '邮件发送失败，请使用以下链接登录（测试模式）:<br>' + result.url,
-      messageType: 'error'
+      message: '当前未配置邮件服务。开发环境可直接使用下方测试链接登录。',
+      messageType: 'info',
+      email,
+      debugLoginUrl: result.url
+    });
+  } else {
+    res.render('login', {
+      title: '登录',
+      message: '邮件发送失败，请稍后重试或联系管理员',
+      messageType: 'error',
+      email
     });
   }
 });
 
 // 验证码登录
-app.get('/login/verify/:code', (req, res) => {
+app.get('/login/verify/:code', async (req, res) => {
   const user = dbModule.prepare('SELECT * FROM users WHERE login_code = ?').get(req.params.code);
 
   if (!user) {
@@ -130,8 +196,18 @@ app.get('/login/verify/:code', (req, res) => {
   }
 
   dbModule.prepare('UPDATE users SET login_code = NULL, login_code_expire = NULL WHERE id = ?').run(user.id);
-  req.session.userId = user.id;
-  res.redirect('/');
+  try {
+    await regenerateSession(req);
+    req.session.userId = user.id;
+    res.redirect('/');
+  } catch (error) {
+    console.error('重建登录会话失败:', error);
+    res.render('login', {
+      title: '登录',
+      message: '登录失败，请重新获取登录链接',
+      messageType: 'error'
+    });
+  }
 });
 
 // 注册页（已合并到登录流程）
@@ -146,6 +222,8 @@ app.get('/profile', isLoggedIn, (req, res) => {
     title: '填写问卷',
     user: req.user,
     profile,
+    message: req.query.msg,
+    messageType: req.query.type,
     isAdmin: req.isAdmin
   });
 });
@@ -178,17 +256,22 @@ app.post('/survey/submit', isLoggedIn, (req, res) => {
     }
   });
 
-  const existing = dbModule.prepare('SELECT id FROM profiles WHERE user_id = ?').get(req.user.id);
+  try {
+    const existing = dbModule.prepare('SELECT id FROM profiles WHERE user_id = ?').get(req.user.id);
 
-  if (existing) {
-    const setClauses = fields.map(f => `${f} = ?`).join(', ');
-    const sql = `UPDATE profiles SET ${setClauses}, updated_at = datetime('now') WHERE user_id = ?`;
-    dbModule.prepare(sql).run(...fields.map(f => values[f]), req.user.id);
-  } else {
-    const cols = ['user_id', ...fields].join(', ');
-    const placeholders = fields.map(() => '?').join(', ');
-    const sql = `INSERT INTO profiles (user_id, ${cols}) VALUES (?, ${placeholders})`;
-    dbModule.prepare(sql).run(req.user.id, ...fields.map(f => values[f]));
+    if (existing) {
+      const setClauses = fields.map(f => `${f} = ?`).join(', ');
+      const sql = `UPDATE profiles SET ${setClauses}, updated_at = datetime('now') WHERE user_id = ?`;
+      dbModule.prepare(sql).run(...fields.map(f => values[f]), req.user.id);
+    } else {
+      const cols = ['user_id', ...fields].join(', ');
+      const placeholders = ['?', ...fields.map(() => '?')].join(', ');
+      const sql = `INSERT INTO profiles (${cols}) VALUES (${placeholders})`;
+      dbModule.prepare(sql).run(req.user.id, ...fields.map(f => values[f]));
+    }
+  } catch (error) {
+    console.error('保存问卷失败:', error);
+    return res.redirect('/profile?msg=' + encodeURIComponent('问卷保存失败，请重试') + '&type=error');
   }
 
   res.redirect('/?msg=问卷已保存&type=success');
@@ -202,7 +285,11 @@ app.post('/profile', isLoggedIn, (req, res) => {
 // 匹配结果页 - 显示匹配列表和分数
 app.get('/matches', isLoggedIn, (req, res) => {
   if (!req.user.verified) {
-    return res.render('matches', { title: '匹配结果', user: req.user });
+    return res.render('matches', {
+      title: '匹配结果',
+      user: req.user,
+      isAdmin: req.isAdmin
+    });
   }
 
   const profile = dbModule.prepare('SELECT id FROM profiles WHERE user_id = ?').get(req.user.id);
@@ -210,14 +297,14 @@ app.get('/matches', isLoggedIn, (req, res) => {
     return res.redirect('/profile');
   }
 
-  // 使用MatchService计算匹配
   const matchService = require('./matchService');
-  const matches = matchService.getTopMatches(req.user.id, 10);
+  const { matches, source } = matchService.getMatchesForDisplay(req.user.id, 10);
 
   res.render('matches', {
     title: '匹配结果',
     user: req.user,
-    matches: matches,
+    matches,
+    matchSource: source,
     isAdmin: req.isAdmin
   });
 });
@@ -225,15 +312,15 @@ app.get('/matches', isLoggedIn, (req, res) => {
 // API: 获取匹配列表
 app.get('/api/matches', isLoggedIn, (req, res) => {
   const matchService = require('./matchService');
-  const matches = matchService.findMatches(req.user.id);
-  res.json({ success: true, data: matches });
+  const result = matchService.getMatchesForDisplay(req.user.id);
+  res.json({ success: true, data: result.matches, source: result.source });
 });
 
 // API: 获取前5名
 app.get('/api/match/top', isLoggedIn, (req, res) => {
   const matchService = require('./matchService');
-  const matches = matchService.getTopMatches(req.user.id, 5);
-  res.json({ success: true, data: matches });
+  const result = matchService.getMatchesForDisplay(req.user.id, 5);
+  res.json({ success: true, data: result.matches, source: result.source });
 });
 
 // 管理页
@@ -252,6 +339,9 @@ app.get('/admin', isLoggedIn, (req, res) => {
     user: req.user,
     users,
     weekNumber: getWeekNumber(),
+    csrfToken: ensureCsrfToken(req),
+    message: req.query.msg,
+    messageType: req.query.type,
     isAdmin: true
   });
 });
@@ -259,7 +349,12 @@ app.get('/admin', isLoggedIn, (req, res) => {
 // 手动触发匹配
 app.get('/admin/match', isLoggedIn, (req, res) => {
   if (!req.isAdmin) return res.redirect('/');
-  const result = runWeeklyMatch();
+  return res.redirect('/admin?msg=' + encodeURIComponent('请使用页面表单触发匹配') + '&type=error');
+});
+
+app.post('/admin/match', isLoggedIn, requireValidCsrf, async (req, res) => {
+  if (!req.isAdmin) return res.redirect('/');
+  const result = await runWeeklyMatch();
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
 });
 
@@ -278,47 +373,31 @@ function getWeekNumber() {
   return Math.floor(diff / 604800000);
 }
 
-function runWeeklyMatch() {
-  const weekNumber = getWeekNumber();
-  const existing = dbModule.prepare('SELECT id FROM matches WHERE week_number = ?').get(weekNumber);
-  if (existing) {
-    return { success: false, message: '本周已执行匹配' };
+async function runWeeklyMatch() {
+  const matchService = require('./matchService');
+  const result = matchService.saveWeeklyMatches();
+  if (!result.success) {
+    return result;
   }
 
-  const users = dbModule.prepare(`
-    SELECT u.id, u.email, u.name
-    FROM users u
-    JOIN profiles p ON u.id = p.user_id
-    WHERE u.verified = 1
-  `).all();
+  const { sendMatchEmail } = require('./mailer');
+  const emailJobs = result.results.flatMap(pair => ([
+    sendMatchEmail(pair.user.email, pair.user.name || '同学', pair.match.name || 'TA', pair.match.my_grade, pair.score),
+    sendMatchEmail(pair.match.email, pair.match.name || '同学', pair.user.name || 'TA', pair.user.my_grade, pair.score)
+  ]));
+  const emailResults = await Promise.allSettled(emailJobs);
+  const failedEmails = emailResults.filter(item =>
+    item.status === 'rejected' || (item.status === 'fulfilled' && item.value?.success === false)
+  ).length;
 
-  if (users.length < 2) {
-    return { success: false, message: '用户数量不足，需要至少2位用户' };
+  if (failedEmails > 0) {
+    return {
+      ...result,
+      message: `${result.message}，但有 ${failedEmails} 封通知邮件发送失败`
+    };
   }
 
-  const shuffled = users.sort(() => Math.random() - 0.5);
-  const pairs = [];
-
-  for (let i = 0; i < shuffled.length - 1; i += 2) {
-    pairs.push([shuffled[i], shuffled[i + 1]]);
-  }
-  if (shuffled.length % 2 === 1 && shuffled.length > 2) {
-    pairs.push([shuffled[shuffled.length - 1], shuffled[0]]);
-  }
-
-  for (const [u1, u2] of pairs) {
-    dbModule.prepare('INSERT INTO matches (user_id_1, user_id_2, week_number) VALUES (?, ?, ?)')
-      .run(u1.id, u2.id, weekNumber);
-
-    const p1 = dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(u1.id);
-    const p2 = dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(u2.id);
-
-    const { sendMatchEmail } = require('./mailer');
-    sendMatchEmail(u1.email, u1.name || '同学', u2.name || 'TA', p2?.grade, p2?.major);
-    sendMatchEmail(u2.email, u2.name || '同学', u1.name || 'TA', p1?.grade, p1?.major);
-  }
-
-  return { success: true, message: `匹配完成，共 ${pairs.length} 对` };
+  return result;
 }
 
 // 初始化数据库并启动
