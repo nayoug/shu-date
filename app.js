@@ -86,6 +86,19 @@ function regenerateSession(req) {
   });
 }
 
+function saveSession(req) {
+  return new Promise((resolve, reject) => {
+    req.session.save(error => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
+
 // ============ 路由 ============
 
 // 首页
@@ -195,19 +208,26 @@ app.get('/login/verify/:code', async (req, res) => {
     });
   }
 
-  dbModule.prepare('UPDATE users SET login_code = NULL, login_code_expire = NULL WHERE id = ?').run(user.id);
   try {
     await regenerateSession(req);
     req.session.userId = user.id;
-    res.redirect('/');
+    await saveSession(req);
   } catch (error) {
-    console.error('重建登录会话失败:', error);
-    res.render('login', {
+    console.error('建立登录会话失败:', error);
+    return res.render('login', {
       title: '登录',
       message: '登录失败，请重新获取登录链接',
       messageType: 'error'
     });
   }
+
+  try {
+    dbModule.prepare('UPDATE users SET login_code = NULL, login_code_expire = NULL WHERE id = ?').run(user.id);
+  } catch (error) {
+    console.error('清理登录验证码失败:', error);
+  }
+
+  res.redirect('/');
 });
 
 // 注册页（已合并到登录流程）

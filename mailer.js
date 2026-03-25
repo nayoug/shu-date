@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+const isProduction = process.env.NODE_ENV === 'production';
 
 console.log('SMTP配置:', {
   host: process.env.SMTP_HOST,
@@ -56,7 +57,9 @@ async function sendLoginEmail(email, loginCode) {
   const loginUrl = `${process.env.BASE_URL}/login/verify/${loginCode}`;
 
   if (!t) {
-    console.log('邮件模拟模式: 登录验证码', loginCode);
+    if (!isProduction) {
+      console.log('邮件模拟模式已启用，请直接使用页面展示的测试登录链接。');
+    }
     return { success: false, simulated: true, code: loginCode, url: loginUrl };
   }
 

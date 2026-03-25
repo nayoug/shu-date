@@ -139,13 +139,42 @@ function saveDatabase() {
   }
 }
 
+function runStatement(sql, params = [], persist = true) {
+  db.run(sql, params);
+
+  if (persist) {
+    saveDatabase();
+  }
+
+  return { changes: db.getRowsModified() };
+}
+
+function transaction(callback) {
+  db.run('BEGIN');
+
+  try {
+    callback();
+    db.run('COMMIT');
+    saveDatabase();
+  } catch (error) {
+    try {
+      db.run('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('事务回滚失败:', rollbackError);
+    }
+
+    throw error;
+  }
+}
+
 // SQL辅助函数
 function prepare(sql) {
   return {
     run: (...params) => {
-      db.run(sql, params);
-      saveDatabase();
-      return { changes: db.getRowsModified() };
+      return runStatement(sql, params, true);
+    },
+    runWithoutSave: (...params) => {
+      return runStatement(sql, params, false);
     },
     get: (...params) => {
       const stmt = db.prepare(sql);
@@ -175,5 +204,6 @@ module.exports = {
   initDatabase: () => initDatabase(),
   getDb: () => db,
   prepare,
-  saveDatabase
+  saveDatabase,
+  transaction
 };

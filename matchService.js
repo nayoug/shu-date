@@ -329,33 +329,40 @@ function saveWeeklyMatches() {
   const matched = new Set();
   const results = [];
 
-  for (const user of users) {
-    if (matched.has(user.id)) continue;
+  try {
+    dbModule.transaction(() => {
+      for (const user of users) {
+        if (matched.has(user.id)) continue;
 
-    const matches = findMatches(user.id).filter(m => !matched.has(m.user_id));
+        const matches = findMatches(user.id).filter(m => !matched.has(m.user_id));
 
-    if (matches.length > 0) {
-      const bestMatch = matches[0];
-      insertMatch.run(user.id, bestMatch.user_id, bestMatch.score, weekNumber);
-      matched.add(user.id);
-      matched.add(bestMatch.user_id);
+        if (matches.length > 0) {
+          const bestMatch = matches[0];
+          insertMatch.runWithoutSave(user.id, bestMatch.user_id, bestMatch.score, weekNumber);
+          matched.add(user.id);
+          matched.add(bestMatch.user_id);
 
-      results.push({
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          my_grade: user.my_grade
-        },
-        match: {
-          id: bestMatch.user_id,
-          email: bestMatch.email,
-          name: bestMatch.name,
-          my_grade: bestMatch.my_grade
-        },
-        score: bestMatch.score
-      });
-    }
+          results.push({
+            user: {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              my_grade: user.my_grade
+            },
+            match: {
+              id: bestMatch.user_id,
+              email: bestMatch.email,
+              name: bestMatch.name,
+              my_grade: bestMatch.my_grade
+            },
+            score: bestMatch.score
+          });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('保存周匹配结果失败:', error);
+    return { success: false, message: '匹配保存失败，请稍后重试', results: [] };
   }
 
   if (results.length === 0) {
