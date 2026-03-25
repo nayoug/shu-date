@@ -1,0 +1,7 @@
+build:
+  command: npm install
+  timeout: 300
+run:
+  command: npm start
+  type: web
+  plan: free
