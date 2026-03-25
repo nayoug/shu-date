@@ -18,20 +18,28 @@ function getTransporter() {
     return null;
   }
 
-  const port = parseInt(process.env.SMTP_PORT) || 587;
-  const isSSL = port === 465;
+  const port = parseInt(process.env.SMTP_PORT) || 465;
 
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: port,
-    secure: isSSL,
-    connectionTimeout: 10000,
+    secure: true,
+    connectionTimeout: 30000,
     tls: {
-      rejectUnauthorized: false
+      ciphers: 'SSLv3'
     },
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
+    }
+  });
+
+  // 验证连接
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('SMTP连接验证失败:', error.message);
+    } else {
+      console.log('SMTP连接成功');
     }
   });
 
@@ -78,7 +86,6 @@ async function sendLoginEmail(email, loginCode) {
     return { success: true };
   } catch (error) {
     console.error('❌ 发送邮件失败:', error.message);
-    // 返回验证码用于开发/测试
     return { success: false, code: loginCode, url: loginUrl, error: error.message };
   }
 }
@@ -91,30 +98,35 @@ async function sendMatchEmail(userEmail, userName, matchedName, matchedGrade, ma
     return true;
   }
 
-  await t.sendMail({
-    from: process.env.FROM_EMAIL || process.env.SMTP_USER,
-    to: userEmail,
-    subject: '【心有所SHU】本周匹配结果出炉啦！',
-    html: `
-      <div style="font-family: 'Microsoft YaHei', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #e74c3c;">💕 本周匹配结果</h2>
-        <p>${userName} 同学你好！</p>
-        <p>本周为你匹配到了一位新朋友：</p>
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p><strong>👤 姓名：</strong>${matchedName}</p>
-          <p><strong>🎓 年级：</strong>${matchedGrade || '未填写'}</p>
-          <p><strong>📚 专业：</strong>${matchedMajor || '未填写'}</p>
+  try {
+    await t.sendMail({
+      from: process.env.FROM_EMAIL || process.env.SMTP_USER,
+      to: userEmail,
+      subject: '【心有所SHU】本周匹配结果出炉啦！',
+      html: `
+        <div style="font-family: 'Microsoft YaHei', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #e74c3c;">💕 本周匹配结果</h2>
+          <p>${userName} 同学你好！</p>
+          <p>本周为你匹配到了一位新朋友：</p>
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p><strong>👤 姓名：</strong>${matchedName}</p>
+            <p><strong>🎓 年级：</strong>${matchedGrade || '未填写'}</p>
+            <p><strong>📚 专业：</strong>${matchedMajor || '未填写'}</p>
+          </div>
+          <p>快去网站看看 ta 的详细信息，主动打个招呼吧！</p>
+          <p style="margin-top: 30px;">
+            <a href="${process.env.BASE_URL}/matches" style="background: #e74c3c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">查看详情</a>
+          </p>
         </div>
-        <p>快去网站看看 ta 的详细信息，主动打个招呼吧！</p>
-        <p style="margin-top: 30px;">
-          <a href="${process.env.BASE_URL}/matches" style="background: #e74c3c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">查看详情</a>
-        </p>
-      </div>
-    `
-  });
+      `
+    });
 
-  console.log(`✅ 匹配通知邮件已发送至 ${userEmail}`);
-  return true;
+    console.log(`✅ 匹配通知邮件已发送至 ${userEmail}`);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ 发送匹配邮件失败:', error.message);
+    return { success: false, error: error.message };
+  }
 }
 
 module.exports = {
