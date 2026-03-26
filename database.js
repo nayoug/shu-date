@@ -1,175 +1,197 @@
-const initSqlJs = require('sql.js');
-const fs = require('fs');
-const path = require('path');
+const { Pool } = require('pg');
+require('dotenv').config();
 
-const dbPath = path.join(__dirname, 'shu.db');
-let db = null;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
-// 初始化数据库
+// 同步缓存（模拟同步行为）
+let syncDb = null;
+let syncReady = false;
+const pendingQueries = [];
+
+// 初始化数据库表
 async function initDatabase() {
-  const SQL = await initSqlJs();
-
-  let data = null;
-  if (fs.existsSync(dbPath)) {
-    data = fs.readFileSync(dbPath);
-  }
-
-  db = new SQL.Database(data);
-
-  // users 表
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      name TEXT,
-      verified INTEGER DEFAULT 0,
-      login_code TEXT,
-      login_code_expire DATETIME,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // profiles 表 - 完整问卷
-  db.run(`
-    CREATE TABLE IF NOT EXISTS profiles (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER UNIQUE NOT NULL,
-
-      -- 一、基础信息
-      gender TEXT,                    -- 1. 性别
-      preferred_gender TEXT,          -- 2. 期望对象性别
-      purpose TEXT,                   -- 3. 目的
-      my_grade TEXT,                 -- 4. 我的学历阶段
-      preferred_grade TEXT,          -- 5. 期望对方学历阶段
-      expected_graduation TEXT,      -- 6. 预计毕业阶段
-      campus TEXT,                    -- 7. 常驻校区
-      cross_campus TEXT,              -- 8. 跨校区态度
-      height TEXT,                    -- 9. 身高
-      preferred_height TEXT,         -- 10. 期望身高
-
-      -- 二、择偶偏好
-      hometown TEXT,                  -- 11. 家乡
-      preferred_hometown TEXT,       -- 12. 期望家乡（新增）
-      core_traits TEXT,              -- 14. 核心特质（多选，逗号分隔）
-      long_distance TEXT,            -- 15. 异地恋接受程度
-
-      -- 三、恋爱观念
-      communication TEXT,            -- 16. 沟通频率
-      spending TEXT,                 -- 17. 消费观念
-      cohabitation TEXT,             -- 18. 婚前同居
-      marriage_plan TEXT,            -- 19. 婚姻规划
-     相处模式 TEXT,                  -- 20. 相处模式（需要转义）
-
-      -- 四、生活习惯
-      sleep_schedule TEXT,           -- 21. 作息习惯
-      smoke_alcohol TEXT,            -- 22. 烟酒态度
-      pet TEXT,                      -- 23. 宠物态度
-      social公开 TEXT,               -- 24. 社交圈公开（需要转义）
-      social_boundary TEXT,          -- 25. 社交边界
-
-      -- 兴趣标签（用于相似度计算）
-      interests TEXT,                -- 兴趣爱好标签
-
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id)
-    )
-  `);
-
-  // matches 表
-  db.run(`
-    CREATE TABLE IF NOT EXISTS matches (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id_1 INTEGER NOT NULL,
-      user_id_2 INTEGER NOT NULL,
-      score REAL,
-      matched_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      week_number INTEGER,
-      FOREIGN KEY (user_id_1) REFERENCES users(id),
-      FOREIGN KEY (user_id_2) REFERENCES users(id)
-    )
-  `);
-
-  // 检查并添加缺失的列（迁移用）
-  let existingColumns = [];
+  const client = await pool.connect();
   try {
-    const stmt = db.prepare("PRAGMA table_info(profiles)");
-    while (stmt.step()) {
-      const row = stmt.getAsObject();
-      existingColumns.push(row.name);
+    // users 表
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        name TEXT,
+        verified INTEGER DEFAULT 0,
+        login_code TEXT,
+        login_code_expire TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // profiles 表
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS profiles (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER UNIQUE NOT NULL,
+        gender TEXT,
+        preferred_gender TEXT,
+        purpose TEXT,
+        my_grade TEXT,
+        preferred_grade TEXT,
+        campus TEXT,
+        cross_campus TEXT,
+        height TEXT,
+        preferred_height TEXT,
+        hometown TEXT,
+        preferred_hometown TEXT,
+        core_traits TEXT,
+        long_distance TEXT,
+        communication TEXT,
+        spending TEXT,
+        cohabitation TEXT,
+        marriage_plan TEXT,
+        relationship_style TEXT,
+        sleep_schedule TEXT,
+        smoke_alcohol TEXT,
+        pet TEXT,
+        social_public TEXT,
+        social_boundary TEXT,
+        interests TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    // matches 表
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS matches (
+        id SERIAL PRIMARY KEY,
+        user_id_1 INTEGER NOT NULL,
+        user_id_2 INTEGER NOT NULL,
+        score REAL,
+        matched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        week_number INTEGER,
+        FOREIGN KEY (user_id_1) REFERENCES users(id),
+        FOREIGN KEY (user_id_2) REFERENCES users(id)
+      )
+    `);
+
+    // 初始化同步缓存
+    syncDb = pool;
+    syncReady = true;
+
+    // 处理积压的查询
+    for (const query of pendingQueries) {
+      query.resolve();
     }
-    stmt.free();
-  } catch(e) {
-    // profiles表可能不存在
+    pendingQueries.length = 0;
+
+    console.log('✅ Supabase数据库初始化完成');
+  } catch (error) {
+    console.error('数据库初始化失败:', error.message);
+    throw error;
+  } finally {
+    client.release();
   }
-
-  const newColumns = [
-    'gender', 'preferred_gender', 'purpose', 'my_grade', 'preferred_grade',
-    'expected_graduation', 'campus', 'cross_campus', 'height', 'preferred_height',
-    'hometown', 'preferred_hometown', 'core_traits', 'long_distance',
-    'communication', 'spending', 'cohabitation', 'marriage_plan', 'sleep_schedule',
-    'smoke_alcohol', 'pet', 'social_public', 'social_boundary', 'interests',
-    'relationship_style'
-  ];
-
-  for (const col of newColumns) {
-    if (!existingColumns.includes(col)) {
-      try {
-        db.run(`ALTER TABLE profiles ADD COLUMN ${col} TEXT`);
-      } catch(e) {
-        // 列可能已存在
-      }
-    }
-  }
-
-  saveDatabase();
-  console.log('数据库初始化完成');
-  return db;
 }
 
-// 保存数据库
-function saveDatabase() {
-  if (db) {
-    const data = db.export();
-    fs.writeFileSync(dbPath, Buffer.from(data));
+// 确保数据库就绪
+function ensureReady() {
+  if (!syncReady) {
+    return new Promise((resolve) => {
+      pendingQueries.push({ resolve });
+    });
   }
 }
 
-// SQL辅助函数
+// SQL辅助函数 - 兼容同步API
 function prepare(sql) {
   return {
-    run: (...params) => {
-      db.run(sql, params);
-      saveDatabase();
-      return { changes: db.getRowsModified() };
-    },
-    get: (...params) => {
-      const stmt = db.prepare(sql);
-      stmt.bind(params);
-      if (stmt.step()) {
-        const row = stmt.getAsObject();
-        stmt.free();
-        return row;
+    run: async function(...params) {
+      await ensureReady();
+      try {
+        const result = await pool.query(sql, params);
+        return { changes: result.rowCount || 0 };
+      } catch (error) {
+        console.error('SQL Error (run):', error.message, sql);
+        return { changes: 0 };
       }
-      stmt.free();
-      return undefined;
     },
-    all: (...params) => {
-      const stmt = db.prepare(sql);
-      stmt.bind(params);
-      const results = [];
-      while (stmt.step()) {
-        results.push(stmt.getAsObject());
+    get: async function(...params) {
+      await ensureReady();
+      try {
+        const result = await pool.query(sql, params);
+        return result.rows[0];
+      } catch (error) {
+        console.error('SQL Error (get):', error.message, sql);
+        return undefined;
       }
-      stmt.free();
-      return results;
+    },
+    all: async function(...params) {
+      await ensureReady();
+      try {
+        const result = await pool.query(sql, params);
+        return result.rows;
+      } catch (error) {
+        console.error('SQL Error (all):', error.message, sql);
+        return [];
+      }
     }
   };
 }
 
+// 同步版本（用于不兼容async的地方，会返回undefined）
+function prepareSync(sql) {
+  return {
+    run: (...params) => {
+      if (!syncReady) return { changes: 0 };
+      pool.query(sql, params).catch(e => console.error('SQL Error:', e.message));
+      return { changes: 1 };
+    },
+    get: (...params) => {
+      if (!syncReady) return undefined;
+      return pool.query(sql, params).then(r => r.rows[0]).catch(() => undefined);
+    },
+    all: (...params) => {
+      if (!syncReady) return [];
+      return pool.query(sql, params).then(r => r.rows).catch(() => []);
+    }
+  };
+}
+
+// 直接查询方法
+async function query(sql, params = []) {
+  await ensureReady();
+  const result = await pool.query(sql, params);
+  return result.rows;
+}
+
+async function queryOne(sql, params = []) {
+  await ensureReady();
+  const result = await pool.query(sql, params);
+  return result.rows[0];
+}
+
+async function execute(sql, params = []) {
+  await ensureReady();
+  const result = await pool.query(sql, params);
+  return { changes: result.rowCount || 0 };
+}
+
+// 异步初始化包装（兼容旧代码）
+async function init() {
+  await initDatabase();
+  return { initDatabase, prepare, query, queryOne, execute, pool };
+}
+
 module.exports = {
-  initDatabase: () => initDatabase(),
-  getDb: () => db,
+  initDatabase,
   prepare,
-  saveDatabase
+  prepareSync: prepare,
+  query,
+  queryOne,
+  execute,
+  pool,
+  init
 };

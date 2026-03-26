@@ -3,7 +3,7 @@ const session = require('express-session');
 const path = require('path');
 require('dotenv').config();
 
-let dbModule;
+let db;
 const app = express();
 
 // 中间件配置
@@ -19,11 +19,11 @@ app.use(session({
 }));
 
 // 登录中间件
-function isLoggedIn(req, res, next) {
+async function isLoggedIn(req, res, next) {
   if (req.session.userId) {
-    const user = dbModule.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+    const user = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
     if (user) {
-      const profile = dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(user.id);
+      const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [user.id]);
       req.user = { ...user, hasProfile: !!profile };
       req.isAdmin = user.email === 'admin@shu.edu.cn';
       return next();
@@ -35,12 +35,12 @@ function isLoggedIn(req, res, next) {
 // ============ 路由 ============
 
 // 首页
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
   let user = null;
   if (req.session.userId) {
-    const u = dbModule.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+    const u = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
     if (u) {
-      const profile = dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(u.id);
+      const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u.id]);
       user = { ...u, hasProfile: !!profile };
     }
   }
@@ -72,25 +72,24 @@ app.post('/login', async (req, res) => {
   }
 
   // 检查用户是否存在
-  let user = dbModule.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
+  let user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
 
   // 生成登录验证码
   const loginCode = Math.random().toString(36).substring(2, 10);
   const expireTime = new Date(Date.now() + 10 * 60 * 1000);
 
   if (user) {
-    dbModule.prepare('UPDATE users SET login_code = ?, login_code_expire = ? WHERE id = ?')
-      .run(loginCode, expireTime.toISOString(), user.id);
+    await db.execute('UPDATE users SET login_code = $1, login_code_expire = $2 WHERE id = $3',
+      [loginCode, expireTime.toISOString(), user.id]);
   } else {
     // 自动注册新用户（默认已验证）
-    dbModule.prepare('INSERT INTO users (email, login_code, login_code_expire, verified) VALUES (?, ?, ?, 1)')
-      .run(email.toLowerCase(), loginCode, expireTime.toISOString());
-    user = dbModule.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
+    const result = await db.execute('INSERT INTO users (email, login_code, login_code_expire, verified) VALUES ($1, $2, $3, 1)',
+      [email.toLowerCase(), loginCode, expireTime.toISOString()]);
+    user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
   }
 
   // 发送登录邮件
   const { sendLoginEmail } = require('./mailer');
-
   const result = await sendLoginEmail(email, loginCode);
 
   if (result.success) {
@@ -100,7 +99,6 @@ app.post('/login', async (req, res) => {
       messageType: 'success'
     });
   } else {
-    // 邮件发送失败时显示验证码（开发/测试模式）
     res.render('login', {
       title: '登录',
       message: '邮件发送失败，请使用以下链接登录（测试模式）:<br>' + result.url,
@@ -110,8 +108,8 @@ app.post('/login', async (req, res) => {
 });
 
 // 验证码登录
-app.get('/login/verify/:code', (req, res) => {
-  const user = dbModule.prepare('SELECT * FROM users WHERE login_code = ?').get(req.params.code);
+app.get('/login/verify/:code', async (req, res) => {
+  const user = await db.queryOne('SELECT * FROM users WHERE login_code = $1', [req.params.code]);
 
   if (!user) {
     return res.render('login', {
@@ -129,7 +127,7 @@ app.get('/login/verify/:code', (req, res) => {
     });
   }
 
-  dbModule.prepare('UPDATE users SET login_code = NULL, login_code_expire = NULL WHERE id = ?').run(user.id);
+  await db.execute('UPDATE users SET login_code = NULL, login_code_expire = NULL WHERE id = $1', [user.id]);
   req.session.userId = user.id;
   res.redirect('/');
 });
@@ -140,8 +138,8 @@ app.get('/register', (req, res) => {
 });
 
 // 个人资料页（问卷）
-app.get('/profile', isLoggedIn, (req, res) => {
-  const profile = dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(req.user.id);
+app.get('/profile', isLoggedIn, async (req, res) => {
+  const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
   res.render('profile', {
     title: '填写问卷',
     user: req.user,
@@ -150,17 +148,15 @@ app.get('/profile', isLoggedIn, (req, res) => {
   });
 });
 
-// 提交问卷（完整24题，删除第6题）
-app.post('/survey/submit', isLoggedIn, (req, res) => {
+// 提交问卷
+app.post('/survey/submit', isLoggedIn, async (req, res) => {
   const data = req.body;
 
-  // 处理多选字段（checkbox返回数组）
   const processMultiSelect = (val) => {
     if (Array.isArray(val)) return val.join(',');
     return val || '';
   };
 
-  // 字段列表（删除expected_graduation）
   const fields = [
     'gender', 'preferred_gender', 'purpose', 'my_grade', 'preferred_grade',
     'campus', 'cross_campus', 'height', 'preferred_height',
@@ -178,17 +174,17 @@ app.post('/survey/submit', isLoggedIn, (req, res) => {
     }
   });
 
-  const existing = dbModule.prepare('SELECT id FROM profiles WHERE user_id = ?').get(req.user.id);
+  const existing = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
 
   if (existing) {
-    const setClauses = fields.map(f => `${f} = ?`).join(', ');
-    const sql = `UPDATE profiles SET ${setClauses}, updated_at = datetime('now') WHERE user_id = ?`;
-    dbModule.prepare(sql).run(...fields.map(f => values[f]), req.user.id);
+    const setClauses = fields.map((f, i) => `${f} = $${i + 1}`).join(', ');
+    const params = [...fields.map(f => values[f]), req.user.id];
+    await db.execute(`UPDATE profiles SET ${setClauses}, updated_at = CURRENT_TIMESTAMP WHERE user_id = $${fields.length + 1}`, params);
   } else {
     const cols = ['user_id', ...fields].join(', ');
-    const placeholders = fields.map(() => '?').join(', ');
-    const sql = `INSERT INTO profiles (user_id, ${cols}) VALUES (?, ${placeholders})`;
-    dbModule.prepare(sql).run(req.user.id, ...fields.map(f => values[f]));
+    const placeholders = fields.map((_, i) => `$${i + 2}`).join(', ');
+    const params = [req.user.id, ...fields.map(f => values[f])];
+    await db.execute(`INSERT INTO profiles (${cols}) VALUES ($1, ${placeholders})`, params);
   }
 
   res.redirect('/?msg=问卷已保存&type=success');
@@ -199,18 +195,17 @@ app.post('/profile', isLoggedIn, (req, res) => {
   res.redirect('/profile');
 });
 
-// 匹配结果页 - 显示匹配列表和分数
-app.get('/matches', isLoggedIn, (req, res) => {
+// 匹配结果页
+app.get('/matches', isLoggedIn, async (req, res) => {
   if (!req.user.verified) {
     return res.render('matches', { title: '匹配结果', user: req.user });
   }
 
-  const profile = dbModule.prepare('SELECT id FROM profiles WHERE user_id = ?').get(req.user.id);
+  const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
   if (!profile) {
     return res.redirect('/profile');
   }
 
-  // 使用MatchService计算匹配
   const matchService = require('./matchService');
   const matches = matchService.getTopMatches(req.user.id, 10);
 
@@ -237,15 +232,15 @@ app.get('/api/match/top', isLoggedIn, (req, res) => {
 });
 
 // 管理页
-app.get('/admin', isLoggedIn, (req, res) => {
+app.get('/admin', isLoggedIn, async (req, res) => {
   if (!req.isAdmin) return res.redirect('/');
 
-  const users = dbModule.prepare(`
+  const users = await db.query(`
     SELECT u.*, CASE WHEN p.id IS NOT NULL THEN 1 ELSE 0 END as hasProfile
     FROM users u
     LEFT JOIN profiles p ON u.id = p.user_id
     ORDER BY u.created_at DESC
-  `).all();
+  `);
 
   res.render('admin', {
     title: '管理',
@@ -257,9 +252,9 @@ app.get('/admin', isLoggedIn, (req, res) => {
 });
 
 // 手动触发匹配
-app.get('/admin/match', isLoggedIn, (req, res) => {
+app.get('/admin/match', isLoggedIn, async (req, res) => {
   if (!req.isAdmin) return res.redirect('/');
-  const result = runWeeklyMatch();
+  const result = await runWeeklyMatch();
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
 });
 
@@ -278,19 +273,19 @@ function getWeekNumber() {
   return Math.floor(diff / 604800000);
 }
 
-function runWeeklyMatch() {
+async function runWeeklyMatch() {
   const weekNumber = getWeekNumber();
-  const existing = dbModule.prepare('SELECT id FROM matches WHERE week_number = ?').get(weekNumber);
+  const existing = await db.queryOne('SELECT id FROM matches WHERE week_number = $1', [weekNumber]);
   if (existing) {
     return { success: false, message: '本周已执行匹配' };
   }
 
-  const users = dbModule.prepare(`
+  const users = await db.query(`
     SELECT u.id, u.email, u.name
     FROM users u
     JOIN profiles p ON u.id = p.user_id
     WHERE u.verified = 1
-  `).all();
+  `);
 
   if (users.length < 2) {
     return { success: false, message: '用户数量不足，需要至少2位用户' };
@@ -307,15 +302,15 @@ function runWeeklyMatch() {
   }
 
   for (const [u1, u2] of pairs) {
-    dbModule.prepare('INSERT INTO matches (user_id_1, user_id_2, week_number) VALUES (?, ?, ?)')
-      .run(u1.id, u2.id, weekNumber);
+    await db.execute('INSERT INTO matches (user_id_1, user_id_2, week_number) VALUES ($1, $2, $3)',
+      [u1.id, u2.id, weekNumber]);
 
-    const p1 = dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(u1.id);
-    const p2 = dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(u2.id);
+    const p1 = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u1.id]);
+    const p2 = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u2.id]);
 
     const { sendMatchEmail } = require('./mailer');
-    sendMatchEmail(u1.email, u1.name || '同学', u2.name || 'TA', p2?.grade, p2?.major);
-    sendMatchEmail(u2.email, u2.name || '同学', u1.name || 'TA', p1?.grade, p1?.major);
+    sendMatchEmail(u1.email, u1.name || '同学', u2.name || 'TA', p2?.my_grade, p2?.major);
+    sendMatchEmail(u2.email, u2.name || '同学', u1.name || 'TA', p1?.my_grade, p1?.major);
   }
 
   return { success: true, message: `匹配完成，共 ${pairs.length} 对` };
@@ -323,8 +318,9 @@ function runWeeklyMatch() {
 
 // 初始化数据库并启动
 async function start() {
-  dbModule = require('./database');
-  await dbModule.initDatabase();
+  const dbModule = require('./database');
+  db = dbModule;
+  await db.initDatabase();
 
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
