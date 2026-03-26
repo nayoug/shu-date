@@ -6,6 +6,9 @@ require('dotenv').config();
 let db;
 const app = express();
 
+// 判断是否为开发环境
+const isDev = process.env.NODE_ENV !== 'production';
+
 // 中间件配置
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -46,6 +49,10 @@ app.get('/', async (req, res) => {
   if (req.session.userId) {
     const u = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
     if (u) {
+      // 管理员直接跳转到管理页面
+      if (u.email === 'admin@shu.edu.cn') {
+        return res.redirect('/admin');
+      }
       const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u.id]);
       user = { ...u, hasProfile: !!profile };
     }
@@ -54,14 +61,21 @@ app.get('/', async (req, res) => {
     title: '首页',
     user: user,
     message: req.query.msg,
-    messageType: req.query.type
+    messageType: req.query.type,
+    isDev
   });
 });
 
 // 登录页 - 输入邮箱
-app.get('/login', (req, res) => {
-  if (req.session.userId) return res.redirect('/');
-  res.render('login', { title: '登录' });
+app.get('/login', async (req, res) => {
+  if (req.session.userId) {
+    const user = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
+    if (user && user.email === 'admin@shu.edu.cn') {
+      return res.redirect('/admin');
+    }
+    return res.redirect('/');
+  }
+  res.render('login', { title: '登录', isDev });
 });
 
 // 发送登录验证码
@@ -73,7 +87,8 @@ app.post('/login', async (req, res) => {
       title: '登录',
       message: '只能使用 @shu.edu.cn 结尾的学校邮箱',
       messageType: 'error',
-      email
+      email,
+      isDev
     });
   }
 
@@ -102,13 +117,19 @@ app.post('/login', async (req, res) => {
     res.render('login', {
       title: '登录',
       message: '验证码已发送到你的邮箱，点击邮件中的链接即可登录',
-      messageType: 'success'
+      messageType: 'success',
+      isDev
     });
   } else {
+    // 测试环境显示测试链接，正式环境显示错误提示
+    const message = isDev
+      ? '测试模式，请使用以下链接登录:<br>' + result.url
+      : '邮件发送失败，请稍后重试或联系管理员';
     res.render('login', {
       title: '登录',
-      message: '邮件发送失败，请使用以下链接登录（测试模式）:<br>' + result.url,
-      messageType: 'error'
+      message,
+      messageType: isDev ? 'info' : 'error',
+      isDev
     });
   }
 });
@@ -147,7 +168,15 @@ app.get('/login/verify/:code', async (req, res) => {
   req.session.userId = user.id;
   console.log('session已设置, sessionID:', req.sessionID);
 
-  res.redirect('/');
+  // 确保 session 保存后再跳转
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err);
+    // 管理员直接跳转到管理页面
+    if (user.email === 'admin@shu.edu.cn') {
+      return res.redirect('/admin');
+    }
+    res.redirect('/');
+  });
 });
 
 // 注册页（已合并到登录流程）
@@ -162,7 +191,8 @@ app.get('/profile', isLoggedIn, async (req, res) => {
     title: '填写问卷',
     user: req.user,
     profile,
-    isAdmin: req.isAdmin
+    isAdmin: req.isAdmin,
+    isDev
   });
 });
 

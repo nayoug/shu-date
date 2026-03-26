@@ -1,3 +1,21 @@
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="logo">心有所<span>SHU</span></a>
+    <div class="nav-links">
+      <% if (typeof user !== 'undefined' && user) { %>
+        <a href="/profile">我的资料</a>
+        <a href="/matches">匹配结果</a>
+        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+          <a href="/admin">管理</a>
+        <% } %>
+        <a href="/logout" class="btn">退出</a>
+      <% } else { %>
+        <a href="/login">登录</a>
+      <% } %>
+    </div>
+  </div>
+</nav>
+
 <div class="hero">
   <h1>💕 心有所SHU</h1>
   <p>上海大学校园交友匹配系统</p>
@@ -49,3 +67,7 @@
   <% } %>
 </div>
 <% } %>
+
+<footer class="footer">
+  <p>© 2026 心有所SHU - 上海大学校园交友匹配系统</p>
+</footer>

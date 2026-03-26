@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "node app.js"
+    "dev": "node app.js",
+    "dev:clean": "rm -f shu.db && node app.js"
   },
   "dependencies": {
     "dotenv": "^16.6.1",

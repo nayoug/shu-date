@@ -28,11 +28,12 @@ function isMailConfigured() {
 // 发送登录验证码邮件
 async function sendLoginEmail(email, loginCode) {
   const r = getResend();
-  const loginUrl = `${process.env.BASE_URL}/login/verify/${loginCode}`;
+  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+  const loginUrl = `${baseUrl}/login/verify/${loginCode}`;
 
   if (!r) {
     console.log('邮件模拟模式: 登录验证码', loginCode);
-    return { success: true, code: loginCode, url: loginUrl };
+    return { success: false, code: loginCode, url: loginUrl };
   }
 
   try {
