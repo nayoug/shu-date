@@ -122,7 +122,7 @@ app.get('/login/verify/:code', async (req, res) => {
   const allUsers = await db.query('SELECT id, email, login_code, login_code_expire FROM users');
   console.log('所有用户:', allUsers);
 
-  const user = await db.queryOne('SELECT * FROM users WHERE login_code = ?', [code]);
+  const user = await db.queryOne('SELECT * FROM users WHERE login_code = $1', [code]);
   console.log('查询结果:', user);
 
   if (!user) {
@@ -133,7 +133,8 @@ app.get('/login/verify/:code', async (req, res) => {
     });
   }
 
-  if (new Date(user.login_code_expire) < new Date()) {
+  // 使用时间戳比较，避免时区问题
+  if (new Date(user.login_code_expire).getTime() < Date.now()) {
     return res.render('login', {
       title: '登录',
       message: '验证码已过期，请重新获取',
@@ -142,7 +143,7 @@ app.get('/login/verify/:code', async (req, res) => {
   }
 
   console.log('验证成功, userId:', user.id);
-  await db.execute('UPDATE users SET login_code = NULL, login_code_expire = NULL WHERE id = ?', [user.id]);
+  await db.execute('UPDATE users SET login_code = NULL, login_code_expire = NULL WHERE id = $1', [user.id]);
 
   req.session.userId = user.id;
   console.log('session已设置, sessionID:', req.sessionID);
