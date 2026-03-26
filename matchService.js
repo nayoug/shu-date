@@ -283,13 +283,53 @@ function getTopMatches(userId, topN = 5) {
 
 function getMatchesForDisplay(userId, topN = 10) {
   const currentWeekMatch = getCurrentWeekMatch(userId);
+
+  // 如果本周已有落库匹配，先检查 score 是否为 NULL/undefined（旧数据可能没有写入 score）
   if (currentWeekMatch) {
+    if (currentWeekMatch.score === null || typeof currentWeekMatch.score === 'undefined') {
+      // 回退到实时计算/补算本周得分
+      const liveMatches = getTopMatches(userId, topN);
+
+      if (liveMatches && liveMatches.length > 0) {
+        const bestMatch = liveMatches[0];
+
+        // 尝试将补算的分数写回本周记录
+        try {
+          if (typeof currentWeekMatch.id !== 'undefined') {
+            dbModule
+              .prepare('UPDATE matches SET score = ? WHERE id = ?')
+              .run(bestMatch.score, currentWeekMatch.id);
+          }
+        } catch (e) {
+          // 如果更新失败，不影响后续展示逻辑
+        }
+
+        // 使用补算后的分数作为本周匹配结果返回
+        const updatedWeeklyMatch = Object.assign({}, currentWeekMatch, {
+          score: bestMatch.score
+        });
+
+        return {
+          matches: [updatedWeeklyMatch],
+          source: 'weekly'
+        };
+      }
+
+      // 若实时也算不出匹配结果，则退回到 live 逻辑（空列表或实时结果）
+      return {
+        matches: liveMatches || [],
+        source: 'live'
+      };
+    }
+
+    // 正常情况：本周已有有效 score，直接使用 weekly 结果
     return {
       matches: [currentWeekMatch],
       source: 'weekly'
     };
   }
 
+  // 默认：不存在本周匹配，走实时计算
   return {
     matches: getTopMatches(userId, topN),
     source: 'live'
