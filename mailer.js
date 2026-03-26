@@ -3,7 +3,7 @@ require('dotenv').config();
 
 console.log('邮件配置:', {
   provider: 'Resend',
-  from: process.env.FROM_EMAIL,
+  from: process.env.FROM_EMAIL || 'no-reply@shudate.xyz',
   apiKey: process.env.RESEND_API_KEY ? '已设置' : '未设置'
 });
 
