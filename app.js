@@ -53,7 +53,19 @@ async function isLoggedIn(req, res, next) {
   res.redirect('/login');
 }
 
-function normalizeEmail(email = '') {
+function normalizeEmail(email) {
+  // Handle arrays from repeated form fields like "email=a&email=b"
+  if (Array.isArray(email)) {
+    email = email[0];
+  }
+
+  if (email === undefined || email === null) {
+    email = '';
+  }
+
+  if (typeof email !== 'string') {
+    return '';
+  }
   return email.trim().toLowerCase();
 }
 
