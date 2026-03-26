@@ -92,34 +92,29 @@ function prepare(sql) {
   const converted = convertPlaceholders(sql);
   return {
     run: async function(...params) {
-      console.log('SQL run:', converted, 'params:', params);
       try {
         const result = await pool.query(converted, params);
         return { changes: result.rowCount };
       } catch (e) {
-        console.error('SQL Error:', e.message);
+        console.error('SQL执行失败:', e.message);
         return { changes: 0 };
       }
     },
     get: async function(...params) {
-      console.log('SQL get:', converted, 'params:', params);
       try {
         const result = await pool.query(converted, params);
-        const row = result.rows[0];
-        console.log('SQL result:', row);
-        return row;
+        return result.rows[0];
       } catch (e) {
-        console.error('SQL Error:', e.message);
+        console.error('SQL查询失败:', e.message);
         return undefined;
       }
     },
     all: async function(...params) {
-      console.log('SQL all:', converted, 'params:', params);
       try {
         const result = await pool.query(converted, params);
         return result.rows;
       } catch (e) {
-        console.error('SQL Error:', e.message);
+        console.error('SQL查询失败:', e.message);
         return [];
       }
     }
