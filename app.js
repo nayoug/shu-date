@@ -1,10 +1,22 @@
 const express = require('express');
 const session = require('express-session');
+const crypto = require('crypto');
 const path = require('path');
 require('dotenv').config();
 
 let db;
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
+const ADMIN_EMAILS = new Set(
+  (process.env.ADMIN_EMAILS || 'admin@shu.edu.cn')
+    .split(',')
+    .map(email => email.trim().toLowerCase())
+    .filter(Boolean)
+);
+
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
 
 // 中间件配置
 app.set('view engine', 'ejs');
@@ -15,7 +27,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'xin_yousuo_shu_secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: isProduction,
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  }
 }));
 
 // 登录中间件
@@ -25,11 +42,61 @@ async function isLoggedIn(req, res, next) {
     if (user) {
       const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [user.id]);
       req.user = { ...user, hasProfile: !!profile };
-      req.isAdmin = user.email === 'admin@shu.edu.cn';
+      req.isAdmin = ADMIN_EMAILS.has((user.email || '').toLowerCase());
       return next();
     }
   }
   res.redirect('/login');
+}
+
+function normalizeEmail(email = '') {
+  return email.trim().toLowerCase();
+}
+
+function generateToken(size = 24) {
+  return crypto.randomBytes(size).toString('hex');
+}
+
+function ensureCsrfToken(req) {
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = generateToken(16);
+  }
+
+  return req.session.csrfToken;
+}
+
+function requireValidCsrf(req, res, next) {
+  if (req.body?.csrfToken && req.session.csrfToken === req.body.csrfToken) {
+    return next();
+  }
+
+  return res.redirect('/admin?msg=' + encodeURIComponent('请求无效，请刷新页面后重试') + '&type=error');
+}
+
+function regenerateSession(req) {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate(error => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
+
+function saveSession(req) {
+  return new Promise((resolve, reject) => {
+    req.session.save(error => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
 }
 
 // ============ 路由 ============
@@ -37,16 +104,19 @@ async function isLoggedIn(req, res, next) {
 // 首页
 app.get('/', async (req, res) => {
   let user = null;
+  let isAdmin = false;
   if (req.session.userId) {
     const u = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
     if (u) {
       const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u.id]);
       user = { ...u, hasProfile: !!profile };
+      isAdmin = ADMIN_EMAILS.has((u.email || '').toLowerCase());
     }
   }
   res.render('index', {
     title: '首页',
     user: user,
+    isAdmin,
     message: req.query.msg,
     messageType: req.query.type
   });
@@ -60,9 +130,9 @@ app.get('/login', (req, res) => {
 
 // 发送登录验证码
 app.post('/login', async (req, res) => {
-  const { email } = req.body;
+  const email = normalizeEmail(req.body.email);
 
-  if (!email.toLowerCase().endsWith('@shu.edu.cn')) {
+  if (!email.endsWith('@shu.edu.cn')) {
     return res.render('login', {
       title: '登录',
       message: '只能使用 @shu.edu.cn 结尾的学校邮箱',
@@ -72,10 +142,10 @@ app.post('/login', async (req, res) => {
   }
 
   // 检查用户是否存在
-  let user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+  let user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
 
   // 生成登录验证码
-  const loginCode = Math.random().toString(36).substring(2, 10);
+  const loginCode = generateToken(24);
   const expireTime = new Date(Date.now() + 10 * 60 * 1000);
 
   if (user) {
@@ -84,8 +154,8 @@ app.post('/login', async (req, res) => {
   } else {
     // 自动注册新用户（默认已验证）
     const result = await db.execute('INSERT INTO users (email, login_code, login_code_expire, verified) VALUES ($1, $2, $3, 1)',
-      [email.toLowerCase(), loginCode, expireTime.toISOString()]);
-    user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+      [email, loginCode, expireTime.toISOString()]);
+    user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
   }
 
   // 发送登录邮件
@@ -96,13 +166,23 @@ app.post('/login', async (req, res) => {
     res.render('login', {
       title: '登录',
       message: '验证码已发送到你的邮箱，点击邮件中的链接即可登录',
-      messageType: 'success'
+      messageType: 'success',
+      email
+    });
+  } else if (result.simulated && !isProduction) {
+    res.render('login', {
+      title: '登录',
+      message: '当前未配置邮件服务。开发环境可直接使用下方测试链接登录。',
+      messageType: 'info',
+      email,
+      debugLoginUrl: result.url
     });
   } else {
     res.render('login', {
       title: '登录',
-      message: '邮件发送失败，请使用以下链接登录（测试模式）:<br>' + result.url,
-      messageType: 'error'
+      message: '邮件发送失败，请稍后重试或联系管理员',
+      messageType: 'error',
+      email
     });
   }
 });
@@ -127,8 +207,25 @@ app.get('/login/verify/:code', async (req, res) => {
     });
   }
 
-  await db.execute('UPDATE users SET login_code = NULL, login_code_expire = NULL WHERE id = $1', [user.id]);
-  req.session.userId = user.id;
+  try {
+    await regenerateSession(req);
+    req.session.userId = user.id;
+    await saveSession(req);
+  } catch (error) {
+    console.error('建立登录会话失败:', error);
+    return res.render('login', {
+      title: '登录',
+      message: '登录失败，请重新获取登录链接',
+      messageType: 'error'
+    });
+  }
+
+  try {
+    await db.execute('UPDATE users SET login_code = NULL, login_code_expire = NULL WHERE id = $1', [user.id]);
+  } catch (error) {
+    console.error('清理登录验证码失败:', error);
+  }
+
   res.redirect('/');
 });
 
@@ -144,6 +241,8 @@ app.get('/profile', isLoggedIn, async (req, res) => {
     title: '填写问卷',
     user: req.user,
     profile,
+    message: req.query.msg,
+    messageType: req.query.type,
     isAdmin: req.isAdmin
   });
 });
@@ -174,17 +273,22 @@ app.post('/survey/submit', isLoggedIn, async (req, res) => {
     }
   });
 
-  const existing = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
+  try {
+    const existing = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
 
-  if (existing) {
-    const setClauses = fields.map((f, i) => `${f} = $${i + 1}`).join(', ');
-    const params = [...fields.map(f => values[f]), req.user.id];
-    await db.execute(`UPDATE profiles SET ${setClauses}, updated_at = CURRENT_TIMESTAMP WHERE user_id = $${fields.length + 1}`, params);
-  } else {
-    const cols = ['user_id', ...fields].join(', ');
-    const placeholders = fields.map((_, i) => `$${i + 2}`).join(', ');
-    const params = [req.user.id, ...fields.map(f => values[f])];
-    await db.execute(`INSERT INTO profiles (${cols}) VALUES ($1, ${placeholders})`, params);
+    if (existing) {
+      const setClauses = fields.map((f, i) => `${f} = $${i + 1}`).join(', ');
+      const params = [...fields.map(f => values[f]), req.user.id];
+      await db.execute(`UPDATE profiles SET ${setClauses}, updated_at = CURRENT_TIMESTAMP WHERE user_id = $${fields.length + 1}`, params);
+    } else {
+      const cols = ['user_id', ...fields].join(', ');
+      const placeholders = fields.map((_, i) => `$${i + 2}`).join(', ');
+      const params = [req.user.id, ...fields.map(f => values[f])];
+      await db.execute(`INSERT INTO profiles (${cols}) VALUES ($1, ${placeholders})`, params);
+    }
+  } catch (error) {
+    console.error('保存问卷失败:', error);
+    return res.redirect('/profile?msg=' + encodeURIComponent('问卷保存失败，请重试') + '&type=error');
   }
 
   res.redirect('/?msg=问卷已保存&type=success');
@@ -198,7 +302,11 @@ app.post('/profile', isLoggedIn, (req, res) => {
 // 匹配结果页
 app.get('/matches', isLoggedIn, async (req, res) => {
   if (!req.user.verified) {
-    return res.render('matches', { title: '匹配结果', user: req.user });
+    return res.render('matches', {
+      title: '匹配结果',
+      user: req.user,
+      isAdmin: req.isAdmin
+    });
   }
 
   const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
@@ -207,28 +315,29 @@ app.get('/matches', isLoggedIn, async (req, res) => {
   }
 
   const matchService = require('./matchService');
-  const matches = matchService.getTopMatches(req.user.id, 10);
+  const { matches, source } = await matchService.getMatchesForDisplay(req.user.id, 10);
 
   res.render('matches', {
     title: '匹配结果',
     user: req.user,
-    matches: matches,
+    matches,
+    matchSource: source,
     isAdmin: req.isAdmin
   });
 });
 
 // API: 获取匹配列表
-app.get('/api/matches', isLoggedIn, (req, res) => {
+app.get('/api/matches', isLoggedIn, async (req, res) => {
   const matchService = require('./matchService');
-  const matches = matchService.findMatches(req.user.id);
-  res.json({ success: true, data: matches });
+  const result = await matchService.getMatchesForDisplay(req.user.id);
+  res.json({ success: true, data: result.matches, source: result.source });
 });
 
 // API: 获取前5名
-app.get('/api/match/top', isLoggedIn, (req, res) => {
+app.get('/api/match/top', isLoggedIn, async (req, res) => {
   const matchService = require('./matchService');
-  const matches = matchService.getTopMatches(req.user.id, 5);
-  res.json({ success: true, data: matches });
+  const result = await matchService.getMatchesForDisplay(req.user.id, 5);
+  res.json({ success: true, data: result.matches, source: result.source });
 });
 
 // 管理页
@@ -247,12 +356,20 @@ app.get('/admin', isLoggedIn, async (req, res) => {
     user: req.user,
     users,
     weekNumber: getWeekNumber(),
+    csrfToken: ensureCsrfToken(req),
+    message: req.query.msg,
+    messageType: req.query.type,
     isAdmin: true
   });
 });
 
 // 手动触发匹配
 app.get('/admin/match', isLoggedIn, async (req, res) => {
+  if (!req.isAdmin) return res.redirect('/');
+  return res.redirect('/admin?msg=' + encodeURIComponent('请使用页面表单触发匹配') + '&type=error');
+});
+
+app.post('/admin/match', isLoggedIn, requireValidCsrf, async (req, res) => {
   if (!req.isAdmin) return res.redirect('/');
   const result = await runWeeklyMatch();
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
@@ -274,46 +391,30 @@ function getWeekNumber() {
 }
 
 async function runWeeklyMatch() {
-  const weekNumber = getWeekNumber();
-  const existing = await db.queryOne('SELECT id FROM matches WHERE week_number = $1', [weekNumber]);
-  if (existing) {
-    return { success: false, message: '本周已执行匹配' };
+  const matchService = require('./matchService');
+  const result = await matchService.saveWeeklyMatches();
+  if (!result.success) {
+    return result;
   }
 
-  const users = await db.query(`
-    SELECT u.id, u.email, u.name
-    FROM users u
-    JOIN profiles p ON u.id = p.user_id
-    WHERE u.verified = 1
-  `);
+  const { sendMatchEmail } = require('./mailer');
+  const emailJobs = result.results.flatMap(pair => ([
+    sendMatchEmail(pair.user.email, pair.user.name || '同学', pair.match.name || 'TA', pair.match.my_grade, pair.score),
+    sendMatchEmail(pair.match.email, pair.match.name || '同学', pair.user.name || 'TA', pair.user.my_grade, pair.score)
+  ]));
+  const emailResults = await Promise.allSettled(emailJobs);
+  const failedEmails = emailResults.filter(item =>
+    item.status === 'rejected' || (item.status === 'fulfilled' && item.value?.success === false)
+  ).length;
 
-  if (users.length < 2) {
-    return { success: false, message: '用户数量不足，需要至少2位用户' };
+  if (failedEmails > 0) {
+    return {
+      ...result,
+      message: `${result.message}，但有 ${failedEmails} 封通知邮件发送失败`
+    };
   }
 
-  const shuffled = users.sort(() => Math.random() - 0.5);
-  const pairs = [];
-
-  for (let i = 0; i < shuffled.length - 1; i += 2) {
-    pairs.push([shuffled[i], shuffled[i + 1]]);
-  }
-  if (shuffled.length % 2 === 1 && shuffled.length > 2) {
-    pairs.push([shuffled[shuffled.length - 1], shuffled[0]]);
-  }
-
-  for (const [u1, u2] of pairs) {
-    await db.execute('INSERT INTO matches (user_id_1, user_id_2, week_number) VALUES ($1, $2, $3)',
-      [u1.id, u2.id, weekNumber]);
-
-    const p1 = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u1.id]);
-    const p2 = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u2.id]);
-
-    const { sendMatchEmail } = require('./mailer');
-    sendMatchEmail(u1.email, u1.name || '同学', u2.name || 'TA', p2?.my_grade, p2?.major);
-    sendMatchEmail(u2.email, u2.name || '同学', u1.name || 'TA', p1?.my_grade, p1?.major);
-  }
-
-  return { success: true, message: `匹配完成，共 ${pairs.length} 对` };
+  return result;
 }
 
 // 初始化数据库并启动

@@ -4,9 +4,16 @@
   <form action="/login" method="POST">
     <div class="form-group">
       <label for="email">学校邮箱</label>
-      <input type="email" id="email" name="email" placeholder="yourname@shu.edu.cn" required>
+      <input type="email" id="email" name="email" placeholder="yourname@shu.edu.cn" value="<%= typeof email !== 'undefined' ? email : '' %>" required>
       <p class="hint">请使用 @shu.edu.cn 结尾的学校邮箱</p>
     </div>
     <button type="submit" class="btn">发送登录链接</button>
   </form>
+
+  <% if (typeof debugLoginUrl !== 'undefined' && debugLoginUrl) { %>
+    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+      <p style="margin-bottom: 10px; color: #666;">测试登录链接：</p>
+      <a href="<%= debugLoginUrl %>" style="word-break: break-all;"><%= debugLoginUrl %></a>
+    </div>
+  <% } %>
 </div>

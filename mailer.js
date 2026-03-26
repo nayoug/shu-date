@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+const isProduction = process.env.NODE_ENV === 'production';
 
 console.log('SMTP配置:', {
   host: process.env.SMTP_HOST,
@@ -56,8 +57,10 @@ async function sendLoginEmail(email, loginCode) {
   const loginUrl = `${process.env.BASE_URL}/login/verify/${loginCode}`;
 
   if (!t) {
-    console.log('邮件模拟模式: 登录验证码', loginCode);
-    return { success: true, code: loginCode, url: loginUrl };
+    if (!isProduction) {
+      console.log('邮件模拟模式已启用，请直接使用页面展示的测试登录链接。');
+    }
+    return { success: false, simulated: true, url: loginUrl };
   }
 
   try {
@@ -91,11 +94,11 @@ async function sendLoginEmail(email, loginCode) {
 }
 
 // 发送匹配结果邮件
-async function sendMatchEmail(userEmail, userName, matchedName, matchedGrade, matchedMajor) {
+async function sendMatchEmail(userEmail, userName, matchedName, matchedGrade, matchScore) {
   const t = getTransporter();
   if (!t) {
     console.log('邮件模拟模式: 匹配通知');
-    return true;
+    return { success: true, simulated: true };
   }
 
   try {
@@ -111,7 +114,7 @@ async function sendMatchEmail(userEmail, userName, matchedName, matchedGrade, ma
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p><strong>👤 姓名：</strong>${matchedName}</p>
             <p><strong>🎓 年级：</strong>${matchedGrade || '未填写'}</p>
-            <p><strong>📚 专业：</strong>${matchedMajor || '未填写'}</p>
+            <p><strong>💯 匹配度：</strong>${typeof matchScore === 'number' ? Math.round(matchScore * 100) + '%' : '待计算'}</p>
           </div>
           <p>快去网站看看 ta 的详细信息，主动打个招呼吧！</p>
           <p style="margin-top: 30px;">
