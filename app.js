@@ -68,6 +68,22 @@ function generateToken(size = 24) {
   return crypto.randomBytes(size).toString('hex');
 }
 
+function ensureCsrfToken(req) {
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = generateToken(16);
+  }
+
+  return req.session.csrfToken;
+}
+
+function requireValidCsrf(req, res, next) {
+  if (req.body?.csrfToken && req.session.csrfToken === req.body.csrfToken) {
+    return next();
+  }
+
+  return res.redirect('/admin?msg=' + encodeURIComponent('请求无效，请刷新页面后重试') + '&type=error');
+}
+
 function regenerateSession(req) {
   return new Promise((resolve, reject) => {
     req.session.regenerate(error => {
@@ -356,12 +372,20 @@ app.get('/admin', isLoggedIn, async (req, res) => {
     user: req.user,
     users,
     weekNumber: getWeekNumber(),
+    csrfToken: ensureCsrfToken(req),
+    message: req.query.msg,
+    messageType: req.query.type,
     isAdmin: true
   });
 });
 
 // 手动触发匹配
 app.get('/admin/match', isLoggedIn, async (req, res) => {
+  if (!req.isAdmin) return res.redirect('/');
+  return res.redirect('/admin?msg=' + encodeURIComponent('请使用页面表单触发匹配') + '&type=error');
+});
+
+app.post('/admin/match', isLoggedIn, requireValidCsrf, async (req, res) => {
   if (!req.isAdmin) return res.redirect('/');
   const result = await runWeeklyMatch();
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));

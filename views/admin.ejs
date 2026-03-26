@@ -2,7 +2,10 @@
   <h2>👥 用户管理</h2>
 
   <div style="margin-bottom: 20px;">
-    <a href="/admin/match" class="btn">🔄 手动触发本周匹配</a>
+    <form action="/admin/match" method="POST" style="display: inline;">
+      <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+      <button type="submit" class="btn">🔄 手动触发本周匹配</button>
+    </form>
     <span style="margin-left: 15px; color: #666;">当前第 <%= weekNumber %> 周</span>
   </div>
 
