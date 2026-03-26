@@ -67,8 +67,19 @@ app.get('/login', (req, res) => {
 // 发送登录验证码
 app.post('/login', async (req, res) => {
   const { email } = req.body;
+  const lowerEmail = email.toLowerCase();
 
-  if (!email.toLowerCase().endsWith('@shu.edu.cn')) {
+  // 1. 定义白名单（把开发者的邮箱放这里）
+  const whiteList = [
+    'kingguog@gmail.com',
+    'joyce_guoy@163.com' // 也可以加上你自己的常用邮箱方便测试
+  ];
+
+  // 2. 只有既不在白名单，又不符合学校后缀的邮箱才会被拦截
+  const isWhiteListed = whiteList.includes(lowerEmail);
+  const isShuEmail = lowerEmail.endsWith('@shu.edu.cn');
+
+  if (!isWhiteListed && !isShuEmail) {
     return res.render('login', {
       title: '登录',
       message: '只能使用 @shu.edu.cn 结尾的学校邮箱',
@@ -76,6 +87,8 @@ app.post('/login', async (req, res) => {
       email
     });
   }
+
+  // ... 后续生成验证码并发送邮件的逻辑 ...
 
   // 检查用户是否存在
   let user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);

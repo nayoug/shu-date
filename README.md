@@ -23,7 +23,7 @@
 
 ## 快速开始
 
-1. 打开 https://xin-yousuo-shu.onrender.com/login
+1. 打开 https://shudate.xyz/login
 2. 输入 @shu.edu.cn 邮箱
 3. 点击发送登录验证码
 4. 邮箱中查看验证码并输入

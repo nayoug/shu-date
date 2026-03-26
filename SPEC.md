@@ -12,7 +12,7 @@
 
 - **后端**: Node.js + Express
 - **前端**: HTML + CSS + Vanilla JS (单页面应用)
-- **数据库**: SQLite (轻量级，无需额外安装)
+- **数据库**: Supabase PostgreSQL (云数据库)
 - **邮件**: Nodemailer (支持SMTP)
 - **模板引擎**: EJS
 
@@ -44,25 +44,44 @@
 ### users 表
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| id | INTEGER | 主键 |
+| id | SERIAL | 主键 |
 | email | TEXT | 学校邮箱，唯一 |
 | name | TEXT | 姓名 |
-| password_hash | TEXT | 密码哈希 |
 | verified | INTEGER | 是否验证(0/1) |
-| verification_code | TEXT | 验证码 |
-| created_at | DATETIME | 注册时间 |
+| login_code | TEXT | 登录验证码 |
+| login_code_expire | TIMESTAMP | 验证码过期时间 |
+| created_at | TIMESTAMP | 注册时间 |
 
 ### profiles 表
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| id | INTEGER | 主键 |
+| id | SERIAL | 主键 |
 | user_id | INTEGER | 外键 |
-| grade | TEXT | 年级 |
-| major | TEXT | 专业 |
-| hobbies | TEXT | 爱好(逗号分隔) |
-| personality_tags | TEXT | 性格标签 |
-| ideal_type | TEXT | 理想型描述 |
-| updated_at | DATETIME | 更新时间 |
+| gender | TEXT | 性别 |
+| preferred_gender | TEXT | 期望性别 |
+| purpose | TEXT | 交友目的 |
+| my_grade | TEXT | 我的年级 |
+| preferred_grade | TEXT | 期望年级 |
+| campus | TEXT | 校区 |
+| cross_campus | TEXT | 跨校区态度 |
+| height | TEXT | 身高 |
+| preferred_height | TEXT | 期望身高 |
+| hometown | TEXT | 家乡 |
+| preferred_hometown | TEXT | 期望家乡 |
+| core_traits | TEXT | 核心特质 |
+| long_distance | TEXT | 异地恋态度 |
+| communication | TEXT | 沟通频率 |
+| spending | TEXT | 消费观念 |
+| cohabitation | TEXT | 婚前同居态度 |
+| marriage_plan | TEXT | 婚姻规划 |
+| relationship_style | TEXT | 相处模式 |
+| sleep_schedule | TEXT | 作息习惯 |
+| smoke_alcohol | TEXT | 烟酒态度 |
+| pet | TEXT | 宠物态度 |
+| social_public | TEXT | 社交公开度 |
+| social_boundary | TEXT | 社交边界 |
+| interests | TEXT | 兴趣爱好 |
+| updated_at | TIMESTAMP | 更新时间 |
 
 ### matches 表
 | 字段 | 类型 | 说明 |
