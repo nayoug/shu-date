@@ -316,7 +316,7 @@ app.get('/matches', isLoggedIn, async (req, res) => {
   }
 
   const matchService = require('./matchService');
-  const matches = matchService.getTopMatches(req.user.id, 10);
+  const matches = await matchService.getTopMatches(req.user.id, 10);
 
   res.render('matches', {
     title: '匹配结果',
@@ -327,16 +327,16 @@ app.get('/matches', isLoggedIn, async (req, res) => {
 });
 
 // API: 获取匹配列表
-app.get('/api/matches', isLoggedIn, (req, res) => {
+app.get('/api/matches', isLoggedIn, async (req, res) => {
   const matchService = require('./matchService');
-  const matches = matchService.findMatches(req.user.id);
+  const matches = await matchService.findMatches(req.user.id);
   res.json({ success: true, data: matches });
 });
 
 // API: 获取前5名
-app.get('/api/match/top', isLoggedIn, (req, res) => {
+app.get('/api/match/top', isLoggedIn, async (req, res) => {
   const matchService = require('./matchService');
-  const matches = matchService.getTopMatches(req.user.id, 5);
+  const matches = await matchService.getTopMatches(req.user.id, 5);
   res.json({ success: true, data: matches });
 });
 

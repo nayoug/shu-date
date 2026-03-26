@@ -192,15 +192,15 @@ function calculateMatchScore(myProfile, theirProfile) {
  * @param {number} userId - 用户ID
  * @returns {Array} 匹配结果列表
  */
-function findMatches(userId) {
-  const myUser = dbModule.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+async function findMatches(userId) {
+  const myUser = await dbModule.prepare('SELECT * FROM users WHERE id = ?').get(userId);
   if (!myUser) return [];
 
-  const myProfile = dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(userId);
+  const myProfile = await dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(userId);
   if (!myProfile) return [];
 
   // 获取所有其他用户资料
-  const allProfiles = dbModule.prepare(`
+  const allProfiles = await dbModule.prepare(`
     SELECT u.id, u.email, u.name, p.*
     FROM users u
     JOIN profiles p ON u.id = p.user_id
@@ -243,25 +243,25 @@ function findMatches(userId) {
  * @param {number} topN - 返回数量，默认5
  * @returns {Array}
  */
-function getTopMatches(userId, topN = 5) {
-  const matches = findMatches(userId);
+async function getTopMatches(userId, topN = 5) {
+  const matches = await findMatches(userId);
   return matches.slice(0, topN);
 }
 
 /**
  * 保存本周匹配结果到数据库
  */
-function saveWeeklyMatches() {
+async function saveWeeklyMatches() {
   const weekNumber = getWeekNumber();
 
   // 检查本周是否已匹配
-  const existing = dbModule.prepare('SELECT id FROM matches WHERE week_number = ?').get(weekNumber);
+  const existing = await dbModule.prepare('SELECT id FROM matches WHERE week_number = ?').get(weekNumber);
   if (existing) {
     return { success: false, message: '本周已执行匹配' };
   }
 
   // 获取所有已填写问卷的用户
-  const users = dbModule.prepare(`
+  const users = await dbModule.prepare(`
     SELECT u.id, u.email, u.name
     FROM users u
     JOIN profiles p ON u.id = p.user_id
@@ -284,11 +284,11 @@ function saveWeeklyMatches() {
   for (const user of users) {
     if (matched.has(user.id)) continue;
 
-    const matches = findMatches(user.id).filter(m => !matched.has(m.user_id));
+    const matches = (await findMatches(user.id)).filter(m => !matched.has(m.user_id));
 
     if (matches.length > 0) {
       const bestMatch = matches[0];
-      insertMatch.run(user.id, bestMatch.user_id, bestMatch.score, weekNumber);
+      await insertMatch.run(user.id, bestMatch.user_id, bestMatch.score, weekNumber);
       matched.add(user.id);
       matched.add(bestMatch.user_id);
 
