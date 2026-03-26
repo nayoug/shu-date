@@ -1,12 +1,47 @@
-<div class="card" style="max-width: 500px; margin: 0 auto;">
-  <h2>🔐 登录</h2>
-  <p style="color: #666; margin-bottom: 20px;">输入你的学校邮箱，系统会发送登录链接到你的邮箱</p>
-  <form action="/login" method="POST">
-    <div class="form-group">
-      <label for="email">学校邮箱</label>
-      <input type="email" id="email" name="email" placeholder="yourname@shu.edu.cn" required>
-      <p class="hint">请使用 @shu.edu.cn 结尾的学校邮箱</p>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="logo">心有所<span>SHU</span></a>
+      <div class="nav-links">
+        <a href="/login">登录</a>
+      </div>
     </div>
-    <button type="submit" class="btn">发送登录链接</button>
-  </form>
-</div>
+  </nav>
+
+  <div class="container" style="max-width: 480px; margin-top: 60px;">
+    <div class="card" style="text-align: center;">
+      <h2 style="margin-bottom: 8px;">🔐 登录</h2>
+      <p style="color: var(--muted-foreground); margin-bottom: 24px;">
+        输入你的学校邮箱，系统会发送登录链接到你的邮箱
+      </p>
+
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="alert alert-<%= messageType || 'info' %>">
+          <%- message %>
+        </div>
+      <% } %>
+
+      <form action="/login" method="POST">
+        <div class="form-group">
+          <label for="email">学校邮箱</label>
+          <input type="email" id="email" name="email" placeholder="yourname@shu.edu.cn" value="<%= typeof email !== 'undefined' ? email : '' %>" required>
+          <p class="hint">请使用 @shu.edu.cn 结尾的学校邮箱</p>
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">发送登录链接</button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 心有所SHU - 上海大学校园交友匹配系统</p>
+  </footer>
+</body>
+</html>

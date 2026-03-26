@@ -1,37 +1,70 @@
-<div class="card">
-  <h2>👥 用户管理</h2>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="logo">心有所<span>SHU</span></a>
+      <div class="nav-links">
+        <a href="/profile">我的资料</a>
+        <a href="/matches">匹配结果</a>
+        <a href="/admin" style="color: var(--primary); font-weight: 600;">管理</a>
+        <a href="/logout" class="btn">退出</a>
+      </div>
+    </div>
+  </nav>
 
-  <div style="margin-bottom: 20px;">
-    <a href="/admin/match" class="btn">🔄 手动触发本周匹配</a>
-    <span style="margin-left: 15px; color: #666;">当前第 <%= weekNumber %> 周</span>
+  <div class="container">
+    <div class="card">
+      <h2 style="display: flex; align-items: center; gap: 10px;">
+        👥 用户管理
+      </h2>
+
+      <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <a href="/admin/match" class="btn">🔄 手动触发本周匹配</a>
+        <span style="color: var(--muted-foreground);">当前第 <%= weekNumber %> 周</span>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>邮箱</th>
+              <th>昵称</th>
+              <th>验证状态</th>
+              <th>有无资料</th>
+              <th>注册时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(function(u) { %>
+            <tr>
+              <td><%= u.id %></td>
+              <td><%= u.email %></td>
+              <td><%= u.name || '-' %></td>
+              <td><%= u.verified ? '✅ 已验证' : '⏳ 未验证' %></td>
+              <td><%= u.hasProfile ? '✅ 有' : '❌ 无' %></td>
+              <td><%= u.created_at ? u.created_at.slice(0, 10) : '-' %></td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="margin-top: 20px; color: var(--muted-foreground); font-size: 0.9rem;">
+        共 <%= users.length %> 位用户注册
+      </p>
+    </div>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>邮箱</th>
-        <th>昵称</th>
-        <th>验证状态</th>
-        <th>有无资料</th>
-        <th>注册时间</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% users.forEach(function(u) { %>
-      <tr>
-        <td><%= u.id %></td>
-        <td><%= u.email %></td>
-        <td><%= u.name || '-' %></td>
-        <td><%= u.verified ? '✅ 已验证' : '⏳ 未验证' %></td>
-        <td><%= u.hasProfile ? '✅ 有' : '❌ 无' %></td>
-        <td><%= u.created_at ? u.created_at.slice(0, 10) : '-' %></td>
-      </tr>
-      <% }); %>
-    </tbody>
-  </table>
-
-  <p style="margin-top: 20px; color: #666;">
-    共 <%= users.length %> 位用户注册
-  </p>
-</div>
+  <footer class="footer">
+    <p>© 2026 心有所SHU - 上海大学校园交友匹配系统</p>
+  </footer>
+</body>
+</html>

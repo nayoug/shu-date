@@ -1,309 +1,354 @@
-<div class="card">
-  <h2>📝 恋爱匹配问卷</h2>
-  <p style="color: #666; margin-bottom: 20px;">请认真填写以下问题，帮助我们为你找到更合适的TA</p>
-
-  <form action="/survey/submit" method="POST">
-
-    <!-- 一、基础信息 -->
-    <div class="form-section">
-      <h3 style="color: #e74c3c; margin: 20px 0 15px;">一、基础信息</h3>
-
-      <div class="form-group">
-        <label>1. 我的性别是：</label>
-        <select name="gender" required>
-          <option value="">请选择</option>
-          <option value="男" <%= profile && profile.gender === '男' ? 'selected' : '' %>>A. 男</option>
-          <option value="女" <%= profile && profile.gender === '女' ? 'selected' : '' %>>B. 女</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>2. 我希望匹配的对象性别是：</label>
-        <select name="preferred_gender" required>
-          <option value="">请选择</option>
-          <option value="男" <%= profile && profile.preferred_gender === '男' ? 'selected' : '' %>>A. 男</option>
-          <option value="女" <%= profile && profile.preferred_gender === '女' ? 'selected' : '' %>>B. 女</option>
-          <option value="不限" <%= profile && profile.preferred_gender === '不限' ? 'selected' : '' %>>C. 不限</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>3. 我来这里的首要目的是：</label>
-        <select name="purpose" required>
-          <option value="">请选择</option>
-          <option value="寻找长期恋爱伴侣" <%= profile && profile.purpose === '寻找长期恋爱伴侣' ? 'selected' : '' %>>A. 寻找长期恋爱伴侣</option>
-          <option value="寻找短期约会对象" <%= profile && profile.purpose === '寻找短期约会对象' ? 'selected' : '' %>>B. 寻找短期约会对象</option>
-          <option value="顺其自然，拓展社交" <%= profile && profile.purpose === '顺其自然，拓展社交' ? 'selected' : '' %>>C. 顺其自然，拓展社交</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>4. 我的学历阶段：</label>
-        <select name="my_grade" required>
-          <option value="">请选择</option>
-          <option value="大一" <%= profile && profile.my_grade === '大一' ? 'selected' : '' %>>A. 大一</option>
-          <option value="大二" <%= profile && profile.my_grade === '大二' ? 'selected' : '' %>>B. 大二</option>
-          <option value="大三" <%= profile && profile.my_grade === '大三' ? 'selected' : '' %>>C. 大三</option>
-          <option value="大四" <%= profile && profile.my_grade === '大四' ? 'selected' : '' %>>D. 大四</option>
-          <option value="研一" <%= profile && profile.my_grade === '研一' ? 'selected' : '' %>>E. 研一</option>
-          <option value="研二" <%= profile && profile.my_grade === '研二' ? 'selected' : '' %>>F. 研二</option>
-          <option value="研三" <%= profile && profile.my_grade === '研三' ? 'selected' : '' %>>G. 研三</option>
-          <option value="博一" <%= profile && profile.my_grade === '博一' ? 'selected' : '' %>>H. 博一</option>
-          <option value="博二" <%= profile && profile.my_grade === '博二' ? 'selected' : '' %>>I. 博二</option>
-          <option value="博三" <%= profile && profile.my_grade === '博三' ? 'selected' : '' %>>J. 博三</option>
-          <option value="博四" <%= profile && profile.my_grade === '博四' ? 'selected' : '' %>>K. 博四</option>
-          <option value="博五" <%= profile && profile.my_grade === '博五' ? 'selected' : '' %>>L. 博五</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>5. 我希望匹配对象的学历阶段范围是：</label>
-        <select name="preferred_grade" required>
-          <option value="">请选择</option>
-          <option value="大一-大四（本科）" <%= profile && profile.preferred_grade === '大一-大四（本科）' ? 'selected' : '' %>>A. 大一-大四（本科）</option>
-          <option value="研一-博五（硕博）" <%= profile && profile.preferred_grade === '研一-博五（硕博）' ? 'selected' : '' %>>B. 研一-博五（硕博）</option>
-          <option value="不限" <%= profile && profile.preferred_grade === '不限' ? 'selected' : '' %>>C. 不限</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>6. 我目前常驻的校区是：</label>
-        <select name="campus" required>
-          <option value="">请选择</option>
-          <option value="宝山" <%= profile && profile.campus === '宝山' ? 'selected' : '' %>>A. 宝山</option>
-          <option value="嘉定" <%= profile && profile.campus === '嘉定' ? 'selected' : '' %>>B. 嘉定</option>
-          <option value="延长" <%= profile && profile.campus === '延长' ? 'selected' : '' %>>C. 延长</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>7. 对于"跨校区恋爱"，我的态度是：</label>
-        <select name="cross_campus" required>
-          <option value="">请选择</option>
-          <option value="可以接受" <%= profile && profile.cross_campus === '可以接受' ? 'selected' : '' %>>A. 可以接受</option>
-          <option value="不可以接受" <%= profile && profile.cross_campus === '不可以接受' ? 'selected' : '' %>>B. 不可以接受</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>8. 我的身高（cm）：</label>
-        <select name="height" required>
-          <option value="">请选择</option>
-          <option value="140-150" <%= profile && profile.height === '140-150' ? 'selected' : '' %>>A. 140-150</option>
-          <option value="151-160" <%= profile && profile.height === '151-160' ? 'selected' : '' %>>B. 151-160</option>
-          <option value="161-170" <%= profile && profile.height === '161-170' ? 'selected' : '' %>>C. 161-170</option>
-          <option value="171-180" <%= profile && profile.height === '171-180' ? 'selected' : '' %>>D. 171-180</option>
-          <option value="181-210" <%= profile && profile.height === '181-210' ? 'selected' : '' %>>E. 181-210</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>9. 我对匹配对象的身高偏好（cm）：</label>
-        <select name="preferred_height" required>
-          <option value="">请选择</option>
-          <option value="140-150" <%= profile && profile.preferred_height === '140-150' ? 'selected' : '' %>>A. 140-150</option>
-          <option value="151-160" <%= profile && profile.preferred_height === '151-160' ? 'selected' : '' %>>B. 151-160</option>
-          <option value="161-170" <%= profile && profile.preferred_height === '161-170' ? 'selected' : '' %>>C. 161-170</option>
-          <option value="171-180" <%= profile && profile.preferred_height === '171-180' ? 'selected' : '' %>>D. 171-180</option>
-          <option value="181-210" <%= profile && profile.preferred_height === '181-210' ? 'selected' : '' %>>E. 181-210</option>
-          <option value="不限" <%= profile && profile.preferred_height === '不限' ? 'selected' : '' %>>F. 不限</option>
-        </select>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>填写问卷 - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="logo">心有所<span>SHU</span></a>
+      <div class="nav-links">
+        <a href="/profile">我的资料</a>
+        <a href="/matches">匹配结果</a>
+        <a href="/logout" class="btn">退出</a>
       </div>
     </div>
+  </nav>
 
-    <!-- 二、择偶偏好 -->
-    <div class="form-section">
-      <h3 style="color: #e74c3c; margin: 20px 0 15px;">二、择偶偏好</h3>
+  <div class="container">
+    <div class="card">
+      <h2>📝 恋爱匹配问卷</h2>
+      <p style="color: var(--muted-foreground); margin-bottom: 24px;">
+        请认真填写以下问题，帮助我们为你找到更合适的TA
+      </p>
 
-      <div class="form-group">
-        <label>10. 我的家乡位于：</label>
-        <select name="hometown" required>
-          <option value="">请选择</option>
-          <option value="上海市" <%= profile && profile.hometown === '上海市' ? 'selected' : '' %>>A. 上海市</option>
-          <option value="上海周边城市" <%= profile && profile.hometown === '上海周边城市' ? 'selected' : '' %>>B. 上海周边城市</option>
-          <option value="其他省份" <%= profile && profile.hometown === '其他省份' ? 'selected' : '' %>>C. 其他省份</option>
-        </select>
-      </div>
+      <% if (typeof isDev !== 'undefined' && isDev) { %>
+      <button type="button" id="devFillBtn" class="btn btn-secondary" style="margin-bottom: 20px;">🔧 开发模式：一键填写</button>
+      <% } %>
 
-      <div class="form-group">
-        <label>11. 我对匹配对象家乡的偏好：</label>
-        <select name="preferred_hometown" required>
-          <option value="">请选择</option>
-          <option value="上海市" <%= profile && profile.preferred_hometown === '上海市' ? 'selected' : '' %>>A. 上海市</option>
-          <option value="上海周边城市" <%= profile && profile.preferred_hometown === '上海周边城市' ? 'selected' : '' %>>B. 上海周边城市</option>
-          <option value="其他省份" <%= profile && profile.preferred_hometown === '其他省份' ? 'selected' : '' %>>C. 其他省份</option>
-          <option value="不限" <%= profile && profile.preferred_hometown === '不限' ? 'selected' : '' %>>D. 不限</option>
-        </select>
-      </div>
+      <form action="/survey/submit" method="POST">
 
-      <div class="form-group">
-        <label>12. 我更看重伴侣的核心特质（可多选）：</label>
-        <div class="checkbox-group">
-          <label><input type="checkbox" name="core_traits" value="性格三观契合" <%= profile && profile.core_traits && profile.core_traits.includes('性格三观契合') ? 'checked' : '' %>> A. 性格三观契合</label>
-          <label><input type="checkbox" name="core_traits" value="颜值气质" <%= profile && profile.core_traits && profile.core_traits.includes('颜值气质') ? 'checked' : '' %>> B. 颜值气质</label>
-          <label><input type="checkbox" name="core_traits" value="学历学识" <%= profile && profile.core_traits && profile.core_traits.includes('学历学识') ? 'checked' : '' %>> C. 学历学识</label>
-          <label><input type="checkbox" name="core_traits" value="经济能力" <%= profile && profile.core_traits && profile.core_traits.includes('经济能力') ? 'checked' : '' %>> D. 经济能力</label>
-          <label><input type="checkbox" name="core_traits" value="家庭背景" <%= profile && profile.core_traits && profile.core_traits.includes('家庭背景') ? 'checked' : '' %>> E. 家庭背景</label>
-          <label><input type="checkbox" name="core_traits" value="兴趣爱好相投" <%= profile && profile.core_traits && profile.core_traits.includes('兴趣爱好相投') ? 'checked' : '' %>> F. 兴趣爱好相投</label>
+        <!-- 一、基础信息 -->
+        <div class="form-section">
+          <h3>一、基础信息</h3>
+
+          <div class="form-group">
+            <label>1. 我的性别是：</label>
+            <select name="gender" required>
+              <option value="">请选择</option>
+              <option value="男" <%= profile && profile.gender === '男' ? 'selected' : '' %>>A. 男</option>
+              <option value="女" <%= profile && profile.gender === '女' ? 'selected' : '' %>>B. 女</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>2. 我希望匹配的对象性别是：</label>
+            <select name="preferred_gender" required>
+              <option value="">请选择</option>
+              <option value="男" <%= profile && profile.preferred_gender === '男' ? 'selected' : '' %>>A. 男</option>
+              <option value="女" <%= profile && profile.preferred_gender === '女' ? 'selected' : '' %>>B. 女</option>
+              <option value="不限" <%= profile && profile.preferred_gender === '不限' ? 'selected' : '' %>>C. 不限</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>3. 我来这里的首要目的是：</label>
+            <select name="purpose" required>
+              <option value="">请选择</option>
+              <option value="寻找长期恋爱伴侣" <%= profile && profile.purpose === '寻找长期恋爱伴侣' ? 'selected' : '' %>>A. 寻找长期恋爱伴侣</option>
+              <option value="寻找短期约会对象" <%= profile && profile.purpose === '寻找短期约会对象' ? 'selected' : '' %>>B. 寻找短期约会对象</option>
+              <option value="顺其自然，拓展社交" <%= profile && profile.purpose === '顺其自然，拓展社交' ? 'selected' : '' %>>C. 顺其自然，拓展社交</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>4. 我的学历阶段：</label>
+            <select name="my_grade" required>
+              <option value="">请选择</option>
+              <option value="大一" <%= profile && profile.my_grade === '大一' ? 'selected' : '' %>>A. 大一</option>
+              <option value="大二" <%= profile && profile.my_grade === '大二' ? 'selected' : '' %>>B. 大二</option>
+              <option value="大三" <%= profile && profile.my_grade === '大三' ? 'selected' : '' %>>C. 大三</option>
+              <option value="大四" <%= profile && profile.my_grade === '大四' ? 'selected' : '' %>>D. 大四</option>
+              <option value="研一" <%= profile && profile.my_grade === '研一' ? 'selected' : '' %>>E. 研一</option>
+              <option value="研二" <%= profile && profile.my_grade === '研二' ? 'selected' : '' %>>F. 研二</option>
+              <option value="研三" <%= profile && profile.my_grade === '研三' ? 'selected' : '' %>>G. 研三</option>
+              <option value="博一" <%= profile && profile.my_grade === '博一' ? 'selected' : '' %>>H. 博一</option>
+              <option value="博二" <%= profile && profile.my_grade === '博二' ? 'selected' : '' %>>I. 博二</option>
+              <option value="博三" <%= profile && profile.my_grade === '博三' ? 'selected' : '' %>>J. 博三</option>
+              <option value="博四" <%= profile && profile.my_grade === '博四' ? 'selected' : '' %>>K. 博四</option>
+              <option value="博五" <%= profile && profile.my_grade === '博五' ? 'selected' : '' %>>L. 博五</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>5. 我希望匹配对象的学历阶段范围是：</label>
+            <select name="preferred_grade" required>
+              <option value="">请选择</option>
+              <option value="大一-大四（本科）" <%= profile && profile.preferred_grade === '大一-大四（本科）' ? 'selected' : '' %>>A. 大一-大四（本科）</option>
+              <option value="研一-博五（硕博）" <%= profile && profile.preferred_grade === '研一-博五（硕博）' ? 'selected' : '' %>>B. 研一-博五（硕博）</option>
+              <option value="不限" <%= profile && profile.preferred_grade === '不限' ? 'selected' : '' %>>C. 不限</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>6. 我目前常驻的校区是：</label>
+            <select name="campus" required>
+              <option value="">请选择</option>
+              <option value="宝山" <%= profile && profile.campus === '宝山' ? 'selected' : '' %>>A. 宝山</option>
+              <option value="嘉定" <%= profile && profile.campus === '嘉定' ? 'selected' : '' %>>B. 嘉定</option>
+              <option value="延长" <%= profile && profile.campus === '延长' ? 'selected' : '' %>>C. 延长</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>7. 对于"跨校区恋爱"，我的态度是：</label>
+            <select name="cross_campus" required>
+              <option value="">请选择</option>
+              <option value="可以接受" <%= profile && profile.cross_campus === '可以接受' ? 'selected' : '' %>>A. 可以接受</option>
+              <option value="不可以接受" <%= profile && profile.cross_campus === '不可以接受' ? 'selected' : '' %>>B. 不可以接受</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>8. 我的身高（cm）：</label>
+            <select name="height" required>
+              <option value="">请选择</option>
+              <option value="140-150" <%= profile && profile.height === '140-150' ? 'selected' : '' %>>A. 140-150</option>
+              <option value="151-160" <%= profile && profile.height === '151-160' ? 'selected' : '' %>>B. 151-160</option>
+              <option value="161-170" <%= profile && profile.height === '161-170' ? 'selected' : '' %>>C. 161-170</option>
+              <option value="171-180" <%= profile && profile.height === '171-180' ? 'selected' : '' %>>D. 171-180</option>
+              <option value="181-210" <%= profile && profile.height === '181-210' ? 'selected' : '' %>>E. 181-210</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>9. 我对匹配对象的身高偏好（cm）：</label>
+            <select name="preferred_height" required>
+              <option value="">请选择</option>
+              <option value="140-150" <%= profile && profile.preferred_height === '140-150' ? 'selected' : '' %>>A. 140-150</option>
+              <option value="151-160" <%= profile && profile.preferred_height === '151-160' ? 'selected' : '' %>>B. 151-160</option>
+              <option value="161-170" <%= profile && profile.preferred_height === '161-170' ? 'selected' : '' %>>C. 161-170</option>
+              <option value="171-180" <%= profile && profile.preferred_height === '171-180' ? 'selected' : '' %>>D. 171-180</option>
+              <option value="181-210" <%= profile && profile.preferred_height === '181-210' ? 'selected' : '' %>>E. 181-210</option>
+              <option value="不限" <%= profile && profile.preferred_height === '不限' ? 'selected' : '' %>>F. 不限</option>
+            </select>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label>13. 我对异地恋的接受程度：</label>
-        <select name="long_distance" required>
-          <option value="">请选择</option>
-          <option value="完全接受" <%= profile && profile.long_distance === '完全接受' ? 'selected' : '' %>>A. 完全接受</option>
-          <option value="短期可以，长期不接受" <%= profile && profile.long_distance === '短期可以，长期不接受' ? 'selected' : '' %>>B. 短期可以，长期不接受</option>
-          <option value="完全不接受" <%= profile && profile.long_distance === '完全不接受' ? 'selected' : '' %>>C. 完全不接受</option>
-        </select>
-      </div>
-    </div>
+        <!-- 二、择偶偏好 -->
+        <div class="form-section">
+          <h3>二、择偶偏好</h3>
 
-    <!-- 三、恋爱观念 -->
-    <div class="form-section">
-      <h3 style="color: #e74c3c; margin: 20px 0 15px;">三、恋爱观念</h3>
+          <div class="form-group">
+            <label>10. 我的家乡位于：</label>
+            <select name="hometown" required>
+              <option value="">请选择</option>
+              <option value="上海市" <%= profile && profile.hometown === '上海市' ? 'selected' : '' %>>A. 上海市</option>
+              <option value="上海周边城市" <%= profile && profile.hometown === '上海周边城市' ? 'selected' : '' %>>B. 上海周边城市</option>
+              <option value="其他省份" <%= profile && profile.hometown === '其他省份' ? 'selected' : '' %>>C. 其他省份</option>
+            </select>
+          </div>
 
-      <div class="form-group">
-        <label>14. 恋爱中，我对沟通频率的期待是：</label>
-        <select name="communication" required>
-          <option value="">请选择</option>
-          <option value="每天保持联系" <%= profile && profile.communication === '每天保持联系' ? 'selected' : '' %>>A. 每天保持联系</option>
-          <option value="每周3-5次" <%= profile && profile.communication === '每周3-5次' ? 'selected' : '' %>>B. 每周3-5次</option>
-          <option value="每周1-2次" <%= profile && profile.communication === '每周1-2次' ? 'selected' : '' %>>C. 每周1-2次</option>
-          <option value="顺其自然，无固定频率" <%= profile && profile.communication === '顺其自然，无固定频率' ? 'selected' : '' %>>D. 顺其自然，无固定频率</option>
-        </select>
-      </div>
+          <div class="form-group">
+            <label>11. 我对匹配对象家乡的偏好：</label>
+            <select name="preferred_hometown" required>
+              <option value="">请选择</option>
+              <option value="上海市" <%= profile && profile.preferred_hometown === '上海市' ? 'selected' : '' %>>A. 上海市</option>
+              <option value="上海周边城市" <%= profile && profile.preferred_hometown === '上海周边城市' ? 'selected' : '' %>>B. 上海周边城市</option>
+              <option value="其他省份" <%= profile && profile.preferred_hometown === '其他省份' ? 'selected' : '' %>>C. 其他省份</option>
+              <option value="不限" <%= profile && profile.preferred_hometown === '不限' ? 'selected' : '' %>>D. 不限</option>
+            </select>
+          </div>
 
-      <div class="form-group">
-        <label>15. 对于恋爱中的消费观念，我的态度是：</label>
-        <select name="spending" required>
-          <option value="">请选择</option>
-          <option value="男方主导消费" <%= profile && profile.spending === '男方主导消费' ? 'selected' : '' %>>A. 男方主导消费</option>
-          <option value="女方主导消费" <%= profile && profile.spending === '女方主导消费' ? 'selected' : '' %>>B. 女方主导消费</option>
-          <option value="AA制" <%= profile && profile.spending === 'AA制' ? 'selected' : '' %>>C. AA制</option>
-          <option value="按需分配，互相体谅" <%= profile && profile.spending === '按需分配，互相体谅' ? 'selected' : '' %>>D. 按需分配，互相体谅</option>
-        </select>
-      </div>
+          <div class="form-group">
+            <label>12. 我更看重伴侣的核心特质（可多选）：</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="core_traits" value="性格三观契合" <%= profile && profile.core_traits && profile.core_traits.includes('性格三观契合') ? 'checked' : '' %>> 性格三观契合</label>
+              <label><input type="checkbox" name="core_traits" value="颜值气质" <%= profile && profile.core_traits && profile.core_traits.includes('颜值气质') ? 'checked' : '' %>> 颜值气质</label>
+              <label><input type="checkbox" name="core_traits" value="学历学识" <%= profile && profile.core_traits && profile.core_traits.includes('学历学识') ? 'checked' : '' %>> 学历学识</label>
+              <label><input type="checkbox" name="core_traits" value="经济能力" <%= profile && profile.core_traits && profile.core_traits.includes('经济能力') ? 'checked' : '' %>> 经济能力</label>
+              <label><input type="checkbox" name="core_traits" value="家庭背景" <%= profile && profile.core_traits && profile.core_traits.includes('家庭背景') ? 'checked' : '' %>> 家庭背景</label>
+              <label><input type="checkbox" name="core_traits" value="兴趣爱好相投" <%= profile && profile.core_traits && profile.core_traits.includes('兴趣爱好相投') ? 'checked' : '' %>> 兴趣爱好相投</label>
+            </div>
+          </div>
 
-      <div class="form-group">
-        <label>16. 我对婚前同居的看法：</label>
-        <select name="cohabitation" required>
-          <option value="">请选择</option>
-          <option value="支持，提前磨合" <%= profile && profile.cohabitation === '支持，提前磨合' ? 'selected' : '' %>>A. 支持，提前磨合</option>
-          <option value="中立，看双方意愿" <%= profile && profile.cohabitation === '中立，看双方意愿' ? 'selected' : '' %>>B. 中立，看双方意愿</option>
-          <option value="反对，保持独立" <%= profile && profile.cohabitation === '反对，保持独立' ? 'selected' : '' %>>C. 反对，保持独立</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>17. 我对婚姻的规划：</label>
-        <select name="marriage_plan" required>
-          <option value="">请选择</option>
-          <option value="毕业1-2年内结婚" <%= profile && profile.marriage_plan === '毕业1-2年内结婚' ? 'selected' : '' %>>A. 毕业1-2年内结婚</option>
-          <option value="毕业3-5年内结婚" <%= profile && profile.marriage_plan === '毕业3-5年内结婚' ? 'selected' : '' %>>B. 毕业3-5年内结婚</option>
-          <option value="暂无结婚规划" <%= profile && profile.marriage_plan === '暂无结婚规划' ? 'selected' : '' %>>C. 暂无结婚规划</option>
-          <option value="不介意" <%= profile && profile.marriage_plan === '不介意' ? 'selected' : '' %>>D. 不介意</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>18. 恋爱中，我更在意的相处模式是：</label>
-        <select name="relationship_style" required>
-          <option value="">请选择</option>
-          <option value="黏腻型，时刻陪伴" <%= profile && profile.relationship_style === '黏腻型，时刻陪伴' ? 'selected' : '' %>>A. 黏腻型，时刻陪伴</option>
-          <option value="独立型，保留个人空间" <%= profile && profile.relationship_style === '独立型，保留个人空间' ? 'selected' : '' %>>B. 独立型，保留个人空间</option>
-          <option value="平衡型，兼顾陪伴与自由" <%= profile && profile.relationship_style === '平衡型，兼顾陪伴与自由' ? 'selected' : '' %>>C. 平衡型，兼顾陪伴与自由</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- 四、生活习惯 -->
-    <div class="form-section">
-      <h3 style="color: #e74c3c; margin: 20px 0 15px;">四、生活习惯</h3>
-
-      <div class="form-group">
-        <label>19. 我的作息习惯：</label>
-        <select name="sleep_schedule" required>
-          <option value="">请选择</option>
-          <option value="早睡早起（23点前睡，7点前起）" <%= profile && profile.sleep_schedule === '早睡早起（23点前睡，7点前起）' ? 'selected' : '' %>>A. 早睡早起（23点前睡，7点前起）</option>
-          <option value="规律作息（23-24点睡，7-8点起）" <%= profile && profile.sleep_schedule === '规律作息（23-24点睡，7-8点起）' ? 'selected' : '' %>>B. 规律作息（23-24点睡，7-8点起）</option>
-          <option value="偶尔熬夜（0-1点睡）" <%= profile && profile.sleep_schedule === '偶尔熬夜（0-1点睡）' ? 'selected' : '' %>>C. 偶尔熬夜（0-1点睡）</option>
-          <option value="经常熬夜（1点后睡）" <%= profile && profile.sleep_schedule === '经常熬夜（1点后睡）' ? 'selected' : '' %>>D. 经常熬夜（1点后睡）</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>20. 我对烟酒的态度：</label>
-        <select name="smoke_alcohol" required>
-          <option value="">请选择</option>
-          <option value="不抽烟不喝酒" <%= profile && profile.smoke_alcohol === '不抽烟不喝酒' ? 'selected' : '' %>>A. 不抽烟不喝酒</option>
-          <option value="偶尔社交饮酒，不抽烟" <%= profile && profile.smoke_alcohol === '偶尔社交饮酒，不抽烟' ? 'selected' : '' %>>B. 偶尔社交饮酒，不抽烟</option>
-          <option value="偶尔抽烟饮酒" <%= profile && profile.smoke_alcohol === '偶尔抽烟饮酒' ? 'selected' : '' %>>C. 偶尔抽烟饮酒</option>
-          <option value="无禁忌" <%= profile && profile.smoke_alcohol === '无禁忌' ? 'selected' : '' %>>D. 无禁忌</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>21. 我对宠物的态度：</label>
-        <select name="pet" required>
-          <option value="">请选择</option>
-          <option value="非常喜欢，想养宠物" <%= profile && profile.pet === '非常喜欢，想养宠物' ? 'selected' : '' %>>A. 非常喜欢，想养宠物</option>
-          <option value="可以接受，不排斥" <%= profile && profile.pet === '可以接受，不排斥' ? 'selected' : '' %>>B. 可以接受，不排斥</option>
-          <option value="不喜欢，不接受养宠物" <%= profile && profile.pet === '不喜欢，不接受养宠物' ? 'selected' : '' %>>C. 不喜欢，不接受养宠物</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>22. 恋爱中，我对社交圈公开的态度：</label>
-        <select name="social_public" required>
-          <option value="">请选择</option>
-          <option value="主动公开，介绍给亲友" <%= profile && profile.social_public === '主动公开，介绍给亲友' ? 'selected' : '' %>>A. 主动公开，介绍给亲友</option>
-          <option value="低调公开，仅亲密好友知晓" <%= profile && profile.social_public === '低调公开，仅亲密好友知晓' ? 'selected' : '' %>>B. 低调公开，仅亲密好友知晓</option>
-          <option value="不公开，保持隐私" <%= profile && profile.social_public === '不公开，保持隐私' ? 'selected' : '' %>>C. 不公开，保持隐私</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>23. 我对伴侣的社交边界要求：</label>
-        <select name="social_boundary" required>
-          <option value="">请选择</option>
-          <option value="无特殊要求，信任为主" <%= profile && profile.social_boundary === '无特殊要求，信任为主' ? 'selected' : '' %>>A. 无特殊要求，信任为主</option>
-          <option value="避免与异性过度亲密" <%= profile && profile.social_boundary === '避免与异性过度亲密' ? 'selected' : '' %>>B. 避免与异性过度亲密</option>
-          <option value="严格限制异性单独接触" <%= profile && profile.social_boundary === '严格限制异性单独接触' ? 'selected' : '' %>>C. 严格限制异性单独接触</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>24. 兴趣爱好标签（可多选）：</label>
-        <div class="checkbox-group">
-          <label><input type="checkbox" name="interests" value="跑步" <%= profile && profile.interests && profile.interests.includes('跑步') ? 'checked' : '' %>> A. 跑步</label>
-          <label><input type="checkbox" name="interests" value="音乐" <%= profile && profile.interests && profile.interests.includes('音乐') ? 'checked' : '' %>> B. 音乐</label>
-          <label><input type="checkbox" name="interests" value="游戏" <%= profile && profile.interests && profile.interests.includes('游戏') ? 'checked' : '' %>> C. 游戏</label>
-          <label><input type="checkbox" name="interests" value="摄影" <%= profile && profile.interests && profile.interests.includes('摄影') ? 'checked' : '' %>> D. 摄影</label>
-          <label><input type="checkbox" name="interests" value="美食" <%= profile && profile.interests && profile.interests.includes('美食') ? 'checked' : '' %>> E. 美食</label>
-          <label><input type="checkbox" name="interests" value="电影" <%= profile && profile.interests && profile.interests.includes('电影') ? 'checked' : '' %>> F. 电影</label>
-          <label><input type="checkbox" name="interests" value="阅读" <%= profile && profile.interests && profile.interests.includes('阅读') ? 'checked' : '' %>> G. 阅读</label>
-          <label><input type="checkbox" name="interests" value="旅行" <%= profile && profile.interests && profile.interests.includes('旅行') ? 'checked' : '' %>> H. 旅行</label>
-          <label><input type="checkbox" name="interests" value="健身" <%= profile && profile.interests && profile.interests.includes('健身') ? 'checked' : '' %>> I. 健身</label>
-          <label><input type="checkbox" name="interests" value="编程" <%= profile && profile.interests && profile.interests.includes('编程') ? 'checked' : '' %>> J. 编程</label>
+          <div class="form-group">
+            <label>13. 我对异地恋的接受程度：</label>
+            <select name="long_distance" required>
+              <option value="">请选择</option>
+              <option value="完全接受" <%= profile && profile.long_distance === '完全接受' ? 'selected' : '' %>>A. 完全接受</option>
+              <option value="短期可以，长期不接受" <%= profile && profile.long_distance === '短期可以，长期不接受' ? 'selected' : '' %>>B. 短期可以，长期不接受</option>
+              <option value="完全不接受" <%= profile && profile.long_distance === '完全不接受' ? 'selected' : '' %>>C. 完全不接受</option>
+            </select>
+          </div>
         </div>
-      </div>
+
+        <!-- 三、恋爱观念 -->
+        <div class="form-section">
+          <h3>三、恋爱观念</h3>
+
+          <div class="form-group">
+            <label>14. 恋爱中，我对沟通频率的期待是：</label>
+            <select name="communication" required>
+              <option value="">请选择</option>
+              <option value="每天保持联系" <%= profile && profile.communication === '每天保持联系' ? 'selected' : '' %>>A. 每天保持联系</option>
+              <option value="每周3-5次" <%= profile && profile.communication === '每周3-5次' ? 'selected' : '' %>>B. 每周3-5次</option>
+              <option value="每周1-2次" <%= profile && profile.communication === '每周1-2次' ? 'selected' : '' %>>C. 每周1-2次</option>
+              <option value="顺其自然，无固定频率" <%= profile && profile.communication === '顺其自然，无固定频率' ? 'selected' : '' %>>D. 顺其自然，无固定频率</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>15. 对于恋爱中的消费观念，我的态度是：</label>
+            <select name="spending" required>
+              <option value="">请选择</option>
+              <option value="男方主导消费" <%= profile && profile.spending === '男方主导消费' ? 'selected' : '' %>>A. 男方主导消费</option>
+              <option value="女方主导消费" <%= profile && profile.spending === '女方主导消费' ? 'selected' : '' %>>B. 女方主导消费</option>
+              <option value="AA制" <%= profile && profile.spending === 'AA制' ? 'selected' : '' %>>C. AA制</option>
+              <option value="按需分配，互相体谅" <%= profile && profile.spending === '按需分配，互相体谅' ? 'selected' : '' %>>D. 按需分配，互相体谅</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>16. 我对婚前同居的看法：</label>
+            <select name="cohabitation" required>
+              <option value="">请选择</option>
+              <option value="支持，提前磨合" <%= profile && profile.cohabitation === '支持，提前磨合' ? 'selected' : '' %>>A. 支持，提前磨合</option>
+              <option value="中立，看双方意愿" <%= profile && profile.cohabitation === '中立，看双方意愿' ? 'selected' : '' %>>B. 中立，看双方意愿</option>
+              <option value="反对，保持独立" <%= profile && profile.cohabitation === '反对，保持独立' ? 'selected' : '' %>>C. 反对，保持独立</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>17. 我对婚姻的规划：</label>
+            <select name="marriage_plan" required>
+              <option value="">请选择</option>
+              <option value="毕业1-2年内结婚" <%= profile && profile.marriage_plan === '毕业1-2年内结婚' ? 'selected' : '' %>>A. 毕业1-2年内结婚</option>
+              <option value="毕业3-5年内结婚" <%= profile && profile.marriage_plan === '毕业3-5年内结婚' ? 'selected' : '' %>>B. 毕业3-5年内结婚</option>
+              <option value="暂无结婚规划" <%= profile && profile.marriage_plan === '暂无结婚规划' ? 'selected' : '' %>>C. 暂无结婚规划</option>
+              <option value="不介意" <%= profile && profile.marriage_plan === '不介意' ? 'selected' : '' %>>D. 不介意</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>18. 恋爱中，我更在意的相处模式是：</label>
+            <select name="relationship_style" required>
+              <option value="">请选择</option>
+              <option value="黏腻型，时刻陪伴" <%= profile && profile.relationship_style === '黏腻型，时刻陪伴' ? 'selected' : '' %>>A. 黏腻型，时刻陪伴</option>
+              <option value="独立型，保留个人空间" <%= profile && profile.relationship_style === '独立型，保留个人空间' ? 'selected' : '' %>>B. 独立型，保留个人空间</option>
+              <option value="平衡型，兼顾陪伴与自由" <%= profile && profile.relationship_style === '平衡型，兼顾陪伴与自由' ? 'selected' : '' %>>C. 平衡型，兼顾陪伴与自由</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 四、生活习惯 -->
+        <div class="form-section">
+          <h3>四、生活习惯</h3>
+
+          <div class="form-group">
+            <label>19. 我的作息习惯：</label>
+            <select name="sleep_schedule" required>
+              <option value="">请选择</option>
+              <option value="早睡早起（23点前睡，7点前起）" <%= profile && profile.sleep_schedule === '早睡早起（23点前睡，7点前起）' ? 'selected' : '' %>>A. 早睡早起（23点前睡，7点前起）</option>
+              <option value="规律作息（23-24点睡，7-8点起）" <%= profile && profile.sleep_schedule === '规律作息（23-24点睡，7-8点起）' ? 'selected' : '' %>>B. 规律作息（23-24点睡，7-8点起）</option>
+              <option value="偶尔熬夜（0-1点睡）" <%= profile && profile.sleep_schedule === '偶尔熬夜（0-1点睡）' ? 'selected' : '' %>>C. 偶尔熬夜（0-1点睡）</option>
+              <option value="经常熬夜（1点后睡）" <%= profile && profile.sleep_schedule === '经常熬夜（1点后睡）' ? 'selected' : '' %>>D. 经常熬夜（1点后睡）</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>20. 我对烟酒的态度：</label>
+            <select name="smoke_alcohol" required>
+              <option value="">请选择</option>
+              <option value="不抽烟不喝酒" <%= profile && profile.smoke_alcohol === '不抽烟不喝酒' ? 'selected' : '' %>>A. 不抽烟不喝酒</option>
+              <option value="偶尔社交饮酒，不抽烟" <%= profile && profile.smoke_alcohol === '偶尔社交饮酒，不抽烟' ? 'selected' : '' %>>B. 偶尔社交饮酒，不抽烟</option>
+              <option value="偶尔抽烟饮酒" <%= profile && profile.smoke_alcohol === '偶尔抽烟饮酒' ? 'selected' : '' %>>C. 偶尔抽烟饮酒</option>
+              <option value="无禁忌" <%= profile && profile.smoke_alcohol === '无禁忌' ? 'selected' : '' %>>D. 无禁忌</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>21. 我对宠物的态度：</label>
+            <select name="pet" required>
+              <option value="">请选择</option>
+              <option value="非常喜欢，想养宠物" <%= profile && profile.pet === '非常喜欢，想养宠物' ? 'selected' : '' %>>A. 非常喜欢，想养宠物</option>
+              <option value="可以接受，不排斥" <%= profile && profile.pet === '可以接受，不排斥' ? 'selected' : '' %>>B. 可以接受，不排斥</option>
+              <option value="不喜欢，不接受养宠物" <%= profile && profile.pet === '不喜欢，不接受养宠物' ? 'selected' : '' %>>C. 不喜欢，不接受养宠物</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>22. 恋爱中，我对社交圈公开的态度：</label>
+            <select name="social_public" required>
+              <option value="">请选择</option>
+              <option value="主动公开，介绍给亲友" <%= profile && profile.social_public === '主动公开，介绍给亲友' ? 'selected' : '' %>>A. 主动公开，介绍给亲友</option>
+              <option value="低调公开，仅亲密好友知晓" <%= profile && profile.social_public === '低调公开，仅亲密好友知晓' ? 'selected' : '' %>>B. 低调公开，仅亲密好友知晓</option>
+              <option value="不公开，保持隐私" <%= profile && profile.social_public === '不公开，保持隐私' ? 'selected' : '' %>>C. 不公开，保持隐私</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>23. 我对伴侣的社交边界要求：</label>
+            <select name="social_boundary" required>
+              <option value="">请选择</option>
+              <option value="无特殊要求，信任为主" <%= profile && profile.social_boundary === '无特殊要求，信任为主' ? 'selected' : '' %>>A. 无特殊要求，信任为主</option>
+              <option value="避免与异性过度亲密" <%= profile && profile.social_boundary === '避免与异性过度亲密' ? 'selected' : '' %>>B. 避免与异性过度亲密</option>
+              <option value="严格限制异性单独接触" <%= profile && profile.social_boundary === '严格限制异性单独接触' ? 'selected' : '' %>>C. 严格限制异性单独接触</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>24. 兴趣爱好标签（可多选）：</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="interests" value="跑步" <%= profile && profile.interests && profile.interests.includes('跑步') ? 'checked' : '' %>> 跑步</label>
+              <label><input type="checkbox" name="interests" value="音乐" <%= profile && profile.interests && profile.interests.includes('音乐') ? 'checked' : '' %>> 音乐</label>
+              <label><input type="checkbox" name="interests" value="游戏" <%= profile && profile.interests && profile.interests.includes('游戏') ? 'checked' : '' %>> 游戏</label>
+              <label><input type="checkbox" name="interests" value="摄影" <%= profile && profile.interests && profile.interests.includes('摄影') ? 'checked' : '' %>> 摄影</label>
+              <label><input type="checkbox" name="interests" value="美食" <%= profile && profile.interests && profile.interests.includes('美食') ? 'checked' : '' %>> 美食</label>
+              <label><input type="checkbox" name="interests" value="电影" <%= profile && profile.interests && profile.interests.includes('电影') ? 'checked' : '' %>> 电影</label>
+              <label><input type="checkbox" name="interests" value="阅读" <%= profile && profile.interests && profile.interests.includes('阅读') ? 'checked' : '' %>> 阅读</label>
+              <label><input type="checkbox" name="interests" value="旅行" <%= profile && profile.interests && profile.interests.includes('旅行') ? 'checked' : '' %>> 旅行</label>
+              <label><input type="checkbox" name="interests" value="健身" <%= profile && profile.interests && profile.interests.includes('健身') ? 'checked' : '' %>> 健身</label>
+              <label><input type="checkbox" name="interests" value="编程" <%= profile && profile.interests && profile.interests.includes('编程') ? 'checked' : '' %>> 编程</label>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn" style="margin-top: 20px; width: 100%;">提交问卷</button>
+      </form>
     </div>
+  </div>
 
-    <button type="submit" class="btn" style="margin-top: 20px;">提交问卷</button>
-  </form>
-</div>
+  <footer class="footer">
+    <p>© 2026 心有所SHU - 上海大学校园交友匹配系统</p>
+  </footer>
 
-<style>
-.form-section {
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-}
-.checkbox-group label {
-  display: inline-block;
-  margin-right: 15px;
-  margin-bottom: 8px;
-  cursor: pointer;
-}
-</style>
+  <script>
+  <% if (typeof isDev !== 'undefined' && isDev) { %>
+  document.getElementById('devFillBtn').addEventListener('click', function() {
+    const selects = document.querySelectorAll('select[name]:not([name="core_traits"]):not([name="interests"])');
+    selects.forEach(select => {
+      if (select.options.length > 1) {
+        select.selectedIndex = 1;
+      }
+    });
+
+    const coreTraits = document.querySelectorAll('input[name="core_traits"]');
+    for (let i = 0; i < Math.min(3, coreTraits.length); i++) {
+      coreTraits[i].checked = true;
+    }
+
+    const interests = document.querySelectorAll('input[name="interests"]');
+    for (let i = 0; i < Math.min(5, interests.length); i++) {
+      interests[i].checked = true;
+    }
+
+    alert('已自动填写测试数据');
+  });
+  <% } %>
+  </script>
+</body>
+</html>
