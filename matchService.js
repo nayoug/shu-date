@@ -26,6 +26,7 @@ const GRADE_ORDER = {
   '研一': 5, '研二': 6, '研三': 7,
   '博一': 8, '博二': 9, '博三': 10, '博四': 11, '博五': 12
 };
+const WEEKLY_MATCH_LOCK_NAMESPACE = 9724;
 
 function jaccardSimilarity(set1, set2) {
   if (!set1 || !set2) return 0;
@@ -84,38 +85,40 @@ function checkHeightMatch(preference, height) {
   return !(preferredRange[1] < targetRange[0] || preferredRange[0] > targetRange[1]);
 }
 
+function isCandidateCompatible(myProfile, profile) {
+  if (myProfile.preferred_gender && myProfile.preferred_gender !== '不限') {
+    if (profile.gender !== myProfile.preferred_gender) return false;
+  }
+
+  if (profile.preferred_gender && profile.preferred_gender !== '不限') {
+    if (myProfile.gender !== profile.preferred_gender) return false;
+  }
+
+  if (myProfile.preferred_grade && !checkGradeMatch(myProfile.preferred_grade, profile.my_grade)) {
+    return false;
+  }
+
+  if (profile.preferred_grade && !checkGradeMatch(profile.preferred_grade, myProfile.my_grade)) {
+    return false;
+  }
+
+  if (myProfile.preferred_height && myProfile.preferred_height !== '不限') {
+    if (!checkHeightMatch(myProfile.preferred_height, profile.height)) return false;
+  }
+
+  if (myProfile.cross_campus === '不可以接受' && profile.campus !== myProfile.campus) {
+    return false;
+  }
+
+  if (getGradeDiff(myProfile.my_grade, profile.my_grade) > 3) {
+    return false;
+  }
+
+  return true;
+}
+
 function filterCandidates(myProfile, allProfiles) {
-  return allProfiles.filter(profile => {
-    if (myProfile.preferred_gender && myProfile.preferred_gender !== '不限') {
-      if (profile.gender !== myProfile.preferred_gender) return false;
-    }
-
-    if (profile.preferred_gender && profile.preferred_gender !== '不限') {
-      if (myProfile.gender !== profile.preferred_gender) return false;
-    }
-
-    if (myProfile.preferred_grade && !checkGradeMatch(myProfile.preferred_grade, profile.my_grade)) {
-      return false;
-    }
-
-    if (profile.preferred_grade && !checkGradeMatch(profile.preferred_grade, myProfile.my_grade)) {
-      return false;
-    }
-
-    if (myProfile.preferred_height && myProfile.preferred_height !== '不限') {
-      if (!checkHeightMatch(myProfile.preferred_height, profile.height)) return false;
-    }
-
-    if (myProfile.cross_campus === '不可以接受' && profile.campus !== myProfile.campus) {
-      return false;
-    }
-
-    if (getGradeDiff(myProfile.my_grade, profile.my_grade) > 3) {
-      return false;
-    }
-
-    return true;
-  });
+  return allProfiles.filter(profile => isCandidateCompatible(myProfile, profile));
 }
 
 function calculateInterestScore(myProfile, theirProfile) {
@@ -179,6 +182,61 @@ function formatMatchResult(candidate, score) {
   };
 }
 
+function formatWeeklyMatchUser(participant) {
+  return {
+    id: participant.user_id,
+    email: participant.email,
+    name: participant.name,
+    my_grade: participant.my_grade
+  };
+}
+
+async function loadVerifiedParticipants(client = null) {
+  const sql = `
+    SELECT u.id AS user_id, u.email, u.name, p.*
+    FROM users u
+    JOIN profiles p ON u.id = p.user_id
+    WHERE u.verified = 1
+    ORDER BY u.id ASC
+  `;
+
+  if (client) {
+    const result = await client.query(sql);
+    return result.rows;
+  }
+
+  return await dbModule.query(sql);
+}
+
+function buildCandidateMap(participants) {
+  const candidateMap = new Map();
+
+  for (const participant of participants) {
+    candidateMap.set(participant.user_id, []);
+  }
+
+  for (let i = 0; i < participants.length; i += 1) {
+    const current = participants[i];
+
+    for (let j = 0; j < participants.length; j += 1) {
+      if (i === j) continue;
+
+      const candidate = participants[j];
+      if (!isCandidateCompatible(current, candidate)) continue;
+
+      candidateMap.get(current.user_id).push(
+        formatMatchResult(candidate, calculateMatchScore(current, candidate))
+      );
+    }
+  }
+
+  for (const matches of candidateMap.values()) {
+    matches.sort((a, b) => b.score - a.score || a.user_id - b.user_id);
+  }
+
+  return candidateMap;
+}
+
 async function getCurrentWeekMatch(userId) {
   const weekNumber = getWeekNumber();
 
@@ -199,36 +257,18 @@ async function getCurrentWeekMatch(userId) {
     JOIN profiles p1 ON p1.user_id = u1.id
     JOIN profiles p2 ON p2.user_id = u2.id
     WHERE m.week_number = $2 AND (m.user_id_1 = $1 OR m.user_id_2 = $1)
+    ORDER BY m.matched_at DESC, m.id DESC
     LIMIT 1
   `, [userId, weekNumber]);
 }
 
 async function findMatches(userId) {
-  const myUser = await dbModule.queryOne('SELECT * FROM users WHERE id = $1', [userId]);
-  if (!myUser) return [];
-
-  const myProfile = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userId]);
+  const participants = await loadVerifiedParticipants();
+  const myProfile = participants.find(participant => participant.user_id === userId);
   if (!myProfile) return [];
 
-  const allProfiles = await dbModule.query(`
-    SELECT u.id AS user_id, u.email, u.name, p.*
-    FROM users u
-    JOIN profiles p ON u.id = p.user_id
-    WHERE u.id != $1 AND u.verified = 1
-  `, [userId]);
-
-  if (allProfiles.length === 0) return [];
-
-  const candidates = filterCandidates(myProfile, allProfiles);
-  if (candidates.length === 0) return [];
-
-  const scored = candidates.map(candidate => {
-    const score = calculateMatchScore(myProfile, candidate);
-    return formatMatchResult(candidate, score);
-  });
-
-  scored.sort((a, b) => b.score - a.score);
-  return scored;
+  const candidateMap = buildCandidateMap(participants);
+  return candidateMap.get(userId) || [];
 }
 
 async function getTopMatches(userId, topN = 5) {
@@ -253,57 +293,65 @@ async function getMatchesForDisplay(userId, topN = 10) {
 
 async function saveWeeklyMatches() {
   const weekNumber = getWeekNumber();
-  const existing = await dbModule.queryOne('SELECT id FROM matches WHERE week_number = $1', [weekNumber]);
-  if (existing) {
-    return { success: false, message: '本周已执行匹配' };
-  }
-
-  const users = await dbModule.query(`
-    SELECT u.id, u.email, u.name, p.my_grade
-    FROM users u
-    JOIN profiles p ON u.id = p.user_id
-    WHERE u.verified = 1
-  `);
-
-  if (users.length < 2) {
-    return { success: false, message: '用户数量不足' };
-  }
-
-  const matched = new Set();
-  const results = [];
   const client = await dbModule.pool.connect();
 
   try {
-    await client.query('BEGIN');
+    await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
 
-    for (const user of users) {
-      if (matched.has(user.id)) continue;
+    const lockResult = await client.query(
+      'SELECT pg_try_advisory_xact_lock($1, $2) AS locked',
+      [WEEKLY_MATCH_LOCK_NAMESPACE, weekNumber]
+    );
 
-      const matches = (await findMatches(user.id)).filter(match => !matched.has(match.user_id));
-      if (matches.length === 0) continue;
+    if (!lockResult.rows[0]?.locked) {
+      await client.query('ROLLBACK');
+      return { success: false, message: '本周匹配正在执行，请稍后刷新', results: [] };
+    }
 
-      const bestMatch = matches[0];
-      await client.query(
-        'INSERT INTO matches (user_id_1, user_id_2, score, week_number) VALUES ($1, $2, $3, $4)',
-        [user.id, bestMatch.user_id, bestMatch.score, weekNumber]
-      );
+    const existing = await client.query(
+      'SELECT id FROM matches WHERE week_number = $1 ORDER BY matched_at DESC, id DESC LIMIT 1',
+      [weekNumber]
+    );
+    if (existing.rows[0]) {
+      await client.query('ROLLBACK');
+      return { success: false, message: '本周已执行匹配', results: [] };
+    }
 
-      matched.add(user.id);
-      matched.add(bestMatch.user_id);
+    const participants = await loadVerifiedParticipants(client);
+    if (participants.length < 2) {
+      await client.query('ROLLBACK');
+      return { success: false, message: '用户数量不足', results: [] };
+    }
+
+    const participantsById = new Map(participants.map(participant => [participant.user_id, participant]));
+    const candidateMap = buildCandidateMap(participants);
+    const matched = new Set();
+    const results = [];
+    const rowsToInsert = [];
+
+    for (const participant of participants) {
+      if (matched.has(participant.user_id)) continue;
+
+      const bestMatch = (candidateMap.get(participant.user_id) || [])
+        .find(match => !matched.has(match.user_id));
+      if (!bestMatch) continue;
+
+      const matchedParticipant = participantsById.get(bestMatch.user_id);
+      if (!matchedParticipant) continue;
+
+      rowsToInsert.push([
+        participant.user_id,
+        matchedParticipant.user_id,
+        bestMatch.score,
+        weekNumber
+      ]);
+
+      matched.add(participant.user_id);
+      matched.add(matchedParticipant.user_id);
 
       results.push({
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          my_grade: user.my_grade
-        },
-        match: {
-          id: bestMatch.user_id,
-          email: bestMatch.email,
-          name: bestMatch.name,
-          my_grade: bestMatch.my_grade
-        },
+        user: formatWeeklyMatchUser(participant),
+        match: formatWeeklyMatchUser(matchedParticipant),
         score: bestMatch.score
       });
     }
@@ -312,6 +360,17 @@ async function saveWeeklyMatches() {
       await client.query('ROLLBACK');
       return { success: false, message: '暂无满足条件的匹配结果', results: [] };
     }
+
+    const insertSql = rowsToInsert.map((_, index) => {
+      const offset = index * 4;
+      return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4})`;
+    }).join(', ');
+    const insertParams = rowsToInsert.flat();
+
+    await client.query(
+      `INSERT INTO matches (user_id_1, user_id_2, score, week_number) VALUES ${insertSql}`,
+      insertParams
+    );
 
     await client.query('COMMIT');
     return { success: true, message: `匹配完成，共 ${results.length} 对`, results };
