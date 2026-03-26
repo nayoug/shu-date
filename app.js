@@ -7,6 +7,7 @@ require('dotenv').config();
 let db;
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
+const sessionSecret = process.env.SESSION_SECRET;
 const ADMIN_EMAILS = new Set(
   (process.env.ADMIN_EMAILS || 'admin@shu.edu.cn')
     .split(',')
@@ -15,6 +16,9 @@ const ADMIN_EMAILS = new Set(
 );
 
 if (isProduction) {
+  if (!sessionSecret) {
+    throw new Error('SESSION_SECRET must be set in production');
+  }
   app.set('trust proxy', 1);
 }
 
@@ -24,7 +28,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'xin_yousuo_shu_secret',
+  secret: sessionSecret || 'xin_yousuo_shu_secret',
   resave: false,
   saveUninitialized: false,
   cookie: {

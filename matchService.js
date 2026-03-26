@@ -117,10 +117,6 @@ function isCandidateCompatible(myProfile, profile) {
   return true;
 }
 
-function filterCandidates(myProfile, allProfiles) {
-  return allProfiles.filter(profile => isCandidateCompatible(myProfile, profile));
-}
-
 function calculateInterestScore(myProfile, theirProfile) {
   return jaccardSimilarity(myProfile.interests, theirProfile.interests);
 }

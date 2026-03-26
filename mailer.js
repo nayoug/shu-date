@@ -2,12 +2,14 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 const isProduction = process.env.NODE_ENV === 'production';
 
-console.log('SMTP配置:', {
-  host: process.env.SMTP_HOST,
-  user: process.env.SMTP_USER,
-  pass: process.env.SMTP_PASS ? '已设置' : '未设置',
-  from: process.env.FROM_EMAIL
-});
+if (!isProduction) {
+  console.log('SMTP配置状态:', {
+    hostSet: !!process.env.SMTP_HOST,
+    userSet: !!process.env.SMTP_USER,
+    passSet: !!process.env.SMTP_PASS,
+    fromSet: !!process.env.FROM_EMAIL
+  });
+}
 
 let transporter = null;
 
