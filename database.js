@@ -1,9 +1,35 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+// 解析连接字符串并使用6543端口（Pooler）
+function getPoolConfig() {
+  const connectionString = process.env.DATABASE_URL;
+
+  // 如果使用5432端口，改为6543（Pooler端口）
+  let adjustedUrl = connectionString;
+  if (connectionString.includes(':5432/')) {
+    adjustedUrl = connectionString.replace(':5432/', ':6543/');
+  }
+
+  return {
+    connectionString: adjustedUrl,
+    ssl: {
+      rejectUnauthorized: false,
+      ca: undefined,
+      key: undefined,
+      cert: undefined
+    },
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000
+  };
+}
+
+const pool = new Pool(getPoolConfig());
+
+// 测试连接
+pool.on('error', (err) => {
+  console.error('Unexpected database pool error:', err.message);
 });
 
 // 同步缓存（模拟同步行为）
