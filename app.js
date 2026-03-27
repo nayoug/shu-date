@@ -3,6 +3,7 @@ const session = require('express-session');
 const crypto = require('crypto');
 const path = require('path');
 require('dotenv').config();
+const lovetypeService = require('./lovetypeService');
 
 let db;
 const app = express();
@@ -123,10 +124,32 @@ function destroySession(req) {
   });
 }
 
+function buildProfilePageModel(req, profile) {
+  const lovetypeAnswers = lovetypeService.parseStoredAnswers(profile?.lovetype_answers);
+  const hasLovetypeAnswers = Object.keys(lovetypeAnswers).length > 0;
+  const lovetypeAssessment = hasLovetypeAnswers ? lovetypeService.calculateLoveType(lovetypeAnswers) : null;
+
+  return {
+    title: '填写问卷',
+    user: req.user,
+    profile,
+    lovetypeQuestions: lovetypeService.LOVETYPE_QUESTIONS,
+    lovetypeScaleOptions: lovetypeService.LOVETYPE_SCALE_OPTIONS,
+    lovetypeAnswers,
+    lovetypeAssessment,
+    lovetypeResult: lovetypeAssessment ? lovetypeAssessment.result : null,
+    isAdmin: req.isAdmin,
+    isDev: !isProduction,
+    message: req.query.msg,
+    messageType: req.query.type
+  };
+}
+
 // ============ 路由 ============
 
 // 首页
 app.get('/', async (req, res) => {
+  console.log('[DEBUG] 首页 sessionID:', req.sessionID, 'userId:', req.session.userId);
   let user = null;
   if (req.session.userId) {
     const u = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
@@ -156,8 +179,7 @@ app.post('/login', async (req, res) => {
 
   // 1. 定义白名单（把开发者的邮箱放这里）
   const whiteList = [
-    'kingguog@gmail.com',
-    'joyce_guoy@163.com' // 也可以加上你自己的常用邮箱方便测试
+    'admain@gmail.com'
   ];
 
   // 2. 只有既不在白名单，又不符合学校后缀的邮箱才会被拦截
@@ -236,12 +258,31 @@ app.get('/login/verify/:code', async (req, res) => {
   console.log('[DEBUG] /login/verify 接收到的 code:', req.params.code);
   console.log('[DEBUG] 当前时间:', new Date().toISOString());
 
-  const user = await db.queryOne(`
-    UPDATE users
-    SET login_code = NULL, login_code_expire = NULL
-    WHERE login_code = $1 AND login_code_expire > NOW()
-    RETURNING id
-  `, [req.params.code]);
+  const loginCode = req.params.code;
+
+  console.log('[DEBUG] 查询测试用户前的数据库状态:');
+  const testUserCheck = await db.queryOne('SELECT id, email, login_code, login_code_expire FROM users WHERE id = 12');
+  console.log('[DEBUG] id=12 用户:', testUserCheck);
+
+  // 检查是否为测试用户 (id=1, login_code='abc123456')，测试用户不刷新验证码
+  const isTestUser = loginCode === 'abc123456';
+
+  let user;
+  if (isTestUser) {
+    // 测试用户: 只查询不更新
+    user = await db.queryOne(`
+      SELECT id FROM users
+      WHERE login_code = $1
+    `, [loginCode]);
+  } else {
+    // 普通用户: 使用后清空验证码
+    user = await db.queryOne(`
+      UPDATE users
+      SET login_code = NULL, login_code_expire = NULL
+      WHERE login_code = $1 AND login_code_expire > NOW()
+      RETURNING id
+    `, [loginCode]);
+  }
 
   console.log('[DEBUG] 查询结果 user:', user);
 
@@ -255,9 +296,33 @@ app.get('/login/verify/:code', async (req, res) => {
   }
 
   try {
-    await regenerateSession(req);
-    req.session.userId = user.id;
-    await saveSession(req);
+    console.log('[DEBUG] 准备建立会话, user.id:', user.id);
+
+    if (isTestUser) {
+      // 测试用户: 跳过 session 重新生成，直接设置用户
+      req.session.userId = user.id;
+      await saveSession(req);
+    } else {
+      // 普通用户: 重新生成 session 以防安全
+      await regenerateSession(req);
+      req.session.userId = user.id;
+      await saveSession(req);
+    }
+
+    console.log('[DEBUG] 会话已保存, sessionID:', req.sessionID, 'userId:', req.session.userId);
+
+    // 测试用户: 直接 render 首页而非重定向，确保 session 正确传递
+    if (isTestUser) {
+      const u = await db.queryOne('SELECT * FROM users WHERE id = $1', [user.id]);
+      const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [user.id]);
+      const testUser = { ...u, hasProfile: !!profile };
+      return res.render('index', {
+        title: '首页',
+        user: testUser,
+        message: '✅ 测试用户登录成功！sessionId=' + req.sessionID,
+        messageType: 'success'
+      });
+    }
   } catch (error) {
     console.error('建立登录会话失败:', error);
     try {
@@ -283,13 +348,7 @@ app.get('/register', (req, res) => {
 // 个人资料页（问卷）
 app.get('/profile', isLoggedIn, async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
-  res.render('profile', {
-    title: '填写问卷',
-    user: req.user,
-    profile,
-    isAdmin: req.isAdmin,
-    isDev: !isProduction
-  });
+  res.render('profile', buildProfilePageModel(req, profile));
 });
 
 // 提交问卷
@@ -301,18 +360,51 @@ app.post('/survey/submit', isLoggedIn, async (req, res) => {
     return val || '';
   };
 
+  const lovetypeAnswerMap = {};
+  lovetypeService.LOVETYPE_QUESTIONS.forEach(question => {
+    lovetypeAnswerMap[question.id] = data[`lovetype_${question.id}`] || '0';
+  });
+  const lovetypeAssessment = lovetypeService.calculateLoveType(lovetypeAnswerMap);
+
   const fields = [
-    'gender', 'preferred_gender', 'purpose', 'my_grade', 'preferred_grade',
-    'campus', 'cross_campus', 'height', 'preferred_height',
-    'hometown', 'preferred_hometown', 'core_traits', 'long_distance',
-    'communication', 'spending', 'cohabitation', 'marriage_plan', 'relationship_style',
-    'sleep_schedule', 'smoke_alcohol', 'pet', 'social_public', 'social_boundary', 'interests'
+    // 基础信息
+    'gender', 'age', 'preferred_gender', 'purpose', 'my_grade',
+    'age_diff_min', 'age_diff_max', 'campus', 'accepted_campus',
+    'height_min', 'height_max', 'preferred_height_min', 'preferred_height_max',
+    // 择偶偏好
+    'hometown', 'preferred_hometown', 'core_traits',
+    // 恋爱观念
+    'communication', 'cohabitation', 'marriage_plan', 'relationship_style',
+    // 生活习惯
+    'sleep_pattern', 'diet_preference', 'spice_tolerance', 'date_preference', 'spending_style',
+    'smoking_habit', 'partner_smoking', 'drinking_habit', 'partner_drinking',
+    'pet', 'social_public', 'social_boundary',
+    // 兴趣爱好
+    'interests', 'partner_interest',
+    // LoveType16
+    'lovetype_answers', 'lovetype_code', 'lovetype_scores'
   ];
 
   const values = {};
   fields.forEach(f => {
-    if (f === 'core_traits' || f === 'interests') {
+    if (f === 'core_traits' || f === 'interests' || f === 'accepted_campus') {
       values[f] = processMultiSelect(data[f]);
+    } else if (f === 'lovetype_answers') {
+      values[f] = JSON.stringify(lovetypeAssessment.answers);
+    } else if (f === 'lovetype_code') {
+      values[f] = lovetypeAssessment.code;
+    } else if (f === 'lovetype_scores') {
+      values[f] = JSON.stringify(lovetypeAssessment.scores);
+    } else if (f === 'age_diff_min' || f === 'age_diff_max' ||
+               f === 'height_min' || f === 'height_max' ||
+               f === 'preferred_height_min' || f === 'preferred_height_max' ||
+               f === 'sleep_pattern' || f === 'diet_preference' ||
+               f === 'spice_tolerance' || f === 'date_preference' ||
+               f === 'spending_style' || f === 'smoking_habit' ||
+               f === 'partner_smoking' || f === 'drinking_habit' ||
+               f === 'partner_drinking' || f === 'partner_interest') {
+      // 整数字段
+      values[f] = data[f] ? parseInt(data[f], 10) : null;
     } else {
       values[f] = data[f] || null;
     }
@@ -331,7 +423,7 @@ app.post('/survey/submit', isLoggedIn, async (req, res) => {
     await db.execute(`INSERT INTO profiles (${cols}) VALUES ($1, ${placeholders})`, params);
   }
 
-  res.redirect('/?msg=问卷已保存&type=success');
+  res.redirect('/profile?msg=问卷已保存&type=success');
 });
 
 // 旧版保存个人资料（兼容）

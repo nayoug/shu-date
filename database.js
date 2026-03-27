@@ -56,11 +56,38 @@ async function initDatabase() {
       social_public TEXT,
       social_boundary TEXT,
       interests TEXT,
+      lovetype_answers TEXT,
+      lovetype_code TEXT,
+      lovetype_scores TEXT,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `);
+
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS lovetype_answers TEXT');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS lovetype_code TEXT');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS lovetype_scores TEXT');
+
+  // 新增字段 (2026-03 问卷更新)
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age TEXT');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age_diff_min INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age_diff_max INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS accepted_campus TEXT');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS height_min INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS height_max INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS preferred_height_min INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS preferred_height_max INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS sleep_pattern INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS diet_preference INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS spice_tolerance INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS date_preference INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS spending_style INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS smoking_habit INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS partner_smoking INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS drinking_habit INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS partner_drinking INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS partner_interest INTEGER');
 
   // matches 表
   await pool.query(`

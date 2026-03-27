@@ -54,6 +54,7 @@
               <span><strong>年级:</strong> <%= m.my_grade || '-' %></span>
               <span><strong>性别:</strong> <%= m.gender || '-' %></span>
               <span><strong>校区:</strong> <%= m.campus || '-' %></span>
+              <span><strong>LoveType:</strong> <%= m.lovetype_code || '-' %></span>
             </div>
             <div style="color: var(--muted-foreground); font-size: 0.9rem;">
               <strong>兴趣爱好:</strong> <%= m.interests || '-' %>
@@ -70,7 +71,7 @@
       </div>
 
       <p style="margin-top: 24px; color: var(--muted-foreground); font-size: 0.85rem; text-align: center;">
-        💡 匹配度算法：兴趣爱好30% + 生活习惯30% + 恋爱观念40%
+        💡 匹配度算法：兴趣爱好30% + 生活习惯30% + 恋爱观念40%，再结合 LoveType 兼容性做加减分
       </p>
     </div>
     <% } %>

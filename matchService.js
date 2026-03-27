@@ -20,6 +20,7 @@
  */
 
 const dbModule = require('./database');
+const lovetypeService = require('./lovetypeService');
 
 // 学历阶段排序
 const GRADE_ORDER = {
@@ -177,12 +178,14 @@ function calculateMatchScore(myProfile, theirProfile) {
   const interestScore = calculateInterestScore(myProfile, theirProfile);
   const lifestyleScore = calculateLifestyleScore(myProfile, theirProfile);
   const loveValueScore = calculateLoveValueScore(myProfile, theirProfile);
+  const lovetypeAdjustment = lovetypeService.getCompatibilityAdjustment(myProfile.lovetype_code, theirProfile.lovetype_code);
 
   // 综合评分权重
-  const finalScore =
+  const baseScore =
     interestScore * 0.3 +
     lifestyleScore * 0.3 +
     loveValueScore * 0.4;
+  const finalScore = Math.max(0, Math.min(1, baseScore + lovetypeAdjustment));
 
   return Math.round(finalScore * 100) / 100;
 }
@@ -227,6 +230,8 @@ async function findMatches(userId) {
       height: candidate.height,
       campus: candidate.campus,
       interests: candidate.interests,
+      lovetype_code: candidate.lovetype_code,
+      lovetype_match_label: lovetypeService.getCompatibilityLabel(myProfile.lovetype_code, candidate.lovetype_code),
       score: score
     };
   });
