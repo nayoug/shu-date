@@ -187,6 +187,153 @@
       margin-bottom: 8px;
       cursor: pointer;
     }
+
+    /* 新的5档选择UI - 水平单行布局 */
+    .scale-horizontal {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 5px;
+      margin-top: 12px;
+    }
+    .scale-label-text {
+      font-size: 12px;
+      color: #888;
+      width: 200px;
+      flex-shrink: 0;
+      word-wrap: break-word;
+      white-space: normal;
+      line-height: 1.3;
+    }
+    .scale-label-left_text {
+      text-align: right;
+      padding-right: 8px;
+    }
+    .scale-label-right_text {
+      text-align: left;
+      padding-left: 8px;
+    }
+    .scale-options-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex: 1;
+      position: relative;
+      min-width: 280px;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .scale-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      flex: 1;
+      max-width: 60px;
+    }
+    .scale-option .scale-circle {
+      min-width: 36px;
+    }
+    .scale-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid #e0e0e0;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      transition: all 0.2s;
+    }
+    .scale-option:hover .scale-circle {
+      border-color: #e74c3c;
+      color: #e74c3c;
+    }
+    .scale-option.selected .scale-circle {
+      border-color: #e74c3c;
+      background: #e74c3c;
+      color: #fff;
+    }
+    .scale-option input[type="radio"] {
+      display: none;
+    }
+
+    /* 双滑块数轴样式 */
+    .dual-range-container {
+      padding: 15px 10px;
+    }
+    .dual-range-wrapper {
+      position: relative;
+      height: 40px;
+    }
+    .dual-range-track {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      transform: translateY(-50%);
+    }
+    .dual-range-track-highlight {
+      position: absolute;
+      top: 50%;
+      height: 6px;
+      background: #e74c3c;
+      border-radius: 3px;
+      transform: translateY(-50%);
+    }
+    .dual-range-input {
+      position: absolute;
+      top: 50%;
+      width: 100%;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .dual-range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #e74c3c;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .dual-range-input::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #e74c3c;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .dual-range-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #888;
+    }
+    .dual-range-value {
+      text-align: center;
+      font-weight: 600;
+      color: #e74c3c;
+      margin-top: 12px;
+      font-size: 15px;
+    }
   </style>
 </head>
 <body>
@@ -288,9 +435,14 @@
           <% }); %>
         </div>
       <% } %>
+
+      <div style="margin-top: 20px; text-align: center;">
+        <a href="/profile?edit=1" class="btn btn-secondary" style="display: inline-block;">✏️ 修改问卷</a>
+      </div>
     </div>
   <% } %>
 
+  <% if (!lovetypeResult || (typeof editMode !== 'undefined' && editMode)) { %>
   <form action="/survey/submit" method="POST">
 
     <!-- 一、基础信息 -->
@@ -306,22 +458,7 @@
       </div>
 
       <div class="form-group">
-        <label>2. 我的年龄是：</label>
-        <div class="option-group">
-          <label><input type="radio" name="age" value="18" <%= profile && profile.age === '18' ? 'checked' : '' %> required> A. 18岁</label>
-          <label><input type="radio" name="age" value="19" <%= profile && profile.age === '19' ? 'checked' : '' %>> B. 19岁</label>
-          <label><input type="radio" name="age" value="20" <%= profile && profile.age === '20' ? 'checked' : '' %>> C. 20岁</label>
-          <label><input type="radio" name="age" value="21" <%= profile && profile.age === '21' ? 'checked' : '' %>> D. 21岁</label>
-          <label><input type="radio" name="age" value="22" <%= profile && profile.age === '22' ? 'checked' : '' %>> E. 22岁</label>
-          <label><input type="radio" name="age" value="23" <%= profile && profile.age === '23' ? 'checked' : '' %>> F. 23岁</label>
-          <label><input type="radio" name="age" value="24" <%= profile && profile.age === '24' ? 'checked' : '' %>> G. 24岁</label>
-          <label><input type="radio" name="age" value="25" <%= profile && profile.age === '25' ? 'checked' : '' %>> H. 25岁</label>
-          <label><input type="radio" name="age" value="26" <%= profile && profile.age === '26' ? 'checked' : '' %>> I. 26岁及以上</label>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>3. 我希望匹配的对象性别是：</label>
+        <label>2. 我希望匹配的对象性别是：</label>
         <div class="option-group">
           <label><input type="radio" name="preferred_gender" value="男" <%= profile && profile.preferred_gender === '男' ? 'checked' : '' %> required> A. 男</label>
           <label><input type="radio" name="preferred_gender" value="女" <%= profile && profile.preferred_gender === '女' ? 'checked' : '' %>> B. 女</label>
@@ -330,16 +467,7 @@
       </div>
 
       <div class="form-group">
-        <label>4. 我来这里的首要目的是：</label>
-        <div class="option-group">
-          <label><input type="radio" name="purpose" value="寻找长期恋爱伴侣" <%= profile && profile.purpose === '寻找长期恋爱伴侣' ? 'checked' : '' %> required> A. 寻找长期恋爱伴侣</label>
-          <label><input type="radio" name="purpose" value="寻找短期约会对象" <%= profile && profile.purpose === '寻找短期约会对象' ? 'checked' : '' %>> B. 寻找短期约会对象</label>
-          <label><input type="radio" name="purpose" value="顺其自然，拓展社交" <%= profile && profile.purpose === '顺其自然，拓展社交' ? 'checked' : '' %>> C. 顺其自然，拓展社交</label>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>5. 我的学历阶段：</label>
+        <label>3. 我的学历阶段：</label>
         <div class="option-group">
           <label><input type="radio" name="my_grade" value="大一" <%= profile && profile.my_grade === '大一' ? 'checked' : '' %> required> A. 大一</label>
           <label><input type="radio" name="my_grade" value="大二" <%= profile && profile.my_grade === '大二' ? 'checked' : '' %>> B. 大二</label>
@@ -358,18 +486,45 @@
       </div>
 
       <div class="form-group">
-        <label>6. 我可接受的对象年龄差（相对于我）：</label>
+        <label>4. 我的年龄：</label>
         <div class="range-container">
-          <input type="range" class="range-slider" name="age_diff_min" id="ageDiffMin" min="-10" max="0" value="<%= profile && profile.age_diff_min ? profile.age_diff_min : -5 %>" oninput="updateAgeDiffDisplay()">
+          <input type="range" class="range-slider" name="age" id="myAge" min="16" max="30" value="<%= profile && profile.age ? profile.age : 20 %>" oninput="updateMyAgeDisplay()">
           <div class="range-labels">
-            <span>-10岁</span>
-            <span>0岁</span>
-            <span>+10岁</span>
+            <span>16岁</span>
+            <span>23岁</span>
+            <span>30岁</span>
           </div>
-          <div class="range-value" id="ageDiffMinValue">可接受比我小 <%= profile && profile.age_diff_min ? Math.abs(profile.age_diff_min) : 5 %> 岁</div>
+          <div class="range-value" id="myAgeValue"><%= profile && profile.age ? profile.age : 20 %> 岁</div>
+        </div>
+      </div>
 
-          <input type="range" class="range-slider" name="age_diff_max" id="ageDiffMax" min="0" max="10" value="<%= profile && profile.age_diff_max ? profile.age_diff_max : 5 %>" oninput="updateAgeDiffDisplay()">
-          <div class="range-value" id="ageDiffMaxValue">可接受比我大 <%= profile && profile.age_diff_max ? profile.age_diff_max : 5 %> 岁</div>
+      <div class="form-group">
+        <label>5. 我希望匹配到的对象年龄范围：</label>
+        <div class="range-container">
+          <input type="range" class="range-slider" name="age_min" id="ageMin" min="16" max="40" value="<%= profile && profile.age_min ? profile.age_min : 18 %>" oninput="updateAgeRangeDisplay()">
+          <div class="range-labels">
+            <span>16岁</span>
+            <span>25岁</span>
+            <span>40岁</span>
+          </div>
+          <div class="range-value" id="ageMinValue">最小 <%= profile && profile.age_min ? profile.age_min : 18 %> 岁</div>
+
+          <input type="range" class="range-slider" name="age_max" id="ageMax" min="16" max="45" value="<%= profile && profile.age_max ? profile.age_max : 28 %>" oninput="updateAgeRangeDisplay()">
+          <div class="range-labels">
+            <span>16岁</span>
+            <span>30岁</span>
+            <span>45岁</span>
+          </div>
+          <div class="range-value" id="ageMaxValue">最大 <%= profile && profile.age_max ? profile.age_max : 28 %> 岁</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>6. 我来这里的首要目的是：</label>
+        <div class="option-group">
+          <label><input type="radio" name="purpose" value="寻找长期恋爱伴侣" <%= profile && profile.purpose === '寻找长期恋爱伴侣' ? 'checked' : '' %> required> A. 寻找长期恋爱伴侣</label>
+          <label><input type="radio" name="purpose" value="寻找短期约会对象" <%= profile && profile.purpose === '寻找短期约会对象' ? 'checked' : '' %>> B. 寻找短期约会对象</label>
+          <label><input type="radio" name="purpose" value="顺其自然，拓展社交" <%= profile && profile.purpose === '顺其自然，拓展社交' ? 'checked' : '' %>> C. 顺其自然，拓展社交</label>
         </div>
       </div>
 
@@ -394,21 +549,13 @@
       <div class="form-group">
         <label>9. 我的身高（cm）：</label>
         <div class="range-container">
-          <input type="range" class="range-slider" name="height_min" id="heightMin" min="140" max="200" value="<%= profile && profile.height_min ? profile.height_min : 160 %>" oninput="updateHeightDisplay()">
+          <input type="range" class="range-slider" name="height_min" id="myHeight" min="140" max="200" value="<%= profile && profile.height_min ? profile.height_min : 170 %>" oninput="updateMyHeightDisplay()">
           <div class="range-labels">
             <span>140cm</span>
             <span>170cm</span>
             <span>200cm</span>
           </div>
-          <div class="range-value" id="heightMinValue">最低 <%= profile && profile.height_min ? profile.height_min : 160 %> cm</div>
-
-          <input type="range" class="range-slider" name="height_max" id="heightMax" min="140" max="210" value="<%= profile && profile.height_max ? profile.height_max : 180 %>" oninput="updateHeightDisplay()">
-          <div class="range-labels">
-            <span>140cm</span>
-            <span>175cm</span>
-            <span>210cm</span>
-          </div>
-          <div class="range-value" id="heightMaxValue">最高 <%= profile && profile.height_max ? profile.height_max : 180 %> cm</div>
+          <div class="range-value" id="myHeightValue"><%= profile && profile.height_min ? profile.height_min : 170 %> cm</div>
         </div>
       </div>
 
@@ -476,15 +623,15 @@
           <option value="台湾省" <%= profile && profile.hometown === '台湾省' ? 'selected' : '' %>>台湾省</option>
           <option value="香港特别行政区" <%= profile && profile.hometown === '香港特别行政区' ? 'selected' : '' %>>香港特别行政区</option>
           <option value="澳门特别行政区" <%= profile && profile.hometown === '澳门特别行政区' ? 'selected' : '' %>>澳门特别行政区</option>
+          <option value="海外" <%= profile && profile.hometown === '海外' ? 'selected' : '' %>>海外</option>
         </select>
       </div>
 
       <div class="form-group">
         <label>12. 我对匹配对象家乡的偏好：</label>
         <div class="option-group">
-          <label><input type="radio" name="preferred_hometown" value="上海市" <%= profile && profile.preferred_hometown === '上海市' ? 'checked' : '' %> required> A. 上海市</label>
-          <label><input type="radio" name="preferred_hometown" value="江浙沪" <%= profile && profile.preferred_hometown === '江浙沪' ? 'checked' : '' %>> B. 江浙沪（上海、江苏、浙江）</label>
-          <label><input type="radio" name="preferred_hometown" value="不限" <%= profile && profile.preferred_hometown === '不限' ? 'checked' : '' %>> C. 不限</label>
+          <label><input type="radio" name="preferred_hometown" value="同家乡" <%= profile && profile.preferred_hometown === '同家乡' ? 'checked' : '' %> required> A. 同家乡</label>
+          <label><input type="radio" name="preferred_hometown" value="不限" <%= profile && profile.preferred_hometown === '不限' ? 'checked' : '' %>> B. 不限</label>
         </div>
       </div>
 
@@ -549,106 +696,277 @@
       <h3 style="color: #e74c3c; margin: 20px 0 15px;">四、生活习惯</h3>
 
       <div class="form-group">
-        <label>18. 我的日常作息节律：</label>
-        <div class="scale-5">
-          <label><input type="radio" name="sleep_pattern" value="-2" <%= profile && profile.sleep_pattern === '-2' ? 'checked' : '' %> required> <span>重度夜猫子</span></label>
-          <label><input type="radio" name="sleep_pattern" value="-1" <%= profile && profile.sleep_pattern === '-1' ? 'checked' : '' %>> <span>-1</span></label>
-          <label><input type="radio" name="sleep_pattern" value="0" <%= profile && profile.sleep_pattern === '0' ? 'checked' : '' %>> <span>0</span></label>
-          <label><input type="radio" name="sleep_pattern" value="1" <%= profile && profile.sleep_pattern === '1' ? 'checked' : '' %>> <span>+1</span></label>
-          <label><input type="radio" name="sleep_pattern" value="2" <%= profile && profile.sleep_pattern === '2' ? 'checked' : '' %>> <span>早起鸟</span></label>
+        <label>14. 我的日常作息节律：</label>
+        <div class="scale-horizontal">
+          <span class="scale-label-text scale-label-left_text">重度夜猫子</span>
+          <div class="scale-options-row">
+            <label class="scale-option <%= profile && profile.sleep_pattern === '-2' ? 'selected' : '' %>">
+              <input type="radio" name="sleep_pattern" value="-2" <%= profile && profile.sleep_pattern === '-2' ? 'checked' : '' %> required>
+              <span class="scale-circle">-2</span>
+            </label>
+            <label class="scale-option <%= profile && profile.sleep_pattern === '-1' ? 'selected' : '' %>">
+              <input type="radio" name="sleep_pattern" value="-1" <%= profile && profile.sleep_pattern === '-1' ? 'checked' : '' %>>
+              <span class="scale-circle">-1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.sleep_pattern === '0' ? 'selected' : '' %>">
+              <input type="radio" name="sleep_pattern" value="0" <%= profile && profile.sleep_pattern === '0' ? 'checked' : '' %>>
+              <span class="scale-circle">0</span>
+            </label>
+            <label class="scale-option <%= profile && profile.sleep_pattern === '1' ? 'selected' : '' %>">
+              <input type="radio" name="sleep_pattern" value="1" <%= profile && profile.sleep_pattern === '1' ? 'checked' : '' %>>
+              <span class="scale-circle">+1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.sleep_pattern === '2' ? 'selected' : '' %>">
+              <input type="radio" name="sleep_pattern" value="2" <%= profile && profile.sleep_pattern === '2' ? 'checked' : '' %>>
+              <span class="scale-circle">+2</span>
+            </label>
+          </div>
+          <span class="scale-label-text scale-label-right_text">早起鸟</span>
         </div>
       </div>
 
       <div class="form-group">
-        <label>19. 我的日常饮食，我更偏好：</label>
-        <div class="scale-5">
-          <label><input type="radio" name="diet_preference" value="-2" <%= profile && profile.diet_preference === '-2' ? 'checked' : '' %> required> <span>几乎全在学校各大食堂解决</span></label>
-          <label><input type="radio" name="diet_preference" value="-1" <%= profile && profile.diet_preference === '-1' ? 'checked' : '' %>> <span>-1</span></label>
-          <label><input type="radio" name="diet_preference" value="0" <%= profile && profile.diet_preference === '0' ? 'checked' : '' %>> <span>0</span></label>
-          <label><input type="radio" name="diet_preference" value="1" <%= profile && profile.diet_preference === '1' ? 'checked' : '' %>> <span>+1</span></label>
-          <label><input type="radio" name="diet_preference" value="2" <%= profile && profile.diet_preference === '2' ? 'checked' : '' %>> <span>频繁点外卖或出去吃</span></label>
+        <label>15. 我的日常饮食，我更偏好：</label>
+        <div class="scale-horizontal">
+          <span class="scale-label-text scale-label-left_text">几乎全在学校各大食堂解决</span>
+          <div class="scale-options-row">
+            <label class="scale-option <%= profile && profile.diet_preference === '-2' ? 'selected' : '' %>">
+              <input type="radio" name="diet_preference" value="-2" <%= profile && profile.diet_preference === '-2' ? 'checked' : '' %> required>
+              <span class="scale-circle">-2</span>
+            </label>
+            <label class="scale-option <%= profile && profile.diet_preference === '-1' ? 'selected' : '' %>">
+              <input type="radio" name="diet_preference" value="-1" <%= profile && profile.diet_preference === '-1' ? 'checked' : '' %>>
+              <span class="scale-circle">-1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.diet_preference === '0' ? 'selected' : '' %>">
+              <input type="radio" name="diet_preference" value="0" <%= profile && profile.diet_preference === '0' ? 'checked' : '' %>>
+              <span class="scale-circle">0</span>
+            </label>
+            <label class="scale-option <%= profile && profile.diet_preference === '1' ? 'selected' : '' %>">
+              <input type="radio" name="diet_preference" value="1" <%= profile && profile.diet_preference === '1' ? 'checked' : '' %>>
+              <span class="scale-circle">+1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.diet_preference === '2' ? 'selected' : '' %>">
+              <input type="radio" name="diet_preference" value="2" <%= profile && profile.diet_preference === '2' ? 'checked' : '' %>>
+              <span class="scale-circle">+2</span>
+            </label>
+          </div>
+          <span class="scale-label-text scale-label-right_text">频繁点外卖或出去吃</span>
         </div>
       </div>
 
       <div class="form-group">
-        <label>20. 我的饮食口味（食辣能力）：</label>
-        <div class="scale-5">
-          <label><input type="radio" name="spice_tolerance" value="-2" <%= profile && profile.spice_tolerance === '-2' ? 'checked' : '' %> required> <span>一点辣都碰不了</span></label>
-          <label><input type="radio" name="spice_tolerance" value="-1" <%= profile && profile.spice_tolerance === '-1' ? 'checked' : '' %>> <span>-1</span></label>
-          <label><input type="radio" name="spice_tolerance" value="0" <%= profile && profile.spice_tolerance === '0' ? 'checked' : '' %>> <span>0</span></label>
-          <label><input type="radio" name="spice_tolerance" value="1" <%= profile && profile.spice_tolerance === '1' ? 'checked' : '' %>> <span>+1</span></label>
-          <label><input type="radio" name="spice_tolerance" value="2" <%= profile && profile.spice_tolerance === '2' ? 'checked' : '' %>> <span>无辣不欢</span></label>
+        <label>16. 我的饮食口味（食辣能力）：</label>
+        <div class="scale-horizontal">
+          <span class="scale-label-text scale-label-left_text">一点辣都碰不了</span>
+          <div class="scale-options-row">
+            <label class="scale-option <%= profile && profile.spice_tolerance === '-2' ? 'selected' : '' %>">
+              <input type="radio" name="spice_tolerance" value="-2" <%= profile && profile.spice_tolerance === '-2' ? 'checked' : '' %> required>
+              <span class="scale-circle">-2</span>
+            </label>
+            <label class="scale-option <%= profile && profile.spice_tolerance === '-1' ? 'selected' : '' %>">
+              <input type="radio" name="spice_tolerance" value="-1" <%= profile && profile.spice_tolerance === '-1' ? 'checked' : '' %>>
+              <span class="scale-circle">-1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.spice_tolerance === '0' ? 'selected' : '' %>">
+              <input type="radio" name="spice_tolerance" value="0" <%= profile && profile.spice_tolerance === '0' ? 'checked' : '' %>>
+              <span class="scale-circle">0</span>
+            </label>
+            <label class="scale-option <%= profile && profile.spice_tolerance === '1' ? 'selected' : '' %>">
+              <input type="radio" name="spice_tolerance" value="1" <%= profile && profile.spice_tolerance === '1' ? 'checked' : '' %>>
+              <span class="scale-circle">+1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.spice_tolerance === '2' ? 'selected' : '' %>">
+              <input type="radio" name="spice_tolerance" value="2" <%= profile && profile.spice_tolerance === '2' ? 'checked' : '' %>>
+              <span class="scale-circle">+2</span>
+            </label>
+          </div>
+          <span class="scale-label-text scale-label-right_text">无辣不欢</span>
         </div>
       </div>
 
       <div class="form-group">
-        <label>21. 周末约会我更倾向于：</label>
-        <div class="scale-5">
-          <label><input type="radio" name="date_preference" value="-2" <%= profile && profile.date_preference === '-2' ? 'checked' : '' %> required> <span>在校园内/图书馆一起学习或散步</span></label>
-          <label><input type="radio" name="date_preference" value="-1" <%= profile && profile.date_preference === '-1' ? 'checked' : '' %>> <span>-1</span></label>
-          <label><input type="radio" name="date_preference" value="0" <%= profile && profile.date_preference === '0' ? 'checked' : '' %>> <span>0</span></label>
-          <label><input type="radio" name="date_preference" value="1" <%= profile && profile.date_preference === '1' ? 'checked' : '' %>> <span>+1</span></label>
-          <label><input type="radio" name="date_preference" value="2" <%= profile && profile.date_preference === '2' ? 'checked' : '' %>> <span>逃离校园，去市中心</span></label>
+        <label>17. 周末约会我更倾向于：</label>
+        <div class="scale-horizontal">
+          <span class="scale-label-text scale-label-left_text">在校园内/图书馆一起学习或散步</span>
+          <div class="scale-options-row">
+            <label class="scale-option <%= profile && profile.date_preference === '-2' ? 'selected' : '' %>">
+              <input type="radio" name="date_preference" value="-2" <%= profile && profile.date_preference === '-2' ? 'checked' : '' %> required>
+              <span class="scale-circle">-2</span>
+            </label>
+            <label class="scale-option <%= profile && profile.date_preference === '-1' ? 'selected' : '' %>">
+              <input type="radio" name="date_preference" value="-1" <%= profile && profile.date_preference === '-1' ? 'checked' : '' %>>
+              <span class="scale-circle">-1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.date_preference === '0' ? 'selected' : '' %>">
+              <input type="radio" name="date_preference" value="0" <%= profile && profile.date_preference === '0' ? 'checked' : '' %>>
+              <span class="scale-circle">0</span>
+            </label>
+            <label class="scale-option <%= profile && profile.date_preference === '1' ? 'selected' : '' %>">
+              <input type="radio" name="date_preference" value="1" <%= profile && profile.date_preference === '1' ? 'checked' : '' %>>
+              <span class="scale-circle">+1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.date_preference === '2' ? 'selected' : '' %>">
+              <input type="radio" name="date_preference" value="2" <%= profile && profile.date_preference === '2' ? 'checked' : '' %>>
+              <span class="scale-circle">+2</span>
+            </label>
+          </div>
+          <span class="scale-label-text scale-label-right_text">逃离校园，去市中心</span>
         </div>
       </div>
 
       <div class="form-group">
-        <label>22. 我平时的消费风格偏向：</label>
-        <div class="scale-5">
-          <label><input type="radio" name="spending_style" value="-2" <%= profile && profile.spending_style === '-2' ? 'checked' : '' %> required> <span>极致节俭，能省则省</span></label>
-          <label><input type="radio" name="spending_style" value="-1" <%= profile && profile.spending_style === '-1' ? 'checked' : '' %>> <span>-1</span></label>
-          <label><input type="radio" name="spending_style" value="0" <%= profile && profile.spending_style === '0' ? 'checked' : '' %>> <span>0</span></label>
-          <label><input type="radio" name="spending_style" value="1" <%= profile && profile.spending_style === '1' ? 'checked' : '' %>> <span>+1</span></label>
-          <label><input type="radio" name="spending_style" value="2" <%= profile && profile.spending_style === '2' ? 'checked' : '' %>> <span>喜欢品质生活，舍得为体验买单</span></label>
+        <label>18. 我平时的消费风格偏向：</label>
+        <div class="scale-horizontal">
+          <span class="scale-label-text scale-label-left_text">极致节俭，能省则省</span>
+          <div class="scale-options-row">
+            <label class="scale-option <%= profile && profile.spending_style === '-2' ? 'selected' : '' %>">
+              <input type="radio" name="spending_style" value="-2" <%= profile && profile.spending_style === '-2' ? 'checked' : '' %> required>
+              <span class="scale-circle">-2</span>
+            </label>
+            <label class="scale-option <%= profile && profile.spending_style === '-1' ? 'selected' : '' %>">
+              <input type="radio" name="spending_style" value="-1" <%= profile && profile.spending_style === '-1' ? 'checked' : '' %>>
+              <span class="scale-circle">-1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.spending_style === '0' ? 'selected' : '' %>">
+              <input type="radio" name="spending_style" value="0" <%= profile && profile.spending_style === '0' ? 'checked' : '' %>>
+              <span class="scale-circle">0</span>
+            </label>
+            <label class="scale-option <%= profile && profile.spending_style === '1' ? 'selected' : '' %>">
+              <input type="radio" name="spending_style" value="1" <%= profile && profile.spending_style === '1' ? 'checked' : '' %>>
+              <span class="scale-circle">+1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.spending_style === '2' ? 'selected' : '' %>">
+              <input type="radio" name="spending_style" value="2" <%= profile && profile.spending_style === '2' ? 'checked' : '' %>>
+              <span class="scale-circle">+2</span>
+            </label>
+          </div>
+          <span class="scale-label-text scale-label-right_text">喜欢品质生活，舍得为体验买单</span>
         </div>
       </div>
 
       <div class="form-group">
-        <label>23. 我本人的吸烟/电子烟习惯是：</label>
-        <div class="scale-5">
-          <label><input type="radio" name="smoking_habit" value="-2" <%= profile && profile.smoking_habit === '-2' ? 'checked' : '' %> required> <span>从不抽</span></label>
-          <label><input type="radio" name="smoking_habit" value="-1" <%= profile && profile.smoking_habit === '-1' ? 'checked' : '' %>> <span>-1</span></label>
-          <label><input type="radio" name="smoking_habit" value="0" <%= profile && profile.smoking_habit === '0' ? 'checked' : '' %>> <span>0</span></label>
-          <label><input type="radio" name="smoking_habit" value="1" <%= profile && profile.smoking_habit === '1' ? 'checked' : '' %>> <span>+1</span></label>
-          <label><input type="radio" name="smoking_habit" value="2" <%= profile && profile.smoking_habit === '2' ? 'checked' : '' %>> <span>经常抽</span></label>
+        <label>19. 我本人的吸烟/电子烟习惯是：</label>
+        <div class="scale-horizontal">
+          <span class="scale-label-text scale-label-left_text">从不抽</span>
+          <div class="scale-options-row">
+            <label class="scale-option <%= profile && profile.smoking_habit === '-2' ? 'selected' : '' %>">
+              <input type="radio" name="smoking_habit" value="-2" <%= profile && profile.smoking_habit === '-2' ? 'checked' : '' %> required>
+              <span class="scale-circle">-2</span>
+            </label>
+            <label class="scale-option <%= profile && profile.smoking_habit === '-1' ? 'selected' : '' %>">
+              <input type="radio" name="smoking_habit" value="-1" <%= profile && profile.smoking_habit === '-1' ? 'checked' : '' %>>
+              <span class="scale-circle">-1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.smoking_habit === '0' ? 'selected' : '' %>">
+              <input type="radio" name="smoking_habit" value="0" <%= profile && profile.smoking_habit === '0' ? 'checked' : '' %>>
+              <span class="scale-circle">0</span>
+            </label>
+            <label class="scale-option <%= profile && profile.smoking_habit === '1' ? 'selected' : '' %>">
+              <input type="radio" name="smoking_habit" value="1" <%= profile && profile.smoking_habit === '1' ? 'checked' : '' %>>
+              <span class="scale-circle">+1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.smoking_habit === '2' ? 'selected' : '' %>">
+              <input type="radio" name="smoking_habit" value="2" <%= profile && profile.smoking_habit === '2' ? 'checked' : '' %>>
+              <span class="scale-circle">+2</span>
+            </label>
+          </div>
+          <span class="scale-label-text scale-label-right_text">经常抽</span>
         </div>
       </div>
 
       <div class="form-group">
-        <label>24. 我能接受伴侣抽烟/抽电子烟：</label>
-        <div class="scale-5">
-          <label><input type="radio" name="partner_smoking" value="-2" <%= profile && profile.partner_smoking === '-2' ? 'checked' : '' %> required> <span>非常不接受</span></label>
-          <label><input type="radio" name="partner_smoking" value="-1" <%= profile && profile.partner_smoking === '-1' ? 'checked' : '' %>> <span>-1</span></label>
-          <label><input type="radio" name="partner_smoking" value="0" <%= profile && profile.partner_smoking === '0' ? 'checked' : '' %>> <span>0</span></label>
-          <label><input type="radio" name="partner_smoking" value="1" <%= profile && profile.partner_smoking === '1' ? 'checked' : '' %>> <span>+1</span></label>
-          <label><input type="radio" name="partner_smoking" value="2" <%= profile && profile.partner_smoking === '2' ? 'checked' : '' %>> <span>完全不介意</span></label>
+        <label>20. 我能接受伴侣抽烟/抽电子烟：</label>
+        <div class="scale-horizontal">
+          <span class="scale-label-text scale-label-left_text">非常不接受</span>
+          <div class="scale-options-row">
+            <label class="scale-option <%= profile && profile.partner_smoking === '-2' ? 'selected' : '' %>">
+              <input type="radio" name="partner_smoking" value="-2" <%= profile && profile.partner_smoking === '-2' ? 'checked' : '' %> required>
+              <span class="scale-circle">-2</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_smoking === '-1' ? 'selected' : '' %>">
+              <input type="radio" name="partner_smoking" value="-1" <%= profile && profile.partner_smoking === '-1' ? 'checked' : '' %>>
+              <span class="scale-circle">-1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_smoking === '0' ? 'selected' : '' %>">
+              <input type="radio" name="partner_smoking" value="0" <%= profile && profile.partner_smoking === '0' ? 'checked' : '' %>>
+              <span class="scale-circle">0</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_smoking === '1' ? 'selected' : '' %>">
+              <input type="radio" name="partner_smoking" value="1" <%= profile && profile.partner_smoking === '1' ? 'checked' : '' %>>
+              <span class="scale-circle">+1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_smoking === '2' ? 'selected' : '' %>">
+              <input type="radio" name="partner_smoking" value="2" <%= profile && profile.partner_smoking === '2' ? 'checked' : '' %>>
+              <span class="scale-circle">+2</span>
+            </label>
+          </div>
+          <span class="scale-label-text scale-label-right_text">完全不介意</span>
         </div>
       </div>
 
       <div class="form-group">
-        <label>25. 我本人的饮酒习惯是：</label>
-        <div class="scale-5">
-          <label><input type="radio" name="drinking_habit" value="-2" <%= profile && profile.drinking_habit === '-2' ? 'checked' : '' %> required> <span>滴酒不沾</span></label>
-          <label><input type="radio" name="drinking_habit" value="-1" <%= profile && profile.drinking_habit === '-1' ? 'checked' : '' %>> <span>-1</span></label>
-          <label><input type="radio" name="drinking_habit" value="0" <%= profile && profile.drinking_habit === '0' ? 'checked' : '' %>> <span>0</span></label>
-          <label><input type="radio" name="drinking_habit" value="1" <%= profile && profile.drinking_habit === '1' ? 'checked' : '' %>> <span>+1</span></label>
-          <label><input type="radio" name="drinking_habit" value="2" <%= profile && profile.drinking_habit === '2' ? 'checked' : '' %>> <span>经常喝酒</span></label>
+        <label>21. 我本人的饮酒习惯是：</label>
+        <div class="scale-horizontal">
+          <span class="scale-label-text scale-label-left_text">滴酒不沾</span>
+          <div class="scale-options-row">
+            <label class="scale-option <%= profile && profile.drinking_habit === '-2' ? 'selected' : '' %>">
+              <input type="radio" name="drinking_habit" value="-2" <%= profile && profile.drinking_habit === '-2' ? 'checked' : '' %> required>
+              <span class="scale-circle">-2</span>
+            </label>
+            <label class="scale-option <%= profile && profile.drinking_habit === '-1' ? 'selected' : '' %>">
+              <input type="radio" name="drinking_habit" value="-1" <%= profile && profile.drinking_habit === '-1' ? 'checked' : '' %>>
+              <span class="scale-circle">-1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.drinking_habit === '0' ? 'selected' : '' %>">
+              <input type="radio" name="drinking_habit" value="0" <%= profile && profile.drinking_habit === '0' ? 'checked' : '' %>>
+              <span class="scale-circle">0</span>
+            </label>
+            <label class="scale-option <%= profile && profile.drinking_habit === '1' ? 'selected' : '' %>">
+              <input type="radio" name="drinking_habit" value="1" <%= profile && profile.drinking_habit === '1' ? 'checked' : '' %>>
+              <span class="scale-circle">+1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.drinking_habit === '2' ? 'selected' : '' %>">
+              <input type="radio" name="drinking_habit" value="2" <%= profile && profile.drinking_habit === '2' ? 'checked' : '' %>>
+              <span class="scale-circle">+2</span>
+            </label>
+          </div>
+          <span class="scale-label-text scale-label-right_text">经常喝酒</span>
         </div>
       </div>
 
       <div class="form-group">
-        <label>26. 我能接受伴侣饮酒：</label>
-        <div class="scale-5">
-          <label><input type="radio" name="partner_drinking" value="-2" <%= profile && profile.partner_drinking === '-2' ? 'checked' : '' %> required> <span>非常不接受</span></label>
-          <label><input type="radio" name="partner_drinking" value="-1" <%= profile && profile.partner_drinking === '-1' ? 'checked' : '' %>> <span>-1</span></label>
-          <label><input type="radio" name="partner_drinking" value="0" <%= profile && profile.partner_drinking === '0' ? 'checked' : '' %>> <span>0</span></label>
-          <label><input type="radio" name="partner_drinking" value="1" <%= profile && profile.partner_drinking === '1' ? 'checked' : '' %>> <span>+1</span></label>
-          <label><input type="radio" name="partner_drinking" value="2" <%= profile && profile.partner_drinking === '2' ? 'checked' : '' %>> <span>完全不介意</span></label>
+        <label>22. 我能接受伴侣饮酒：</label>
+        <div class="scale-horizontal">
+          <span class="scale-label-text scale-label-left_text">非常不接受</span>
+          <div class="scale-options-row">
+            <label class="scale-option <%= profile && profile.partner_drinking === '-2' ? 'selected' : '' %>">
+              <input type="radio" name="partner_drinking" value="-2" <%= profile && profile.partner_drinking === '-2' ? 'checked' : '' %> required>
+              <span class="scale-circle">-2</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_drinking === '-1' ? 'selected' : '' %>">
+              <input type="radio" name="partner_drinking" value="-1" <%= profile && profile.partner_drinking === '-1' ? 'checked' : '' %>>
+              <span class="scale-circle">-1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_drinking === '0' ? 'selected' : '' %>">
+              <input type="radio" name="partner_drinking" value="0" <%= profile && profile.partner_drinking === '0' ? 'checked' : '' %>>
+              <span class="scale-circle">0</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_drinking === '1' ? 'selected' : '' %>">
+              <input type="radio" name="partner_drinking" value="1" <%= profile && profile.partner_drinking === '1' ? 'checked' : '' %>>
+              <span class="scale-circle">+1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_drinking === '2' ? 'selected' : '' %>">
+              <input type="radio" name="partner_drinking" value="2" <%= profile && profile.partner_drinking === '2' ? 'checked' : '' %>>
+              <span class="scale-circle">+2</span>
+            </label>
+          </div>
+          <span class="scale-label-text scale-label-right_text">完全不介意</span>
         </div>
       </div>
 
       <div class="form-group">
-        <label>27. 我对宠物的态度：</label>
+        <label>23. 我对宠物的态度：</label>
         <div class="option-group">
           <label><input type="radio" name="pet" value="非常喜欢，想养宠物" <%= profile && profile.pet === '非常喜欢，想养宠物' ? 'checked' : '' %> required> A. 非常喜欢，想养宠物</label>
           <label><input type="radio" name="pet" value="可以接受，不排斥" <%= profile && profile.pet === '可以接受，不排斥' ? 'checked' : '' %>> B. 可以接受，不排斥</label>
@@ -750,13 +1068,33 @@
       </div>
 
       <div class="form-group">
-        <label>我希望伴侣和自己有相似的兴趣爱好：</label>
-        <div class="scale-5">
-          <label><input type="radio" name="partner_interest" value="-2" <%= profile && profile.partner_interest === '-2' ? 'checked' : '' %> required> <span>更喜欢互补</span></label>
-          <label><input type="radio" name="partner_interest" value="-1" <%= profile && profile.partner_interest === '-1' ? 'checked' : '' %>> <span>-1</span></label>
-          <label><input type="radio" name="partner_interest" value="0" <%= profile && profile.partner_interest === '0' ? 'checked' : '' %>> <span>0</span></label>
-          <label><input type="radio" name="partner_interest" value="1" <%= profile && profile.partner_interest === '1' ? 'checked' : '' %>> <span>+1</span></label>
-          <label><input type="radio" name="partner_interest" value="2" <%= profile && profile.partner_interest === '2' ? 'checked' : '' %>> <span>必须要有高度重合的爱好</span></label>
+        <label>31. 我希望伴侣和自己有相似的兴趣爱好：</label>
+        <div class="scale-horizontal">
+          <span class="scale-label-text scale-label-left_text">更喜欢互补</span>
+          <div class="scale-options-row">
+            <label class="scale-option <%= profile && profile.partner_interest === '-2' ? 'selected' : '' %>">
+              <input type="radio" name="partner_interest" value="-2" <%= profile && profile.partner_interest === '-2' ? 'checked' : '' %> required>
+              <span class="scale-circle">-2</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_interest === '-1' ? 'selected' : '' %>">
+              <input type="radio" name="partner_interest" value="-1" <%= profile && profile.partner_interest === '-1' ? 'checked' : '' %>>
+              <span class="scale-circle">-1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_interest === '0' ? 'selected' : '' %>">
+              <input type="radio" name="partner_interest" value="0" <%= profile && profile.partner_interest === '0' ? 'checked' : '' %>>
+              <span class="scale-circle">0</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_interest === '1' ? 'selected' : '' %>">
+              <input type="radio" name="partner_interest" value="1" <%= profile && profile.partner_interest === '1' ? 'checked' : '' %>>
+              <span class="scale-circle">+1</span>
+            </label>
+            <label class="scale-option <%= profile && profile.partner_interest === '2' ? 'selected' : '' %>">
+              <input type="radio" name="partner_interest" value="2" <%= profile && profile.partner_interest === '2' ? 'checked' : '' %>>
+              <span class="scale-circle">+2</span>
+            </label>
+          </div>
+          <span class="scale-label-text scale-label-right_text">必须要有高度重合的爱好</span>
+        </div>
         </div>
       </div>
     </div>
@@ -764,31 +1102,39 @@
     <!-- 六、Love Type16 恋爱类型测试 -->
     <div class="form-section">
       <h3 style="color: #e74c3c; margin: 20px 0 15px;">六、Love Type16 恋爱类型测试</h3>
-      <p class="lovetype-intro">请根据你的真实感受，选择最接近的选项。每题从左到右代表从 A 到 B 的 5 档倾向，越靠近一侧分值越高。</p>
 
       <% lovetypeQuestions.forEach(function(question) { %>
         <div class="lovetype-question">
           <div class="lovetype-question-head">
             <strong><%= question.number %>. <%= question.prompt %></strong>
-            <div class="lovetype-question-sides">
-              <span>A / 左侧：<%= question.left.text %>（<%= question.left.letter %>）</span>
-              <span>B / 右侧：<%= question.right.text %>（<%= question.right.letter %>）</span>
-            </div>
           </div>
-
-          <div class="lovetype-scale">
-            <% lovetypeScaleOptions.forEach(function(option) { %>
-              <label class="lovetype-scale-option">
-                <input
-                  type="radio"
-                  name="lovetype_<%= question.id %>"
-                  value="<%= option.value %>"
-                  <%= String(lovetypeAnswers[question.id] || '0') === option.value ? 'checked' : '' %>
-                  required
-                >
-                <span class="lovetype-scale-label"><%= option.label %></span>
-              </label>
-            <% }); %>
+          <div class="lovetype-scale-wrapper">
+            <div class="scale-horizontal">
+              <span class="scale-label-text scale-label-left_text"><%= question.left.text %></span>
+              <div class="scale-options-row" style="margin-bottom: 0;">
+                <label class="scale-option <%= String(lovetypeAnswers[question.id] || '0') === '-2' ? 'selected' : '' %>">
+                  <input type="radio" name="lovetype_<%= question.id %>" value="-2" <%= String(lovetypeAnswers[question.id] || '0') === '-2' ? 'checked' : '' %> required>
+                  <span class="scale-circle">-2</span>
+                </label>
+                <label class="scale-option <%= String(lovetypeAnswers[question.id] || '0') === '-1' ? 'selected' : '' %>">
+                  <input type="radio" name="lovetype_<%= question.id %>" value="-1" <%= String(lovetypeAnswers[question.id] || '0') === '-1' ? 'checked' : '' %>>
+                  <span class="scale-circle">-1</span>
+                </label>
+                <label class="scale-option <%= String(lovetypeAnswers[question.id] || '0') === '0' ? 'selected' : '' %>">
+                  <input type="radio" name="lovetype_<%= question.id %>" value="0" <%= String(lovetypeAnswers[question.id] || '0') === '0' ? 'checked' : '' %>>
+                  <span class="scale-circle">0</span>
+                </label>
+                <label class="scale-option <%= String(lovetypeAnswers[question.id] || '0') === '1' ? 'selected' : '' %>">
+                  <input type="radio" name="lovetype_<%= question.id %>" value="1" <%= String(lovetypeAnswers[question.id] || '0') === '1' ? 'checked' : '' %>>
+                  <span class="scale-circle">+1</span>
+                </label>
+                <label class="scale-option <%= String(lovetypeAnswers[question.id] || '0') === '2' ? 'selected' : '' %>">
+                  <input type="radio" name="lovetype_<%= question.id %>" value="2" <%= String(lovetypeAnswers[question.id] || '0') === '2' ? 'checked' : '' %>>
+                  <span class="scale-circle">+2</span>
+                </label>
+              </div>
+              <span class="scale-label-text scale-label-right_text"><%= question.right.text %></span>
+            </div>
           </div>
         </div>
       <% }); %>
@@ -796,6 +1142,7 @@
 
     <button type="submit" class="btn" style="margin-top: 20px;">提交问卷</button>
   </form>
+  <% } %>
 </div>
 </div>
 
@@ -941,9 +1288,17 @@
 
 <script>
 // 范围选择器互斥逻辑
-function updateAgeDiffDisplay() {
-  const minSlider = document.getElementById('ageDiffMin');
-  const maxSlider = document.getElementById('ageDiffMax');
+
+// 我的年龄
+function updateMyAgeDisplay() {
+  const slider = document.getElementById('myAge');
+  document.getElementById('myAgeValue').textContent = slider.value + ' 岁';
+}
+
+// 双滑块年龄范围选择
+function updateAgeDualRange() {
+  const minSlider = document.getElementById('ageMin');
+  const maxSlider = document.getElementById('ageMax');
   const minVal = parseInt(minSlider.value);
   const maxVal = parseInt(maxSlider.value);
 
@@ -952,8 +1307,43 @@ function updateAgeDiffDisplay() {
     minSlider.value = maxVal;
   }
 
-  document.getElementById('ageDiffMinValue').textContent = '可接受比我小 ' + Math.abs(minSlider.value) + ' 岁';
-  document.getElementById('ageDiffMaxValue').textContent = '可接受比我大 ' + maxSlider.value + ' 岁';
+  // 更新高亮区域
+  const highlight = document.getElementById('ageRangeHighlight');
+  const minPercent = ((minVal - 16) / (40 - 16)) * 100;
+  const maxPercent = ((maxVal - 16) / (40 - 16)) * 100;
+  highlight.style.left = minPercent + '%';
+  highlight.style.width = (maxPercent - minPercent) + '%';
+
+  // 更新显示值
+  document.getElementById('ageMinDisplay').textContent = minSlider.value;
+  document.getElementById('ageMaxDisplay').textContent = maxSlider.value;
+}
+
+// 双数轴年龄范围选择
+function updateAgeRangeDisplay() {
+  const minSlider = document.getElementById('ageMin');
+  const maxSlider = document.getElementById('ageMax');
+  const minVal = parseInt(minSlider.value);
+  const maxVal = parseInt(maxSlider.value);
+
+  // 确保最小值不超过最大值
+  if (minVal > maxVal) {
+    minSlider.value = maxVal;
+  }
+
+  document.getElementById('ageMinValue').textContent = '最小 ' + minSlider.value + ' 岁';
+  document.getElementById('ageMaxValue').textContent = '最大 ' + maxSlider.value + ' 岁';
+}
+
+// 我的身高（单次数轴）
+function updateMyHeightDisplay() {
+  const slider = document.getElementById('myHeight');
+  document.getElementById('myHeightValue').textContent = slider.value + ' cm';
+}
+
+// 旧版函数保留兼容
+function updateAgeDiffDisplay() {
+  updateAgeRangeDisplay();
 }
 
 function updateHeightDisplay() {
@@ -1015,8 +1405,9 @@ function updateInterestCounter() {
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
-  updateAgeDiffDisplay();
-  updateHeightDisplay();
+  updateMyAgeDisplay();
+  updateAgeRangeDisplay();
+  updateMyHeightDisplay();
   updatePreferredHeightDisplay();
   updateInterestCounter();
 
@@ -1030,6 +1421,28 @@ document.addEventListener('DOMContentLoaded', function() {
       const group = this.closest('.option-group');
       group.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
       this.classList.add('selected');
+    });
+  });
+
+  // 5档程度选择 (-2到+2) 点击效果
+  document.querySelectorAll('.scale-options-row').forEach(scaleRow => {
+    scaleRow.querySelectorAll('.scale-option').forEach(option => {
+      const radio = option.querySelector('input[type="radio"]');
+      if (radio && radio.checked) {
+        option.classList.add('selected');
+      }
+      option.addEventListener('click', function(e) {
+        // 防止重复触发
+        const radio = this.querySelector('input[type="radio"]');
+        if (!radio) return;
+
+        const row = this.closest('.scale-options-row');
+        row.querySelectorAll('.scale-option').forEach(opt => opt.classList.remove('selected'));
+        this.classList.add('selected');
+
+        // 选中radio
+        radio.checked = true;
+      });
     });
   });
 

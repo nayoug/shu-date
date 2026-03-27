@@ -70,12 +70,11 @@ async function initDatabase() {
   await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS lovetype_scores TEXT');
 
   // 新增字段 (2026-03 问卷更新)
-  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age TEXT');
-  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age_diff_min INTEGER');
-  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age_diff_max INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age_min INTEGER');
+  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age_max INTEGER');
   await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS accepted_campus TEXT');
   await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS height_min INTEGER');
-  await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS height_max INTEGER');
   await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS preferred_height_min INTEGER');
   await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS preferred_height_max INTEGER');
   await pool.query('ALTER TABLE profiles ADD COLUMN IF NOT EXISTS sleep_pattern INTEGER');

@@ -1,33 +1,28 @@
 /**
- * 匹配服务 - 完整匹配算法
+ * 匹配服务 - 完整匹配算法（2026-03 新版问卷）
  *
  * 过滤条件：
  * - 性别偏好
- * - 年级偏好
- * - 身高偏好
- * - 校区接受度
- * - 年龄差
+ * - 年龄范围（age_min, age_max）
+ * - 校区接受度（accepted_campus）
+ * - 身高偏好范围（preferred_height_min, preferred_height_max）
+ * - 家乡偏好（hometown, preferred_hometown）
  *
  * 相似度计算：
  * - 兴趣标签 Jaccard
- * - 生活习惯 Jaccard
- * - 恋爱观匹配度
+ * - 生活方式相似度（作息、饮食、口味、约会、消费、烟酒）
+ * - 恋爱观匹配度（沟通、同居、婚姻、相处模式）
+ * - 兴趣爱好相似度偏好（partner_interest）
  *
  * 综合评分：
- * - interest: 0.3
- * - lifestyle: 0.3
- * - love_values: 0.4
+ * - interest: 0.25
+ * - lifestyle: 0.35
+ * - love_values: 0.25
+ * - lovetype: 0.15
  */
 
 const dbModule = require('./database');
 const lovetypeService = require('./lovetypeService');
-
-// 学历阶段排序
-const GRADE_ORDER = {
-  '大一': 1, '大二': 2, '大三': 3, '大四': 4,
-  '研一': 5, '研二': 6, '研三': 7,
-  '博一': 8, '博二': 9, '博三': 10, '博四': 11, '博五': 12
-};
 
 // ============ 工具函数 ============
 
@@ -52,11 +47,11 @@ function optionMatch(myValue, theirValue) {
   return 0;
 }
 
-// 计算年级差距
-function getGradeDiff(grade1, grade2) {
-  const g1 = GRADE_ORDER[grade1] || 5;
-  const g2 = GRADE_ORDER[grade2] || 5;
-  return Math.abs(g1 - g2);
+// 整数相似度（用于-2到2的评分）
+function intSimilarity(val1, val2) {
+  if (val1 === null || val1 === undefined || val2 === null || val2 === undefined) return 0.5;
+  const diff = Math.abs(val1 - val2);
+  return 1 - (diff / 4); // 最大差为4，转换为0-1
 }
 
 // ============ 过滤阶段 ============
@@ -73,82 +68,104 @@ function filterCandidates(myProfile, allProfiles) {
       if (myProfile.gender !== p.preferred_gender) return false;
     }
 
-    // 2. 年级偏好过滤
-    if (myProfile.preferred_grade) {
-      if (!checkGradeMatch(myProfile.preferred_grade, p.my_grade)) return false;
+    // 2. 年龄范围过滤（使用绝对年龄范围）
+    if (myProfile.age_min !== null && myProfile.age_max !== null) {
+      if (p.age) {
+        const theirAge = parseInt(p.age);
+        if (theirAge < myProfile.age_min || theirAge > myProfile.age_max) return false;
+      }
     }
-    // 对方也要接受我的年级
-    if (p.preferred_grade) {
-      if (!checkGradeMatch(p.preferred_grade, myProfile.my_grade)) return false;
-    }
-
-    // 3. 身高偏好过滤
-    if (myProfile.preferred_height && myProfile.preferred_height !== '不限') {
-      if (!checkHeightMatch(myProfile.preferred_height, p.height)) return false;
-    }
-
-    // 4. 校区接受度过滤
-    if (myProfile.cross_campus === '不可以接受') {
-      if (p.campus !== myProfile.campus) return false;
+    // 对方也要在我的年龄范围内
+    if (p.age_min !== null && p.age_max !== null) {
+      if (myProfile.age) {
+        const myAge = parseInt(myProfile.age);
+        if (myAge < p.age_min || myAge > p.age_max) return false;
+      }
     }
 
-    // 5. 年级差过滤（最多差3级）
-    if (getGradeDiff(myProfile.my_grade, p.my_grade) > 3) return false;
+    // 3. 校区接受度过滤
+    if (myProfile.accepted_campus && p.campus) {
+      const acceptedCampuses = myProfile.accepted_campus.split(',').map(s => s.trim());
+      if (!acceptedCampuses.includes(p.campus)) return false;
+    }
+    // 对方也要接受我的校区
+    if (p.accepted_campus && myProfile.campus) {
+      const acceptedCampuses = p.accepted_campus.split(',').map(s => s.trim());
+      if (!acceptedCampuses.includes(myProfile.campus)) return false;
+    }
+
+    // 4. 身高偏好过滤
+    if (myProfile.preferred_height_min !== null && myProfile.preferred_height_min !== undefined &&
+        myProfile.preferred_height_max !== null && myProfile.preferred_height_max !== undefined &&
+        p.height_min !== null && p.height_min !== undefined) {
+      // 我的身高要在对方偏好范围内
+      if (p.height_min > myProfile.preferred_height_max || p.height_min < myProfile.preferred_height_min) {
+        // 再次检查：对方的实际身高是否在我的偏好范围内
+        if (myProfile.preferred_height_min > p.height_min || myProfile.preferred_height_max < p.height_min) {
+          return false;
+        }
+      }
+    }
+
+    // 5. 家乡偏好过滤
+    if (myProfile.preferred_hometown && myProfile.preferred_hometown !== '不限') {
+      if (myProfile.preferred_hometown === '同家乡') {
+        if (p.hometown !== myProfile.hometown) return false;
+      }
+    }
+    // 对方也要接受我的家乡
+    if (p.preferred_hometown && p.preferred_hometown !== '不限') {
+      if (p.preferred_hometown === '同家乡') {
+        if (myProfile.hometown !== p.hometown) return false;
+      }
+    }
 
     return true;
   });
 }
 
-function checkGradeMatch(preference, grade) {
-  if (!preference || !grade) return true;
-  if (preference === '不限') return true;
-
-  if (preference === '大一-大四（本科）') {
-    return ['大一', '大二', '大三', '大四'].includes(grade);
-  }
-  if (preference === '研一-博五（硕博）') {
-    return ['研一', '研二', '研三', '博一', '博二', '博三', '博四', '博五'].includes(grade);
-  }
-  return true;
-}
-
-function checkHeightMatch(preference, height) {
-  if (!preference || !height) return true;
-  if (preference === '不限') return true;
-
-  const heightRanges = {
-    '140-150': [140, 150],
-    '151-160': [151, 160],
-    '161-170': [161, 170],
-    '171-180': [171, 180],
-    '181-210': [181, 210]
-  };
-
-  const myRange = heightRanges[preference];
-  const theirRange = heightRanges[height];
-
-  if (!myRange || !theirRange) return true;
-
-  // 检查范围是否有交集
-  return !(myRange[1] < theirRange[0] || myRange[0] > theirRange[1]);
-}
-
 // ============ 相似度计算 ============
 
-function calculateInterestScore(myProfile, theirProfile) {
-  // 兴趣爱好 Jaccard 相似度
-  return jaccardSimilarity(myProfile.interests, theirProfile.interests);
+// 考虑用户对伴侣兴趣相似的偏好
+function calculateInterestScoreWithPreference(myProfile, theirProfile) {
+  const baseScore = jaccardSimilarity(myProfile.interests, theirProfile.interests);
+  const preference = myProfile.partner_interest;
+
+  // 如果用户偏好相似（partner_interest > 0），提高匹配分数要求
+  // 如果用户偏好互补（partner_interest < 0），降低匹配分数要求
+  if (preference === null || preference === undefined) return baseScore;
+
+  if (preference >= 1) {
+    // 希望高度相似：加分
+    return Math.min(1, baseScore + 0.2);
+  } else if (preference <= -1) {
+    // 可以互补：保持原分数
+    return baseScore;
+  } else {
+    // 中立：轻微加分
+    return baseScore + 0.1;
+  }
 }
 
 function calculateLifestyleScore(myProfile, theirProfile) {
-  // 生活习惯相关字段
-  const lifestyleFields = ['sleep_schedule', 'smoke_alcohol', 'pet', 'social_boundary'];
+  // 生活方式相关字段 - 使用整数相似度（-2到2）
+  const lifestyleFields = [
+    'sleep_pattern',    // 作息节律
+    'diet_preference',  // 饮食偏好
+    'spice_tolerance',  // 食辣能力
+    'date_preference',  // 周末约会
+    'spending_style',   // 消费风格
+    'smoking_habit',    // 吸烟习惯
+    'drinking_habit'   // 饮酒习惯
+  ];
+
   let score = 0;
   let count = 0;
 
   for (const field of lifestyleFields) {
-    if (myProfile[field] && theirProfile[field]) {
-      score += optionMatch(myProfile[field], theirProfile[field]);
+    if (myProfile[field] !== null && myProfile[field] !== undefined &&
+        theirProfile[field] !== null && theirProfile[field] !== undefined) {
+      score += intSimilarity(myProfile[field], theirProfile[field]);
       count++;
     }
   }
@@ -157,8 +174,14 @@ function calculateLifestyleScore(myProfile, theirProfile) {
 }
 
 function calculateLoveValueScore(myProfile, theirProfile) {
-  // 恋爱观念相关字段
-  const loveFields = ['long_distance', 'communication', 'spending', 'cohabitation', 'marriage_plan', 'relationship_style'];
+  // 恋爱观念相关字段 - 使用选项匹配
+  const loveFields = [
+    'communication',      // 沟通频率
+    'cohabitation',      // 婚前同居
+    'marriage_plan',     // 婚姻规划
+    'relationship_style' // 相处模式
+  ];
+
   let score = 0;
   let count = 0;
 
@@ -175,16 +198,18 @@ function calculateLoveValueScore(myProfile, theirProfile) {
 // ============ 主匹配函数 ============
 
 function calculateMatchScore(myProfile, theirProfile) {
-  const interestScore = calculateInterestScore(myProfile, theirProfile);
+  const interestScore = calculateInterestScoreWithPreference(myProfile, theirProfile);
   const lifestyleScore = calculateLifestyleScore(myProfile, theirProfile);
   const loveValueScore = calculateLoveValueScore(myProfile, theirProfile);
   const lovetypeAdjustment = lovetypeService.getCompatibilityAdjustment(myProfile.lovetype_code, theirProfile.lovetype_code);
 
-  // 综合评分权重
+  // 综合评分权重（根据新问卷调整）
   const baseScore =
-    interestScore * 0.3 +
-    lifestyleScore * 0.3 +
-    loveValueScore * 0.4;
+    interestScore * 0.25 +
+    lifestyleScore * 0.35 +
+    loveValueScore * 0.25;
+
+  // LoveType兼容性和基础分结合
   const finalScore = Math.max(0, Math.min(1, baseScore + lovetypeAdjustment));
 
   return Math.round(finalScore * 100) / 100;
@@ -225,10 +250,11 @@ async function findMatches(userId) {
       email: candidate.email,
       name: candidate.name,
       my_grade: candidate.my_grade,
-      major: candidate.major,
       gender: candidate.gender,
-      height: candidate.height,
+      age: candidate.age,
+      height_min: candidate.height_min,
       campus: candidate.campus,
+      hometown: candidate.hometown,
       interests: candidate.interests,
       lovetype_code: candidate.lovetype_code,
       lovetype_match_label: lovetypeService.getCompatibilityLabel(myProfile.lovetype_code, candidate.lovetype_code),

@@ -29,10 +29,10 @@ app.use(session({
   cookie: {
     httpOnly: true,
     sameSite: 'lax',
-    secure: isProduction,
+    secure: false,
     maxAge: 7 * 24 * 60 * 60 * 1000
   },
-  proxy: isProduction
+  proxy: false
 }));
 
 // 登录中间件
@@ -128,6 +128,7 @@ function buildProfilePageModel(req, profile) {
   const lovetypeAnswers = lovetypeService.parseStoredAnswers(profile?.lovetype_answers);
   const hasLovetypeAnswers = Object.keys(lovetypeAnswers).length > 0;
   const lovetypeAssessment = hasLovetypeAnswers ? lovetypeService.calculateLoveType(lovetypeAnswers) : null;
+  const showResult = lovetypeAssessment && !req.query.edit;
 
   return {
     title: '填写问卷',
@@ -137,11 +138,12 @@ function buildProfilePageModel(req, profile) {
     lovetypeScaleOptions: lovetypeService.LOVETYPE_SCALE_OPTIONS,
     lovetypeAnswers,
     lovetypeAssessment,
-    lovetypeResult: lovetypeAssessment ? lovetypeAssessment.result : null,
+    lovetypeResult: showResult ? lovetypeAssessment.result : null,
     isAdmin: req.isAdmin,
     isDev: !isProduction,
     message: req.query.msg,
-    messageType: req.query.type
+    messageType: req.query.type,
+    editMode: req.query.edit === '1'
   };
 }
 
@@ -150,6 +152,7 @@ function buildProfilePageModel(req, profile) {
 // 首页
 app.get('/', async (req, res) => {
   console.log('[DEBUG] 首页 sessionID:', req.sessionID, 'userId:', req.session.userId);
+  console.log('[DEBUG] 首页接收到的 Cookie:', req.headers.cookie);
   let user = null;
   if (req.session.userId) {
     const u = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
@@ -177,16 +180,19 @@ app.post('/login', async (req, res) => {
   const { email } = req.body;
   const lowerEmail = email.toLowerCase();
 
+  // 验证邮箱格式：必须以 @shu.edu.cn 结尾，且不包含特殊字符
+  const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
+  const isValidShuEmail = emailPattern.test(lowerEmail);
+
   // 1. 定义白名单（把开发者的邮箱放这里）
   const whiteList = [
     'admain@gmail.com'
   ];
 
-  // 2. 只有既不在白名单，又不符合学校后缀的邮箱才会被拦截
+  // 2. 只有既不在白名单，又符合学校邮箱格式的才允许
   const isWhiteListed = whiteList.includes(lowerEmail);
-  const isShuEmail = lowerEmail.endsWith('@shu.edu.cn');
 
-  if (!isWhiteListed && !isShuEmail) {
+  if (!isWhiteListed && !isValidShuEmail) {
     return res.render('login', {
       title: '登录',
       message: '只能使用 @shu.edu.cn 结尾的学校邮箱',
@@ -298,30 +304,16 @@ app.get('/login/verify/:code', async (req, res) => {
   try {
     console.log('[DEBUG] 准备建立会话, user.id:', user.id);
 
-    if (isTestUser) {
-      // 测试用户: 跳过 session 重新生成，直接设置用户
-      req.session.userId = user.id;
-      await saveSession(req);
-    } else {
-      // 普通用户: 重新生成 session 以防安全
-      await regenerateSession(req);
-      req.session.userId = user.id;
-      await saveSession(req);
-    }
+    // 重新生成 session 并设置用户
+    await regenerateSession(req);
+    req.session.userId = user.id;
+    await saveSession(req);
 
     console.log('[DEBUG] 会话已保存, sessionID:', req.sessionID, 'userId:', req.session.userId);
 
-    // 测试用户: 直接 render 首页而非重定向，确保 session 正确传递
+    // 测试用户: 重定向到首页，确保 session cookie 正确传递
     if (isTestUser) {
-      const u = await db.queryOne('SELECT * FROM users WHERE id = $1', [user.id]);
-      const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [user.id]);
-      const testUser = { ...u, hasProfile: !!profile };
-      return res.render('index', {
-        title: '首页',
-        user: testUser,
-        message: '✅ 测试用户登录成功！sessionId=' + req.sessionID,
-        messageType: 'success'
-      });
+      return res.redirect('/');
     }
   } catch (error) {
     console.error('建立登录会话失败:', error);
@@ -369,8 +361,8 @@ app.post('/survey/submit', isLoggedIn, async (req, res) => {
   const fields = [
     // 基础信息
     'gender', 'age', 'preferred_gender', 'purpose', 'my_grade',
-    'age_diff_min', 'age_diff_max', 'campus', 'accepted_campus',
-    'height_min', 'height_max', 'preferred_height_min', 'preferred_height_max',
+    'age_min', 'age_max', 'campus', 'accepted_campus',
+    'height_min', 'preferred_height_min', 'preferred_height_max',
     // 择偶偏好
     'hometown', 'preferred_hometown', 'core_traits',
     // 恋爱观念
@@ -395,8 +387,8 @@ app.post('/survey/submit', isLoggedIn, async (req, res) => {
       values[f] = lovetypeAssessment.code;
     } else if (f === 'lovetype_scores') {
       values[f] = JSON.stringify(lovetypeAssessment.scores);
-    } else if (f === 'age_diff_min' || f === 'age_diff_max' ||
-               f === 'height_min' || f === 'height_max' ||
+    } else if (f === 'age_min' || f === 'age_max' ||
+               f === 'height_min' ||
                f === 'preferred_height_min' || f === 'preferred_height_max' ||
                f === 'sleep_pattern' || f === 'diet_preference' ||
                f === 'spice_tolerance' || f === 'date_preference' ||
