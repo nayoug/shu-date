@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "node app.js",
-    "dev:clean": "rm -f shu.db && node app.js"
+    "seed:test-data": "node generateTestData.js"
   },
   "dependencies": {
     "dotenv": "^16.6.1",
@@ -14,7 +14,6 @@
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "pg": "^8.20.0",
-    "resend": "^4.0.0",
-    "sql.js": "^1.10.0"
+    "resend": "^4.0.0"
   }
 }

@@ -233,12 +233,17 @@ app.post('/login', async (req, res) => {
 
 // 验证码登录
 app.get('/login/verify/:code', async (req, res) => {
+  console.log('[DEBUG] /login/verify 接收到的 code:', req.params.code);
+  console.log('[DEBUG] 当前时间:', new Date().toISOString());
+
   const user = await db.queryOne(`
     UPDATE users
     SET login_code = NULL, login_code_expire = NULL
     WHERE login_code = $1 AND login_code_expire > NOW()
     RETURNING id
   `, [req.params.code]);
+
+  console.log('[DEBUG] 查询结果 user:', user);
 
   if (!user) {
     const expiredToken = await db.queryOne('SELECT id FROM users WHERE login_code = $1', [req.params.code]);
