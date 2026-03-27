@@ -26,11 +26,10 @@
 ### 2.2 数据库
 - **当前**: Supabase PostgreSQL (云数据库)
 - **驱动**: pg
-- **连接**: postgresql://postgres:***@db.jthhgotaizuhtjcwxyhy.supabase.co:5432/postgres
+- **连接**: `DATABASE_URL` 环境变量
 
 ### 2.3 邮件服务
-- **主要**: Resend (API方式)
-- **备用**: Nodemailer (QQ邮箱SMTP)
+- **当前**: Resend (API方式)
 
 ---
 
@@ -39,7 +38,7 @@
 ### 3.1 已完成 ✅
 
 #### 用户系统
-- [x] 邮箱验证码登录 (仅限 @shu.edu.cn)
+- [x] 邮箱登录链接 (仅限 @shu.edu.cn)
 - [x] 自动注册新用户
 - [x] Session会话管理
 - [x] 登出功能
@@ -57,16 +56,16 @@
 - [x] 匹配过滤条件 (性别、年级、身高、校区)
 - [x] 相似度计算 (Jaccard + 选项匹配)
 - [x] 匹配结果查看
+- [x] 手动触发匹配后发送结果邮件
 
 #### 管理后台
 - [x] 查看所有用户
-- [x] 查看用户登录码
+- [x] 查看问卷完成情况
 - [x] 手动触发匹配
 
 ### 3.2 开发中 🔄
 
 - [ ] 自动每周匹配任务
-- [ ] 匹配结果邮件通知
 - [ ] 用户画像展示优化
 
 ### 3.3 待办 📋
@@ -87,8 +86,8 @@
 | email | TEXT | 学校邮箱 (唯一) |
 | name | TEXT | 姓名 |
 | verified | INTEGER | 是否验证 (0/1) |
-| login_code | TEXT | 登录验证码 |
-| login_code_expire | TIMESTAMP | 验证码过期时间 |
+| login_code | TEXT | 一次性登录令牌 |
+| login_code_expire | TIMESTAMP | 登录令牌过期时间 |
 | created_at | TIMESTAMP | 创建时间 |
 
 ### 4.2 profiles 表
@@ -141,8 +140,8 @@
 |------|------|------|------|
 | GET | / | 首页 | 公开 |
 | GET | /login | 登录页 | 公开 |
-| POST | /login | 发送验证码 | 公开 |
-| GET | /login/verify/:code | 验证码登录 | 公开 |
+| POST | /login | 发送登录链接 | 公开 |
+| GET | /login/verify/:code | 登录链接验证 | 公开 |
 | GET | /logout | 登出 | 已登录 |
 | GET | /profile | 问卷页 | 已登录 |
 | POST | /survey/submit | 提交问卷 | 已登录 |
@@ -151,7 +150,7 @@
 | GET | /api/matches | 获取匹配列表 | 已登录 |
 | GET | /api/match/top | 获取最佳匹配 | 已登录 |
 | GET | /admin | 管理后台 | 管理员 |
-| GET | /admin/match | 手动触发匹配 | 管理员 |
+| POST | /admin/match | 手动触发匹配 | 管理员 |
 
 ---
 
@@ -192,10 +191,13 @@
 - 切换数据库从 SQLite 到 Supabase PostgreSQL
 - 添加 pg 依赖
 - 更新 database.js 适配异步 PostgreSQL
+- 管理端手动匹配改为 POST + CSRF
+- 修复 matchService 与异步 PostgreSQL 封装的调用链
+- 对齐文档与测试数据脚本到 PostgreSQL 方案
 
 ### 2026-03-25(历史版本)
 - 初始版本 V0.1
-- 实现邮箱验证码登录
+- 实现邮箱登录流程
 - 实现24题问卷
 - 实现匹配算法
 - 部署到 Render
@@ -206,7 +208,7 @@
 
 ### 高优先级
 1. [ ] 配置自动每周匹配任务 (Cron job)
-2. [ ] 实现匹配结果邮件通知
+2. [ ] 将匹配任务与邮件通知接入自动调度
 3. [ ] 优化用户画像展示
 
 ### 中优先级

@@ -13,7 +13,7 @@
 ## 内测功能
 
 ### 已上线
-- ✅ 邮箱验证码登录 (@shu.edu.cn)
+- ✅ 邮箱登录链接 (@shu.edu.cn)
 - ✅ 24题恋爱匹配问卷
 - ✅ 智能匹配算法
 - ✅ 匹配结果查看
@@ -25,8 +25,8 @@
 
 1. 打开 https://shudate.xyz/login
 2. 输入 @shu.edu.cn 邮箱
-3. 点击发送登录验证码
-4. 邮箱中查看验证码并输入
+3. 点击发送登录链接
+4. 邮箱中点击登录链接完成登录
 
 ---
 
@@ -79,7 +79,7 @@
 | 后端 | Node.js + Express |
 | 数据库 | Supabase PostgreSQL |
 | 前端 | EJS模板 |
-| 邮件 | Resend + Nodemailer |
+| 邮件 | Resend |
 
 ---
 
@@ -91,10 +91,28 @@
 
 ---
 
+## 本地开发
+
+1. 安装依赖：`npm install`
+2. 配置 `.env`，至少包含：
+
+```env
+DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<database>
+SESSION_SECRET=replace-this-in-production
+BASE_URL=http://localhost:3000
+```
+
+3. 启动服务：`npm start`
+4. 生成演示数据：`npm run seed:test-data`
+
+> `generateTestData.js` 会直接写入 `DATABASE_URL` 指向的 PostgreSQL 数据库，请不要对生产库执行。
+
+---
+
 ## 注意事项
 
-1. **数据库**: 使用 Supabase 云数据库，数据持久化
-2. **邮件**: 配置了 Resend API 和 QQ邮箱 SMTP
+1. **数据库**: 使用 Supabase PostgreSQL，通过 `DATABASE_URL` 连接
+2. **邮件**: 当前登录邮件与匹配通知均通过 Resend 发送
 3. **休眠**: Render免费版30分钟无访问会休眠
 
 ---
