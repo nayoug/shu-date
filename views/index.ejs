@@ -1,73 +1,84 @@
-<nav class="navbar">
-  <div class="container">
-    <a href="/" class="logo">心有所<span>SHU</span></a>
-    <div class="nav-links">
-      <% if (typeof user !== 'undefined' && user) { %>
-        <a href="/profile">我的资料</a>
-        <a href="/matches">匹配结果</a>
-        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-          <a href="/admin">管理</a>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>心有所SHU - 上大交友匹配</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="logo">心有所<span>SHU</span></a>
+      <div class="nav-links">
+        <% if (typeof user !== 'undefined' && user) { %>
+          <a href="/profile">资料</a>
+          <a href="/matches">匹配</a>
+          <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+            <a href="/admin">后台</a>
+          <% } %>
+          <a href="/logout" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.85rem;">退出</a>
+        <% } else { %>
+          <a href="/login" class="btn" style="padding: 6px 14px; font-size: 0.85rem;">登录</a>
         <% } %>
-        <a href="/logout" class="btn">退出</a>
-      <% } else { %>
-        <a href="/login">登录</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <% if (typeof message !== 'undefined' && message) { %>
+      <div class="alert alert-<%= messageType || 'info' %>"><%= message %></div>
+    <% } %>
+
+    <div class="hero">
+      <h1>心有所SHU</h1>
+      <p class="subtitle">上大同学之间的互相认识，从这里开始</p>
+      <p style="opacity: 0.7; font-size: 0.9rem;">小范围内测中</p>
+      <% if (typeof user === 'undefined' || !user) { %>
+        <a href="/login" class="btn btn-large" style="background: white; color: var(--primary); margin-top: 20px;">开始</a>
       <% } %>
     </div>
-  </div>
-</nav>
 
-<div class="hero">
-  <h1>💕 心有所SHU</h1>
-  <p>上海大学校园交友匹配系统</p>
-  <p>每周为你推荐一位可能聊得来的同学</p>
-
-  <p>当前为小范围测试，仅限内部使用</p>
-
-  <% if (!user) { %>
-    <a href="/register" class="btn" style="background: white; color: #e74c3c;">立即注册</a>
-  <% } %>
-</div>
-
-<div class="features">
-  <div class="feature-card">
-    <div class="icon">📧</div>
-    <h3>校园邮箱验证</h3>
-    <p>仅限 @shu.edu.cn 邮箱，确保都是本校同学</p>
-  </div>
-  <div class="feature-card">
-    <div class="icon">📝</div>
-    <h3>简单问卷</h3>
-    <p>填写你的专业、爱好、性格标签</p>
-  </div>
-  <div class="feature-card">
-    <div class="icon">💌</div>
-    <h3>每周匹配</h3>
-    <p>系统每周为你推荐一位新朋友</p>
-  </div>
-</div>
-
-<% if (user) { %>
-<div class="card" style="margin-top: 30px;">
-  <h2>欢迎回来，<%= user.name || user.email %>！</h2>
-  <% if (!user.verified) { %>
-    <div class="alert alert-error">
-      ⚠️ 你的邮箱还未验证，请查收验证邮件完成验证。
+    <div class="features">
+      <div class="feature-card">
+        <div class="icon">📧</div>
+        <h3>学校邮箱</h3>
+        <p>@shu.edu.cn 验证身份</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">✏️</div>
+        <h3>填个问卷</h3>
+        <p>说说你的性格和爱好</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">💕</div>
+        <h3>每周推荐</h3>
+        <p>认识一个可能聊得来的人</p>
+      </div>
     </div>
-  <% } else { %>
-    <div class="alert alert-success">
-      ✅ 邮箱已验证
+
+    <% if (typeof user !== 'undefined' && user) { %>
+    <div class="card">
+      <h3 style="margin-bottom: 12px;">Hi, <%= user.name || user.email.split('@')[0] %></h3>
+      <% if (!user.verified) { %>
+        <div class="alert alert-warning" style="margin-bottom: 16px;">
+          邮箱还没验证，去邮箱里点一下验证链接
+        </div>
+      <% } else { %>
+        <% if (user.hasProfile) { %>
+          <p style="color: var(--muted-foreground); margin-bottom: 16px;">资料填好了，等匹配结果吧</p>
+          <a href="/matches" class="btn">看看匹配</a>
+        <% } else { %>
+          <p style="color: var(--muted-foreground); margin-bottom: 16px;">还差个问卷没填</p>
+          <a href="/profile" class="btn">去填</a>
+        <% } %>
+      <% } %>
     </div>
-    <% if (user.hasProfile) { %>
-      <p>你的资料已完善，可以等待每周的匹配结果啦！</p>
-      <a href="/matches" class="btn">查看匹配结果</a>
-    <% } else { %>
-      <p>还没有填写个人资料，快去完善吧～</p>
-      <a href="/profile" class="btn">填写资料</a>
     <% } %>
-  <% } %>
-</div>
-<% } %>
+  </div>
 
-<footer class="footer">
-  <p>© 2026 心有所SHU - 上海大学校园交友匹配系统</p>
-</footer>
+  <footer class="footer">
+    <p>© 2026 心有所SHU</p>
+  </footer>
+</body>
+</html>

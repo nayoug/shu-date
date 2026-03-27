@@ -1,0 +1,19 @@
+{
+  "name": "xin-yousuo-shu",
+  "version": "01.0",
+  "description": "上海大学校园交友匹配网站",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "pg": "^8.20.0",
+    "resend": "^4.0.0",
+    "sql.js": "^1.10.0"
+  }
+}

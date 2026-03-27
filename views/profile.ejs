@@ -1,21 +1,31 @@
-<nav class="navbar">
-  <div class="container">
-    <a href="/" class="logo">心有所<span>SHU</span></a>
-    <div class="nav-links">
-      <a href="/profile">我的资料</a>
-      <a href="/matches">匹配结果</a>
-      <a href="/logout" class="btn">退出</a>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>填写问卷 - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="logo">心有所<span>SHU</span></a>
+      <div class="nav-links">
+        <a href="/profile" style="color: var(--primary); font-weight: 600;">资料</a>
+        <a href="/matches">匹配</a>
+        <a href="/logout" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.85rem;">退出</a>
+      </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
-<div class="card">
-  <h2>📝 恋爱匹配问卷</h2>
-  <p style="color: #666; margin-bottom: 20px;">请认真填写以下问题，帮助我们为你找到更合适的TA</p>
+  <div class="container" style="max-width: 800px;">
+    <div class="card">
+      <h2 style="margin-bottom: 8px;">📝 恋爱匹配问卷</h2>
+      <p style="color: var(--muted-foreground); margin-bottom: 24px;">填完这个，我们就能帮你找到聊得来的人</p>
 
-  <% if (typeof isDev !== 'undefined' && isDev) { %>
-<button type="button" id="devFillBtn" style="background: #9b59b6; margin-bottom: 15px;" class="btn">🔧 开发模式：一键填写</button>
-<% } %>
+      <% if (typeof isDev !== 'undefined' && isDev) { %>
+        <button type="button" id="devFillBtn" class="btn btn-secondary" style="margin-bottom: 20px;">🔧 一键填写（测试）</button>
+      <% } %>
 
   <form action="/survey/submit" method="POST">
 
@@ -305,29 +315,17 @@
       </div>
     </div>
 
-    <button type="submit" class="btn" style="margin-top: 20px;">提交问卷</button>
+    <button type="submit" class="btn" style="margin-top: 20px; width: 100%;">提交问卷</button>
   </form>
+</div>
 </div>
 
 <footer class="footer">
-  <p>© 2026 心有所SHU - 上海大学校园交友匹配系统</p>
+  <p>© 2026 心有所SHU</p>
 </footer>
 
-<style>
-.form-section {
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-}
-.checkbox-group label {
-  display: inline-block;
-  margin-right: 15px;
-  margin-bottom: 8px;
-  cursor: pointer;
-}
-</style>
-
 <script>
+<% if (typeof isDev !== 'undefined' && isDev) { %>
 document.getElementById('devFillBtn').addEventListener('click', function() {
   // 下拉框选择第一项
   const selects = document.querySelectorAll('select[name]:not([name="core_traits"]):not([name="interests"])');
@@ -350,4 +348,7 @@ document.getElementById('devFillBtn').addEventListener('click', function() {
 
   alert('已自动填写测试数据');
 });
+<% } %>
 </script>
+</body>
+</html>
