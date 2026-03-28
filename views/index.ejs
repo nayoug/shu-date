@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>心有所SHU - 上大交友匹配</title>
   <link rel="stylesheet" href="/css/style.css">
+  <% if (typeof isDev !== 'undefined' && isDev) { %>
+  <link rel="stylesheet" href="/css/dev-tools.css">
+  <% } %>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -65,102 +68,6 @@
     <p>© 2026 心有所SHU</p>
   </footer>
 
-  <% if (typeof isDev !== 'undefined' && isDev) { %>
-  <style>
-    .dev-tool-btn {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
-      z-index: 9999;
-    }
-    .dev-tool-btn:hover { transform: scale(1.1); }
-    .dev-modal {
-      display: none;
-      position: fixed;
-      top: 60px;
-      right: 15px;
-      width: 300px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-      z-index: 9998;
-      overflow: hidden;
-    }
-    .dev-modal.show { display: block; }
-    .dev-modal-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 12px 16px;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-    }
-    .dev-modal-header .close-btn {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 18px;
-      cursor: pointer;
-    }
-    .dev-modal-body { padding: 16px; }
-    .dev-section { margin-bottom: 16px; }
-    .dev-section:last-child { margin-bottom: 0; }
-    .dev-section-title { font-size: 12px; color: #888; margin-bottom: 8px; }
-    .dev-btn {
-      display: block;
-      width: 100%;
-      padding: 10px 12px;
-      margin-bottom: 8px;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      background: #f8f9fa;
-      color: #333;
-      text-decoration: none;
-      text-align: center;
-    }
-    .dev-btn:hover { background: #667eea; color: white; border-color: #667eea; }
-    .dev-btn.primary { background: #667eea; color: white; border-color: #667eea; }
-    .dev-info { font-size: 12px; color: #666; background: #f0f0f0; padding: 8px 10px; border-radius: 6px; }
-    .dev-badge { background: #4caf50; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 8px; }
-  </style>
-  <button class="dev-tool-btn" onclick="toggleDevModal()">🔧</button>
-  <div class="dev-modal" id="devModal">
-    <div class="dev-modal-header">
-      <span>🛠️ 开发者工具<span class="dev-badge">DEV</span></span>
-      <button class="close-btn" onclick="toggleDevModal()">×</button>
-    </div>
-    <div class="dev-modal-body">
-      <div class="dev-section">
-        <div class="dev-section-title">快速登录</div>
-        <a href="/login/verify/abc123456" class="dev-btn primary">🚀 测试用户一键登录</a>
-      </div>
-      <div class="dev-section">
-        <div class="dev-section-title">环境信息</div>
-        <div class="dev-info"><strong>环境:</strong> development</div>
-      </div>
-      <div class="dev-section">
-        <div class="dev-section-title">快捷操作</div>
-        <a href="/admin" class="dev-btn">📊 管理后台</a>
-        <a href="/logout" class="dev-btn">🔓 退出登录</a>
-      </div>
-    </div>
-  </div>
-  <script>
-    function toggleDevModal() { document.getElementById('devModal').classList.toggle('show'); }
-    document.addEventListener('click', function(e) {
-      const m = document.getElementById('devModal'), b = document.querySelector('.dev-tool-btn');
-      if (m && b && !m.contains(e.target) && !b.contains(e.target)) m.classList.remove('show');
-    });
-  </script>
-  <% } %>
+  <%- include('partials/dev-tools', { isDev: typeof isDev !== 'undefined' ? isDev : false, port: typeof port !== 'undefined' ? port : '3000' }) %>
 </body>
 </html>

@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>登录 - 心有所SHU</title>
   <link rel="stylesheet" href="/css/style.css">
+  <% if (typeof isDev !== 'undefined' && isDev) { %>
+  <link rel="stylesheet" href="/css/dev-tools.css">
+  <% } %>
   <style>
     .login-tabs {
       display: flex;
@@ -113,7 +116,7 @@
     <p>© 2026 心有所SHU</p>
   </footer>
 
-  <script>
+<script>
     function switchLoginMethod(method) {
       // 更新 tab 状态
       document.querySelectorAll('.login-tab').forEach(tab => {
@@ -133,5 +136,6 @@
       }
     }
   </script>
+  <%- include('partials/dev-tools', { isDev: typeof isDev !== 'undefined' ? isDev : false, port: typeof port !== 'undefined' ? port : '3000', usePageEmailInput: true }) %>
 </body>
 </html>

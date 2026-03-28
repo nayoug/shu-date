@@ -1,5 +1,27 @@
+# Dependencies
 node_modules/
+
+# Database
 shu.db
+
+# Environment
 .env
+.env.local
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Logs
 *.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code
+.claude/
+
+# Test/temp files
+cookies.txt

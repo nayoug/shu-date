@@ -1,0 +1,72 @@
+<% /* 开发者工具面板组件 */ %>
+<% if (typeof isDev !== 'undefined' && isDev) { %>
+<button class="dev-tool-btn" onclick="toggleDevModal()" title="开发者工具">🔧</button>
+<div class="dev-modal" id="devModal">
+  <div class="dev-modal-header">
+    <span>🛠️ 开发者工具<span class="dev-badge">DEV</span></span>
+    <button class="close-btn" onclick="toggleDevModal()">×</button>
+  </div>
+  <div class="dev-modal-body">
+    <% if (typeof showAutoFill !== 'undefined' && showAutoFill) { %>
+    <div class="dev-section">
+      <div class="dev-section-title">问卷测试</div>
+      <button class="dev-btn primary" onclick="autoFillForm()">📝 一键填写测试数据</button>
+    </div>
+    <% } %>
+    <div class="dev-section">
+      <div class="dev-section-title">快速登录</div>
+      <% if (typeof usePageEmailInput !== 'undefined' && usePageEmailInput) { %>
+        <button class="dev-btn primary" onclick="devLoginFromPage()">🚀 登录当前输入的邮箱</button>
+        <p style="font-size: 12px; color: #888; margin-top: 8px; text-align: center;">在上方输入邮箱前缀后点击</p>
+      <% } else { %>
+        <input type="text" id="devEmailInput" class="dev-input" placeholder="邮箱前缀（如 test、admin）">
+        <button class="dev-btn primary" onclick="devLogin()">🚀 登录该用户</button>
+      <% } %>
+    </div>
+    <div class="dev-section">
+      <div class="dev-section-title">环境信息</div>
+      <div class="dev-info">
+        <strong>环境:</strong> development<br>
+        <strong>端口:</strong> <%= typeof port !== 'undefined' ? port : '3000' %>
+      </div>
+    </div>
+    <div class="dev-section">
+      <div class="dev-section-title">快捷操作</div>
+      <a href="/admin" class="dev-btn">📊 管理后台</a>
+      <a href="/logout" class="dev-btn">🔓 退出登录</a>
+    </div>
+  </div>
+</div>
+<script>
+  function toggleDevModal() {
+    document.getElementById('devModal').classList.toggle('show');
+  }
+
+  function devLogin() {
+    var prefix = document.getElementById('devEmailInput').value.trim();
+    if (!prefix) {
+      alert('请输入邮箱前缀');
+      return;
+    }
+    window.location.href = '/dev/login/' + encodeURIComponent(prefix);
+  }
+
+  function devLoginFromPage() {
+    var prefixEl = document.getElementById('emailPrefix') || document.getElementById('devEmailInput');
+    var prefix = prefixEl ? prefixEl.value.trim() : '';
+    if (!prefix) {
+      alert('请先输入邮箱前缀');
+      return;
+    }
+    window.location.href = '/dev/login/' + encodeURIComponent(prefix);
+  }
+
+  document.addEventListener('click', function(e) {
+    var modal = document.getElementById('devModal');
+    var btn = document.querySelector('.dev-tool-btn');
+    if (modal && btn && !modal.contains(e.target) && !btn.contains(e.target)) {
+      modal.classList.remove('show');
+    }
+  });
+</script>
+<% } %>

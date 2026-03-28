@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>填写问卷 - 心有所SHU</title>
   <link rel="stylesheet" href="/css/style.css">
+  <% if (typeof isDev !== 'undefined' && isDev) { %>
+  <link rel="stylesheet" href="/css/dev-tools.css">
+  <% } %>
   <style>
     .option-group {
       display: flex;
@@ -344,7 +347,7 @@
     <div class="card" style="background: #f8f9fa; padding: 20px; margin-bottom: 20px;">
       <h3 style="margin-bottom: 16px;">🔐 修改密码</h3>
 
-      <% if (typeof passwordMessage !== 'undefined' && passwordMessage) { %>
+<% if (typeof passwordMessage !== 'undefined' && passwordMessage) { %>
         <div class="alert alert-<%= passwordMessageType || 'info' %>" style="margin-bottom: 16px;">
           <%= passwordMessage %>
         </div>
@@ -1489,213 +1492,50 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 <% if (typeof isDev !== 'undefined' && isDev) { %>
-document.getElementById('devFillBtn').addEventListener('click', function() {
-  // 随机选择单选框
-  const radioGroups = {};
-  document.querySelectorAll('input[type="radio"]').forEach(radio => {
-    if (!radioGroups[radio.name]) {
-      radioGroups[radio.name] = [];
-    }
-    radioGroups[radio.name].push(radio);
-  });
-
-  Object.values(radioGroups).forEach(group => {
-    if (group.length > 0 && !group[0].disabled) {
-      const randomIndex = Math.floor(Math.random() * group.length);
-      group[randomIndex].checked = true;
-      // 触发点击事件更新样式
-      group[randomIndex].closest('label').click();
-    }
-  });
-
-  // 多选框各选前3个
-  const coreTraits = document.querySelectorAll('input[name="core_traits"]');
-  for (let i = 0; i < Math.min(3, coreTraits.length); i++) {
-    coreTraits[i].checked = true;
-    coreTraits[i].closest('label').click();
-  }
-
-  // 兴趣爱好各选几个
-  const interests = document.querySelectorAll('input[name="interests"]');
-  const selectedInterests = new Set();
-  while (selectedInterests.size < 4) {
-    const idx = Math.floor(Math.random() * interests.length);
-    if (!interests[idx].disabled) {
-      interests[idx].checked = true;
-      selectedInterests.add(interests[idx].value);
-    }
-  }
-  updateInterestCounter();
-
-  alert('已自动填写测试数据');
-});
-<% } %>
-</script>
-
-<% if (typeof isDev !== 'undefined' && isDev) { %>
-<!-- 开发者工具 -->
-<style>
-  .dev-tool-btn {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
-    z-index: 9999;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .dev-tool-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6);
-  }
-  .dev-modal {
-    display: none;
-    position: fixed;
-    top: 60px;
-    right: 15px;
-    width: 300px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    z-index: 9998;
-    overflow: hidden;
-  }
-  .dev-modal.show {
-    display: block;
-    animation: slideDown 0.2s ease;
-  }
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .dev-modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 12px 16px;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .dev-modal-header .close-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
-    opacity: 0.8;
-  }
-  .dev-modal-header .close-btn:hover {
-    opacity: 1;
-  }
-  .dev-modal-body {
-    padding: 16px;
-  }
-  .dev-section {
-    margin-bottom: 16px;
-  }
-  .dev-section:last-child {
-    margin-bottom: 0;
-  }
-  .dev-section-title {
-    font-size: 12px;
-    color: #888;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-  }
-  .dev-btn {
-    display: block;
-    width: 100%;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    background: #f8f9fa;
-    color: #333;
-    text-decoration: none;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .dev-btn:last-child {
-    margin-bottom: 0;
-  }
-  .dev-btn:hover {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
-  }
-  .dev-btn.primary {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
-  }
-  .dev-btn.primary:hover {
-    background: #764ba2;
-    border-color: #764ba2;
-  }
-  .dev-info {
-    font-size: 12px;
-    color: #666;
-    background: #f0f0f0;
-    padding: 8px 10px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-  }
-  .dev-badge {
-    display: inline-block;
-    background: #4caf50;
-    color: white;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    margin-left: 8px;
-  }
-</style>
-<button class="dev-tool-btn" onclick="toggleDevModal()" title="开发者工具">🔧</button>
-<div class="dev-modal" id="devModal">
-  <div class="dev-modal-header">
-    <span>🛠️ 开发者工具<span class="dev-badge">DEV</span></span>
-    <button class="close-btn" onclick="toggleDevModal()">×</button>
-  </div>
-  <div class="dev-modal-body">
-    <div class="dev-section">
-      <div class="dev-section-title">快速登录</div>
-      <a href="/login/verify/abc123456" class="dev-btn primary">🚀 测试用户一键登录</a>
-    </div>
-    <div class="dev-section">
-      <div class="dev-section-title">环境信息</div>
-      <div class="dev-info">
-        <strong>环境:</strong> development<br>
-        <strong>端口:</strong> <%= typeof port !== 'undefined' ? port : '3000' %>
-      </div>
-    </div>
-    <div class="dev-section">
-      <div class="dev-section-title">快捷操作</div>
-      <a href="/admin" class="dev-btn">📊 管理后台</a>
-      <a href="/logout" class="dev-btn">🔓 退出登录</a>
-    </div>
-  </div>
-</div>
+<%- include('partials/dev-tools', { isDev: true, port: typeof port !== 'undefined' ? port : '3000', showAutoFill: true }) %>
 <script>
-  function toggleDevModal() {
-    const modal = document.getElementById('devModal');
-    modal.classList.toggle('show');
-  }
-  document.addEventListener('click', function(e) {
-    const modal = document.getElementById('devModal');
-    const btn = document.querySelector('.dev-tool-btn');
-    if (modal && btn && !modal.contains(e.target) && !btn.contains(e.target)) {
-      modal.classList.remove('show');
+  // profile 页面专有：一键填写测试数据
+  function autoFillForm() {
+    // 随机选择单选框
+    const radioGroups = {};
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+      if (!radioGroups[radio.name]) {
+        radioGroups[radio.name] = [];
+      }
+      radioGroups[radio.name].push(radio);
+    });
+
+    Object.values(radioGroups).forEach(group => {
+      if (group.length > 0 && !group[0].disabled) {
+        const randomIndex = Math.floor(Math.random() * group.length);
+        group[randomIndex].checked = true;
+        group[randomIndex].closest('label').click();
+      }
+    });
+
+    // 多选框各选前3个
+    const coreTraits = document.querySelectorAll('input[name="core_traits"]');
+    for (let i = 0; i < Math.min(3, coreTraits.length); i++) {
+      coreTraits[i].checked = true;
+      coreTraits[i].closest('label').click();
     }
-  });
+
+    // 兴趣爱好各选几个
+    const interests = document.querySelectorAll('input[name="interests"]');
+    const selectedInterests = new Set();
+    while (selectedInterests.size < 4 && selectedInterests.size < interests.length) {
+      const idx = Math.floor(Math.random() * interests.length);
+      if (!interests[idx].disabled) {
+        interests[idx].checked = true;
+        selectedInterests.add(interests[idx].value);
+      }
+    }
+    if (typeof updateInterestCounter === 'function') {
+      updateInterestCounter();
+    }
+
+    alert('已自动填写测试数据');
+  }
 </script>
 <% } %>
 </body>
