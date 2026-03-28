@@ -153,16 +153,28 @@
       </div>
     <% } %>
 
-    <form action="/login" method="POST">
+    <form action="/login" method="POST" onsubmit="return handleSubmit(event)">
       <div class="form-group">
-        <input type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" required style="text-align: center; font-size: 16px;">
+        <div style="display: flex; align-items: center; gap: 0;">
+          <input type="text" id="emailPrefix" placeholder="你的学号/工号" value="<%= typeof email !== 'undefined' && email ? email.replace('@shu.edu.cn', '') : '' %>" required style="flex: 1; text-align: center; font-size: 16px; border-radius: 6px 0 0 6px; border-right: none;">
+          <span style="background: #f0f0f0; padding: 12px 14px; border: 1px solid #e0e0e0; border-radius: 0 6px 6px 0; color: #666; font-size: 14px; white-space: nowrap;">@shu.edu.cn</span>
+        </div>
+        <input type="hidden" name="email" id="emailFull">
       </div>
       <button type="submit" class="btn" style="width: 100%;">发送登录链接</button>
     </form>
 
-    <p style="text-align: center; color: var(--muted-foreground); font-size: 0.8rem; margin-top: 24px;">
-      仅支持 @shu.edu.cn 邮箱
-    </p>
+    <script>
+    function handleSubmit(e) {
+      const prefix = document.getElementById('emailPrefix').value.trim();
+      if (!prefix) {
+        alert('请输入学号/工号');
+        return false;
+      }
+      document.getElementById('emailFull').value = prefix + '@shu.edu.cn';
+      return true;
+    }
+    </script>
   </div>
 </div>
 
