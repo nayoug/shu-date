@@ -7,23 +7,7 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="/" class="logo">心有所<span>SHU</span></a>
-      <div class="nav-links">
-        <% if (typeof user !== 'undefined' && user) { %>
-          <a href="/profile">资料</a>
-          <a href="/matches">匹配</a>
-          <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-            <a href="/admin">后台</a>
-          <% } %>
-          <a href="/logout" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.85rem;">退出</a>
-        <% } else { %>
-          <a href="/login" class="btn" style="padding: 6px 14px; font-size: 0.85rem;">登录</a>
-        <% } %>
-      </div>
-    </div>
-  </nav>
+  <%- include('partials/navbar') %>
 
   <div class="container">
     <% if (typeof message !== 'undefined' && message) { %>

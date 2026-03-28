@@ -64,6 +64,52 @@ async function sendLoginEmail(email, loginCode) {
   }
 }
 
+// 发送注册验证邮件
+async function sendVerifyEmail(email) {
+  const r = getResend();
+  // 生成验证链接，包含邮箱和时间戳
+  const timestamp = Date.now();
+  const verifyToken = Buffer.from(`${email}:${timestamp}`).toString('base64');
+  const verifyUrl = `${process.env.BASE_URL}/register/verify/${verifyToken}`;
+
+  if (!r) {
+    if (!isProduction) {
+      console.log('邮件模拟模式已启用，显示测试验证链接。');
+      return { success: false, simulated: true, url: verifyUrl };
+    }
+    return { success: false, error: 'mail-not-configured' };
+  }
+
+  try {
+    await r.emails.send({
+      from: process.env.FROM_EMAIL || '心有所SHU <onboarding@resend.dev>',
+      to: email,
+      subject: '【心有所SHU】注册验证',
+      html: `
+        <div style="font-family: 'Microsoft YaHei', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #e74c3c;">🎓 欢迎加入心有所SHU</h2>
+          <p>同学你好！</p>
+          <p>感谢你注册心有所SHU，请点击以下链接完成邮箱验证：</p>
+          <p style="margin: 20px 0;">
+            <a href="${verifyUrl}" style="background: #e74c3c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">验证邮箱</a>
+          </p>
+          <p>或复制以下链接到浏览器打开：</p>
+          <p style="word-break: break-all; color: #666;">${verifyUrl}</p>
+          <p style="color: #999; font-size: 12px; margin-top: 30px;">
+            链接有效期为24小时。如非本人操作，请忽略此邮件。
+          </p>
+        </div>
+      `
+    });
+
+    console.log(`✅ 验证邮件已发送至 ${email}`);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ 发送验证邮件失败:', error.message);
+    return { success: false, url: verifyUrl, error: error.message };
+  }
+}
+
 // 发送匹配结果邮件
 async function sendMatchEmail(userEmail, userName, matchedName, matchedGrade, matchedMajor) {
   const r = getResend();
@@ -107,5 +153,6 @@ module.exports = {
   getResend,
   isMailConfigured,
   sendLoginEmail,
-  sendMatchEmail
+  sendMatchEmail,
+  sendVerifyEmail
 };

@@ -7,16 +7,7 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="/" class="logo">心有所<span>SHU</span></a>
-      <div class="nav-links">
-        <a href="/profile">我的资料</a>
-        <a href="/matches" style="color: var(--primary); font-weight: 600;">匹配结果</a>
-        <a href="/logout" class="btn">退出</a>
-      </div>
-    </div>
-  </nav>
+  <%- include('partials/navbar') %>
 
   <div class="container">
     <% if (!user.verified) { %>
@@ -30,9 +21,8 @@
       <div style="font-size: 4rem; margin-bottom: 16px;">🤔</div>
       <h2>暂无匹配</h2>
       <p style="color: var(--muted-foreground); margin-bottom: 24px;">
-        你还没有填写问卷，或者系统暂无匹配用户。
+        内测阶段暂不支持匹配功能。
       </p>
-      <a href="/profile" class="btn">填写问卷</a>
     </div>
     <% } else { %>
     <div class="card">

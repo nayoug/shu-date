@@ -560,3 +560,50 @@ tr:hover td {
     width: 100%;
   }
 }
+
+/* ===== 下拉菜单 ===== */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
+}
+
+.dropdown-toggle:hover {
+  background: var(--muted);
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  min-width: 160px;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 10px 16px;
+  color: var(--foreground);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.dropdown-menu a:hover {
+  background: var(--muted);
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}

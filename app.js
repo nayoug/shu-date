@@ -5,6 +5,15 @@ const path = require('path');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
 
+// 密码哈希工具函数
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+function verifyPassword(password, hash) {
+  return hashPassword(password) === hash;
+}
+
 let db;
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
@@ -22,14 +31,6 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-
-// 全局视图变量
-app.use((req, res, next) => {
-  res.locals.isDev = !isProduction;
-  res.locals.port = process.env.PORT || 3000;
-  next();
-});
-
 app.use(session({
   secret: sessionSecret || 'xin_yousuo_shu_secret',
   resave: false,
@@ -51,6 +52,10 @@ async function isLoggedIn(req, res, next) {
       const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [user.id]);
       req.user = { ...user, hasProfile: !!profile };
       req.isAdmin = user.email === 'admin@shu.edu.cn';
+      // 同步更新 session 中的 nickname
+      if (user.nickname) {
+        req.session.nickname = user.nickname;
+      }
       return next();
     }
   }
@@ -133,8 +138,8 @@ function destroySession(req) {
 }
 
 function buildProfilePageModel(req, profile) {
-  const lovetypeAnswers = lovetypeService.parseStoredAnswers(profile?.lovetype_answers);
-  const hasLovetypeAnswers = Object.keys(lovetypeAnswers).length > 0;
+  const lovetypeAnswers = lovetypeService.parseStoredAnswers(profile && profile.lovetype_answers);
+  const hasLovetypeAnswers = lovetypeAnswers && Object.keys(lovetypeAnswers).length > 0;
   const lovetypeAssessment = hasLovetypeAnswers ? lovetypeService.calculateLoveType(lovetypeAnswers) : null;
   const showResult = lovetypeAssessment && !req.query.edit;
 
@@ -146,7 +151,7 @@ function buildProfilePageModel(req, profile) {
     lovetypeScaleOptions: lovetypeService.LOVETYPE_SCALE_OPTIONS,
     lovetypeAnswers,
     lovetypeAssessment,
-    lovetypeResult: showResult ? lovetypeAssessment.result : null,
+    lovetypeResult: showResult && lovetypeAssessment ? lovetypeAssessment.result : null,
     isAdmin: req.isAdmin,
     isDev: !isProduction,
     message: req.query.msg,
@@ -159,8 +164,6 @@ function buildProfilePageModel(req, profile) {
 
 // 首页
 app.get('/', async (req, res) => {
-  console.log('[DEBUG] 首页 sessionID:', req.sessionID, 'userId:', req.session.userId);
-  console.log('[DEBUG] 首页接收到的 Cookie:', req.headers.cookie);
   let user = null;
   if (req.session.userId) {
     const u = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
@@ -172,47 +175,387 @@ app.get('/', async (req, res) => {
   res.render('index', {
     title: '首页',
     user: user,
+    nickname: req.session.nickname,
+    hasProfile: user ? user.hasProfile : false,
+    showPassword: true,
     message: req.query.msg,
     messageType: req.query.type
   });
 });
 
-// 登录页 - 输入邮箱
+// 登录页
 app.get('/login', (req, res) => {
   if (req.session.userId) return res.redirect('/');
-  res.render('login', { title: '登录' });
+  const method = req.query.method || 'login';
+  const email = req.query.email || '';
+  // 如果是重定向过来的，显示提示信息
+  const msg = req.query.msg;
+  const type = req.query.type;
+  res.render('login', { title: '登录', loginMethod: method, email, message: msg, messageType: type });
 });
 
-// 发送登录验证码
-app.post('/login', async (req, res) => {
+// 忘记密码页
+app.get('/forgot', (req, res) => {
+  if (req.session.userId) return res.redirect('/');
+  res.render('forgot', { title: '忘记密码' });
+});
+
+// 发送密码重置邮件
+app.post('/forgot', async (req, res) => {
   const { email } = req.body;
   const lowerEmail = email.toLowerCase();
 
-  // 验证邮箱格式：必须以 @shu.edu.cn 结尾，且不包含特殊字符
+  // 验证邮箱格式
   const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
-  const isValidShuEmail = emailPattern.test(lowerEmail);
-
-  // 1. 定义白名单（把开发者的邮箱放这里）
-  const whiteList = [
-    'admain@gmail.com'
-  ];
-
-  // 2. 只有既不在白名单，又符合学校邮箱格式的才允许
-  const isWhiteListed = whiteList.includes(lowerEmail);
-
-  if (!isWhiteListed && !isValidShuEmail) {
-    return res.render('login', {
-      title: '登录',
-      message: '只能使用 @shu.edu.cn 结尾的学校邮箱',
+  if (!emailPattern.test(lowerEmail)) {
+    return res.render('forgot', {
+      title: '忘记密码',
+      message: '请输入 @shu.edu.cn 结尾的学校邮箱',
       messageType: 'error',
       email
     });
   }
 
-  // ... 后续生成验证码并发送邮件的逻辑 ...
+  // 查找用户
+  const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
+
+  if (!user) {
+    return res.render('forgot', {
+      title: '忘记密码',
+      message: '该邮箱未注册，请先注册',
+      messageType: 'error',
+      email
+    });
+  }
+
+  // 生成重置验证码
+  const resetCode = generateToken(24);
+  const expireTime = new Date(Date.now() + 30 * 60 * 1000); // 30分钟有效
+
+  await db.execute(
+    'UPDATE users SET login_code = $1, login_code_expire = $2 WHERE id = $3',
+    [resetCode, expireTime.toISOString(), user.id]
+  );
+
+  // 发送重置邮件
+  const { sendLoginEmail } = require('./mailer');
+  const result = await sendLoginEmail(email, resetCode);
+
+  if (result.success || (result.simulated && !isProduction)) {
+    res.render('forgot', {
+      title: '忘记密码',
+      message: '重置链接已发送到你的邮箱，请查收',
+      messageType: 'success',
+      email
+    });
+  } else {
+    res.render('forgot', {
+      title: '忘记密码',
+      message: '邮件发送失败，请稍后重试',
+      messageType: 'error',
+      email
+    });
+  }
+});
+
+// 密码重置页
+app.get('/reset/:code', async (req, res) => {
+  const resetCode = req.params.code;
+
+  const user = await db.queryOne(
+    'SELECT id FROM users WHERE login_code = $1 AND login_code_expire > NOW()',
+    [resetCode]
+  );
+
+  if (!user) {
+    return res.render('login', {
+      title: '登录',
+      message: '重置链接已过期，请重新发起',
+      messageType: 'error',
+      loginMethod: 'login'
+    });
+  }
+
+  res.render('reset', { title: '重置密码', code: resetCode });
+});
+
+// 处理密码重置
+app.post('/reset/:code', async (req, res) => {
+  const { code } = req.params;
+  const { password, confirmPassword } = req.body;
+
+  if (!password || password.length < 6) {
+    return res.render('reset', {
+      title: '重置密码',
+      message: '密码长度至少6位',
+      messageType: 'error',
+      code
+    });
+  }
+
+  if (password !== confirmPassword) {
+    return res.render('reset', {
+      title: '重置密码',
+      message: '两次输入的密码不一致',
+      messageType: 'error',
+      code
+    });
+  }
+
+  const user = await db.queryOne(
+    'SELECT id, nickname FROM users WHERE login_code = $1 AND login_code_expire > NOW()',
+    [code]
+  );
+
+  if (!user) {
+    return res.render('login', {
+      title: '登录',
+      message: '重置链接已过期，请重新发起',
+      messageType: 'error',
+      loginMethod: 'login'
+    });
+  }
+
+  // 更新密码
+  const passwordHash = hashPassword(password);
+  await db.execute(
+    'UPDATE users SET password_hash = $1, login_code = NULL, login_code_expire = NULL WHERE id = $2',
+    [passwordHash, user.id]
+  );
+
+  // 自动登录
+  try {
+    await regenerateSession(req);
+    req.session.userId = user.id;
+    req.session.nickname = user.nickname;
+    await saveSession(req);
+    res.redirect('/');
+  } catch (error) {
+    res.redirect('/login');
+  }
+});
+
+// 注册
+app.post('/register', async (req, res) => {
+  const { email, password, nickname } = req.body;
+  const lowerEmail = email.toLowerCase();
+
+  // 验证邮箱格式
+  const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
+  if (!emailPattern.test(lowerEmail)) {
+    return res.render('login', {
+      title: '登录',
+      message: '请使用 @shu.edu.cn 结尾的学校邮箱',
+      messageType: 'error',
+      email,
+      loginMethod: 'register'
+    });
+  }
+
+  // 验证密码
+  if (!password || password.length < 6) {
+    return res.render('login', {
+      title: '登录',
+      message: '密码长度至少6位',
+      messageType: 'error',
+      email,
+      loginMethod: 'register'
+    });
+  }
+
+  // 验证昵称
+  if (!nickname || nickname.trim().length === 0) {
+    return res.render('login', {
+      title: '登录',
+      message: '请输入昵称',
+      messageType: 'error',
+      email,
+      loginMethod: 'register'
+    });
+  }
+
+  // 检查用户是否已存在
+  const existingUser = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
+
+  if (existingUser) {
+    // 检查是否已完成注册（密码和昵称都有）
+    if (existingUser.password_hash && existingUser.nickname) {
+      return res.redirect('/login?method=login&msg=' + encodeURIComponent('该邮箱已完成注册，请直接登录') + '&type=info');
+    }
+    // 用户存在但未完成注册，更新信息
+    const passwordHash = hashPassword(password);
+    await db.execute(
+      'UPDATE users SET password_hash = $1, nickname = $2 WHERE id = $3',
+      [passwordHash, nickname.trim(), existingUser.id]
+    );
+    // 发送验证邮件
+    const { sendVerifyEmail } = require('./mailer');
+    const verifyResult = await sendVerifyEmail(email);
+    let message = '请前往邮箱点击验证链接完成验证。';
+    let messageType = 'success';
+    if (verifyResult && verifyResult.simulated) {
+      message += ` （测试模式：<a href="${verifyResult.url}">${verifyResult.url}</a>）`;
+    }
+    return res.render('login', {
+      title: '登录',
+      message,
+      messageType,
+      loginMethod: 'login'
+    });
+  }
+
+  // 创建新用户（未验证状态）
+  const passwordHash = hashPassword(password);
+  const writeResult = await db.execute(
+    'INSERT INTO users (email, password_hash, nickname, verified) VALUES ($1, $2, $3, 0)',
+    [email, passwordHash, nickname.trim()]
+  );
+
+  if (!writeResult || writeResult.changes !== 1) {
+    return res.render('login', {
+      title: '登录',
+      message: '注册失败，请稍后重试',
+      messageType: 'error',
+      email,
+      loginMethod: 'register'
+    });
+  }
+
+  // 发送验证邮件
+  const { sendVerifyEmail } = require('./mailer');
+  const verifyResult = await sendVerifyEmail(email);
+
+  // 无论邮件是否发送成功，都显示验证提示（邮件发送失败时显示模拟链接）
+  let message = '注册成功！请前往邮箱点击验证链接完成验证。';
+  let messageType = 'success';
+
+  if (verifyResult && verifyResult.simulated) {
+    message += ` （测试模式：<a href="${verifyResult.url}">${verifyResult.url}</a>）`;
+  } else if (verifyResult && !verifyResult.success) {
+    message = '注册成功，但邮件发送失败。请稍后尝试重新发送验证邮件。';
+    messageType = 'warning';
+  }
+
+  return res.render('login', {
+    title: '登录',
+    message,
+    messageType,
+    loginMethod: 'login'
+  });
+});
+
+// 登录
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  const lowerEmail = email.toLowerCase();
+
+  // 验证邮箱格式
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailPattern.test(lowerEmail)) {
+    return res.render('login', {
+      title: '登录',
+      message: '请输入有效的邮箱地址',
+      messageType: 'error',
+      email,
+      loginMethod: 'login'
+    });
+  }
+
+  // 查找用户
+  const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
+
+  if (!user) {
+    return res.redirect('/login?method=register&email=' + encodeURIComponent(email) + '&msg=' + encodeURIComponent('账号不存在，请先注册') + '&type=error');
+  }
+
+  // 检查是否完成注册（需要有密码和昵称和邮箱）
+  if (!user.password_hash || !user.nickname || !user.email) {
+    return res.redirect('/login?method=register&email=' + encodeURIComponent(email) + '&msg=' + encodeURIComponent('你还未设置密码，请先完成注册') + '&type=warning');
+  }
+
+  // 验证密码
+
+  if (!verifyPassword(password, user.password_hash)) {
+    return res.render('login', {
+      title: '登录',
+      message: '密码错误，请重试',
+      messageType: 'error',
+      email,
+      loginMethod: 'login'
+    });
+  }
+
+  // 检查邮箱是否已验证
+  if (!user.verified) {
+    return res.render('login', {
+      title: '登录',
+      message: '邮箱还未验证，请先查收验证邮件完成验证',
+      messageType: 'error',
+      email,
+      loginMethod: 'login'
+    });
+  }
+
+  // 登录成功
+  try {
+    await regenerateSession(req);
+    req.session.userId = user.id;
+    req.session.nickname = user.nickname;
+    await saveSession(req);
+  } catch (error) {
+    console.error('建立登录会话失败:', error);
+    return res.render('login', {
+      title: '登录',
+      message: '登录失败，请重试',
+      messageType: 'error',
+      email,
+      loginMethod: 'login'
+    });
+  }
+
+  res.redirect('/');
+});
+
+// 退出登录
+app.get('/logout', async (req, res) => {
+  try {
+    await destroySession(req);
+  } catch (error) {
+    console.error('退出登录失败:', error);
+  }
+  res.redirect('/login');
+});
+
+// 注册页（已合并到登录流程）
+app.get('/register', (req, res) => {
+  res.redirect('/login');
+});
+
+
+// 发送登录验证码（已有账户）
+app.post('/login/code', async (req, res) => {
+  const { email } = req.body;
+  const lowerEmail = email.toLowerCase();
+
+  // 验证邮箱格式
+  const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
+  if (!emailPattern.test(lowerEmail)) {
+    return res.render('login', {
+      title: '登录',
+      message: '请使用 @shu.edu.cn 结尾的学校邮箱',
+      messageType: 'error',
+      email,
+      loginMethod: 'code'
+    });
+  }
 
   // 检查用户是否存在
   let user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
+
+  // 如果用户存在但没有密码或昵称，视为未完成注册
+  if (user && (!user.password_hash || !user.nickname || !user.email)) {
+    return res.redirect('/login?method=register&email=' + encodeURIComponent(email) + '&msg=' + encodeURIComponent('你还未设置密码，请先完成注册') + '&type=warning');
+  }
 
   // 生成登录验证码
   const loginCode = generateToken(24);
@@ -220,12 +563,16 @@ app.post('/login', async (req, res) => {
   let writeResult;
 
   if (user) {
-    writeResult = await db.execute('UPDATE users SET login_code = $1, login_code_expire = $2 WHERE id = $3',
-      [loginCode, expireTime.toISOString(), user.id]);
+    writeResult = await db.execute(
+      'UPDATE users SET login_code = $1, login_code_expire = $2 WHERE id = $3',
+      [loginCode, expireTime.toISOString(), user.id]
+    );
   } else {
     // 自动注册新用户（默认已验证）
-    writeResult = await db.execute('INSERT INTO users (email, login_code, login_code_expire, verified) VALUES ($1, $2, $3, 1)',
-      [email, loginCode, expireTime.toISOString()]);
+    writeResult = await db.execute(
+      'INSERT INTO users (email, login_code, login_code_expire, verified) VALUES ($1, $2, $3, 1)',
+      [email, loginCode, expireTime.toISOString()]
+    );
     user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
   }
 
@@ -234,7 +581,8 @@ app.post('/login', async (req, res) => {
       title: '登录',
       message: '登录链接生成失败，请稍后重试',
       messageType: 'error',
-      email
+      email,
+      loginMethod: 'code'
     });
   }
 
@@ -245,30 +593,34 @@ app.post('/login', async (req, res) => {
   if (result.success) {
     res.render('login', {
       title: '登录',
-      message: '验证码已发送到你的邮箱，点击邮件中的链接即可登录',
+      message: '验证码已发送到你的邮箱，点击邮件中的链接即可登录。由于校内网关限制，邮件可能会有 1-2 分钟延迟，请耐心等待',
       messageType: 'success',
-      email
+      email,
+      loginMethod: 'code'
+    });
+  } else if (result.simulated && !isProduction) {
+    res.render('login', {
+      title: '登录',
+      message: '当前未配置邮件服务。开发环境可直接使用下方测试链接登录。',
+      messageType: 'info',
+      email,
+      debugLoginUrl: result.url,
+      loginMethod: 'code'
     });
   } else {
     res.render('login', {
       title: '登录',
       message: '邮件发送失败，请稍后重试或联系管理员',
       messageType: 'error',
-      email
+      email,
+      loginMethod: 'code'
     });
   }
 });
 
 // 验证码登录
 app.get('/login/verify/:code', async (req, res) => {
-  console.log('[DEBUG] /login/verify 接收到的 code:', req.params.code);
-  console.log('[DEBUG] 当前时间:', new Date().toISOString());
-
   const loginCode = req.params.code;
-
-  console.log('[DEBUG] 查询测试用户前的数据库状态:');
-  const testUserCheck = await db.queryOne('SELECT id, email, login_code, login_code_expire FROM users WHERE id = 12');
-  console.log('[DEBUG] id=12 用户:', testUserCheck);
 
   // 检查是否为测试用户 (id=1, login_code='abc123456')，测试用户不刷新验证码
   const isTestUser = loginCode === 'abc123456';
@@ -277,7 +629,7 @@ app.get('/login/verify/:code', async (req, res) => {
   if (isTestUser) {
     // 测试用户: 只查询不更新
     user = await db.queryOne(`
-      SELECT id FROM users
+      SELECT id, nickname, email FROM users
       WHERE login_code = $1
     `, [loginCode]);
   } else {
@@ -286,30 +638,26 @@ app.get('/login/verify/:code', async (req, res) => {
       UPDATE users
       SET login_code = NULL, login_code_expire = NULL
       WHERE login_code = $1 AND login_code_expire > NOW()
-      RETURNING id
+      RETURNING id, nickname, email
     `, [loginCode]);
   }
-
-  console.log('[DEBUG] 查询结果 user:', user);
 
   if (!user) {
     const expiredToken = await db.queryOne('SELECT id FROM users WHERE login_code = $1', [req.params.code]);
     return res.render('login', {
       title: '登录',
       message: expiredToken ? '验证码已过期，请重新获取' : '验证码无效或已过期',
-      messageType: 'error'
+      messageType: 'error',
+      loginMethod: 'code'
     });
   }
 
   try {
-    console.log('[DEBUG] 准备建立会话, user.id:', user.id);
-
     // 重新生成 session 并设置用户
     await regenerateSession(req);
     req.session.userId = user.id;
+    req.session.nickname = user.nickname || user.email.split('@')[0];
     await saveSession(req);
-
-    console.log('[DEBUG] 会话已保存, sessionID:', req.sessionID, 'userId:', req.session.userId);
 
     // 测试用户: 重定向到首页，确保 session cookie 正确传递
     if (isTestUser) {
@@ -332,6 +680,78 @@ app.get('/login/verify/:code', async (req, res) => {
   res.redirect('/');
 });
 
+// 验证注册邮箱
+app.get('/register/verify/:token', async (req, res) => {
+  try {
+    const token = req.params.token;
+    const decoded = Buffer.from(token, 'base64').toString('utf8');
+    const [email, timestamp] = decoded.split(':');
+
+    // 检查token是否过期（24小时）
+    const now = Date.now();
+    const tokenTime = parseInt(timestamp);
+    if (isNaN(tokenTime) || now - tokenTime > 24 * 60 * 60 * 1000) {
+      return res.render('login', {
+        title: '登录',
+        message: '验证链接已过期，请重新注册',
+        messageType: 'error',
+        loginMethod: 'login'
+      });
+    }
+
+    // 查找用户并验证
+    const user = await db.queryOne('SELECT id, email, nickname, verified FROM users WHERE email = $1', [email]);
+
+    if (!user) {
+      return res.render('login', {
+        title: '登录',
+        message: '验证链接无效，用户不存在',
+        messageType: 'error',
+        loginMethod: 'login'
+      });
+    }
+
+    if (user.verified) {
+      return res.render('login', {
+        title: '登录',
+        message: '邮箱已验证，请直接登录',
+        messageType: 'success',
+        loginMethod: 'login'
+      });
+    }
+
+    // 更新为已验证
+    const result = await db.execute(
+      'UPDATE users SET verified = 1 WHERE id = $1',
+      [user.id]
+    );
+
+    if (result && result.changes === 1) {
+      return res.render('login', {
+        title: '登录',
+        message: '邮箱验证成功！请登录',
+        messageType: 'success',
+        loginMethod: 'login'
+      });
+    } else {
+      return res.render('login', {
+        title: '登录',
+        message: '验证失败，请稍后重试',
+        messageType: 'error',
+        loginMethod: 'login'
+      });
+    }
+  } catch (error) {
+    console.error('验证邮箱失败:', error);
+    return res.render('login', {
+      title: '登录',
+      message: '验证链接无效',
+      messageType: 'error',
+      loginMethod: 'login'
+    });
+  }
+});
+
 // 注册页（已合并到登录流程）
 app.get('/register', (req, res) => {
   res.redirect('/login');
@@ -340,7 +760,16 @@ app.get('/register', (req, res) => {
 // 个人资料页（问卷）
 app.get('/profile', isLoggedIn, async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
-  res.render('profile', buildProfilePageModel(req, profile));
+  const hasProfile = !!profile;
+  const model = buildProfilePageModel(req, profile);
+  // 传递导航栏所需变量
+  model.nickname = req.session.nickname;
+  model.hasProfile = hasProfile;
+  model.showPassword = false; // profile页面隐藏修改密码
+  // 传递密码修改相关变量
+  model.passwordMessage = req.query.passwordMsg || (res.locals.passwordMessage || '');
+  model.passwordMessageType = res.locals.passwordMessageType || '';
+  res.render('profile', model);
 });
 
 // 提交问卷
@@ -423,10 +852,96 @@ app.post('/profile', isLoggedIn, (req, res) => {
   res.redirect('/profile');
 });
 
+// 修改密码页面
+app.get('/profile/password', isLoggedIn, async (req, res) => {
+  const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
+  const hasProfile = !!profile;
+  const model = buildProfilePageModel(req, profile);
+  model.nickname = req.session.nickname;
+  model.hasProfile = hasProfile;
+  model.showPassword = true; // 显示修改密码
+  model.passwordMessage = req.query.msg || '';
+  model.passwordMessageType = req.query.type || '';
+  res.render('profile', model);
+});
+
+// 修改密码
+app.post('/profile/password', isLoggedIn, async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  // 获取当前用户的 profile
+  const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
+  const hasProfile = !!profile;
+
+  const baseModel = buildProfilePageModel(req, profile);
+  baseModel.nickname = req.session.nickname;
+  baseModel.hasProfile = hasProfile;
+  baseModel.showPassword = true; // 始终显示修改密码表单
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return res.render('profile', Object.assign(baseModel, {
+      passwordMessage: '请填写所有字段',
+      passwordMessageType: 'error'
+    }));
+  }
+
+  if (newPassword.length < 6) {
+    return res.render('profile', Object.assign(baseModel, {
+      passwordMessage: '新密码长度至少6位',
+      passwordMessageType: 'error'
+    }));
+  }
+
+  if (newPassword !== confirmPassword) {
+    return res.render('profile', Object.assign(baseModel, {
+      passwordMessage: '两次输入的密码不一致',
+      passwordMessageType: 'error'
+    }));
+  }
+
+  // 获取当前用户
+  const user = await db.queryOne('SELECT password_hash FROM users WHERE id = $1', [req.session.userId]);
+
+  // 如果之前没有密码，则跳过验证
+  if (user.password_hash) {
+    if (!verifyPassword(currentPassword, user.password_hash)) {
+      return res.render('profile', Object.assign(baseModel, {
+        passwordMessage: '当前密码错误',
+        passwordMessageType: 'error'
+      }));
+    }
+  }
+
+  // 更新密码
+  const passwordHash = hashPassword(newPassword);
+  const result = await db.execute(
+    'UPDATE users SET password_hash = $1 WHERE id = $2',
+    [passwordHash, req.session.userId]
+  );
+
+  if (result && result.changes === 1) {
+    return res.render('profile', Object.assign(baseModel, {
+      passwordMessage: '密码修改成功',
+      passwordMessageType: 'success'
+    }));
+  } else {
+    return res.render('profile', Object.assign(baseModel, {
+      passwordMessage: '密码修改失败，请重试',
+      passwordMessageType: 'error'
+    }));
+  }
+});
+
 // 匹配结果页
 app.get('/matches', isLoggedIn, async (req, res) => {
   if (!req.user.verified) {
-    return res.render('matches', { title: '匹配结果', user: req.user });
+    return res.render('matches', {
+      title: '匹配结果',
+      user: req.user,
+      nickname: req.session.nickname,
+      hasProfile: false,
+      showPassword: true
+    });
   }
 
   const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
@@ -440,6 +955,9 @@ app.get('/matches', isLoggedIn, async (req, res) => {
   res.render('matches', {
     title: '匹配结果',
     user: req.user,
+    nickname: req.session.nickname,
+    hasProfile: true,
+    showPassword: true,
     matches: matches,
     isAdmin: req.isAdmin
   });
@@ -517,7 +1035,7 @@ async function runWeeklyMatch() {
   }
 
   const users = await db.query(`
-    SELECT u.id, u.email, u.name
+    SELECT u.id, u.email, u.nickname
     FROM users u
     JOIN profiles p ON u.id = p.user_id
     WHERE u.verified = 1
@@ -545,8 +1063,8 @@ async function runWeeklyMatch() {
     const p2 = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u2.id]);
 
     const { sendMatchEmail } = require('./mailer');
-    sendMatchEmail(u1.email, u1.name || '同学', u2.name || 'TA', p2?.my_grade, p2?.major);
-    sendMatchEmail(u2.email, u2.name || '同学', u1.name || 'TA', p1?.my_grade, p1?.major);
+    sendMatchEmail(u1.email, u1.nickname || '同学', u2.nickname || 'TA', p2?.my_grade, p2?.major);
+    sendMatchEmail(u2.email, u2.nickname || '同学', u1.nickname || 'TA', p1?.my_grade, p1?.major);
   }
 
   return { success: true, message: `匹配完成，共 ${pairs.length} 对` };
@@ -563,7 +1081,7 @@ async function start() {
     console.log(`
   ╔════════════════════════════════════════╗
   ║     💕 心有所SHU 服务器已启动          ║
-  ║     访问: http://localhost:${PORT}           ║
+  ║     访问: http://localhost:${PORT}        ║
   ╚════════════════════════════════════════╝
     `);
   });

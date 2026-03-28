@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="logo">心有所<span>SHU</span></a>
+    </div>
+  </nav>
+
+  <div class="container" style="max-width: 400px; padding-top: 80px;">
+    <div class="card">
+      <h2 style="text-align: center; margin-bottom: 6px;">忘记密码</h2>
+      <p style="text-align: center; color: var(--muted-foreground); font-size: 0.9rem; margin-bottom: 28px;">
+        输入你的学校邮箱
+      </p>
+
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="alert alert-<%= messageType || 'info' %>">
+          <%- message %>
+        </div>
+      <% } %>
+
+      <form action="/forgot" method="POST">
+        <div class="form-group">
+          <input type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" required style="text-align: center; font-size: 16px;">
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">发送重置链接</button>
+      </form>
+
+      <p style="text-align: center; margin-top: 20px;">
+        <a href="/login" style="color: var(--primary);">← 返回登录</a>
+      </p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 心有所SHU</p>
+  </footer>
+</body>
+</html>

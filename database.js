@@ -1,4 +1,3 @@
-const crypto = require('crypto');
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -19,6 +18,8 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
+      password_hash TEXT,
+      nickname TEXT,
       name TEXT,
       verified INTEGER DEFAULT 0,
       login_code TEXT,
@@ -26,6 +27,10 @@ async function initDatabase() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);
+
+  // 确保 password_hash 和 nickname 字段存在（升级时）
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT');
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS nickname TEXT');
 
   // profiles 表
   await pool.query(`
@@ -107,95 +112,29 @@ async function initDatabase() {
   return pool;
 }
 
-// SQL辅助函数 - 模拟 sql.js 的 API
-// 支持 $1, $2 等 PostgreSQL 占位符和 ? 占位符
-function convertPlaceholders(sql) {
-  // 先转换 $1, $2 为 ?
-  let converted = sql.replace(/\$(\d+)/g, '?');
-  // 再将 ? 转换回 $1, $2 (用于 PostgreSQL)
-  let paramIndex = 1;
-  return converted.replace(/\?/g, () => '$' + paramIndex++);
-}
-
-function getQueryFingerprint(sql) {
-  return crypto.createHash('sha256').update(sql).digest('hex').slice(0, 12);
-}
-
-function logQueryError(operation, sql, error) {
-  const metadata = {
-    queryId: getQueryFingerprint(sql),
-    code: error?.code || null,
-    table: error?.table || null,
-    constraint: error?.constraint || null,
-    routine: error?.routine || null
-  };
-
-  console.error(`${operation}:`, metadata);
-  if (error?.stack) {
-    console.error(error.stack);
-  } else if (error?.message) {
-    console.error(error.message);
-  }
-}
-
-function prepare(sql) {
-  const converted = convertPlaceholders(sql);
-  return {
-    run: async function(...params) {
-      try {
-        const result = await pool.query(converted, params);
-        return { changes: result.rowCount };
-      } catch (e) {
-        logQueryError('SQL执行失败', converted, e);
-        return { changes: 0 };
-      }
-    },
-    get: async function(...params) {
-      try {
-        const result = await pool.query(converted, params);
-        return result.rows[0];
-      } catch (e) {
-        logQueryError('SQL查询失败', converted, e);
-        return undefined;
-      }
-    },
-    all: async function(...params) {
-      try {
-        const result = await pool.query(converted, params);
-        return result.rows;
-      } catch (e) {
-        logQueryError('SQL查询失败', converted, e);
-        return [];
-      }
-    }
-  };
-}
-
-// 兼容方法
+// 执行查询返回多行
 async function query(sql, params = []) {
-  return (await prepare(sql).all(...params));
+  const result = await pool.query(sql, params);
+  return result.rows;
 }
 
+// 执行查询返回单行
 async function queryOne(sql, params = []) {
-  return (await prepare(sql).get(...params));
+  const result = await pool.query(sql, params);
+  return result.rows[0];
 }
 
+// 执行INSERT/UPDATE/DELETE
 async function execute(sql, params = []) {
-  return (await prepare(sql).run(...params));
-}
-
-// 初始化并返回
-async function init() {
-  await initDatabase();
-  return { initDatabase, prepare, query, queryOne, execute, pool };
+  const result = await pool.query(sql, params);
+  return { changes: result.rowCount, lastInsertRowid: null };
 }
 
 module.exports = {
   initDatabase,
-  prepare,
   query,
   queryOne,
   execute,
-  init,
+  init: initDatabase,
   getPool: () => pool
 };

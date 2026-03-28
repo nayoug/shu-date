@@ -337,27 +337,51 @@
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="/" class="logo">心有所<span>SHU</span></a>
-      <div class="nav-links">
-        <a href="/profile" style="color: var(--primary); font-weight: 600;">资料</a>
-        <a href="/matches">匹配</a>
-        <a href="/logout" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.85rem;">退出</a>
-      </div>
-    </div>
-  </nav>
+  <%- include('partials/navbar') %>
 
   <div class="container" style="max-width: 800px;">
-    <div class="card">
-      <h2 style="margin-bottom: 8px;">📝 恋爱匹配问卷</h2>
-      <p style="color: var(--muted-foreground); margin-bottom: 24px;">填完这个，我们就能帮你找到聊得来的人</p>
+    <% if (typeof showPassword !== 'undefined' && showPassword) { %>
+    <div class="card" style="background: #f8f9fa; padding: 20px; margin-bottom: 20px;">
+      <h3 style="margin-bottom: 16px;">🔐 修改密码</h3>
 
-      <% if (typeof isDev !== 'undefined' && isDev) { %>
-        <button type="button" id="devFillBtn" class="btn btn-secondary" style="margin-bottom: 20px;">🔧 一键填写（测试）</button>
+      <% if (typeof passwordMessage !== 'undefined' && passwordMessage) { %>
+        <div class="alert alert-<%= passwordMessageType || 'info' %>" style="margin-bottom: 16px;">
+          <%= passwordMessage %>
+        </div>
       <% } %>
 
-  <% if (lovetypeResult) { %>
+      <form action="/profile/password" method="POST" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">当前密码</label>
+          <input type="password" name="currentPassword" placeholder="若未设置密码则留空" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        </div>
+        <div></div>
+        <div>
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">新密码</label>
+          <input type="password" name="newPassword" placeholder="至少6位" minlength="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">确认新密码</label>
+          <input type="password" name="confirmPassword" placeholder="再次输入新密码" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <button type="submit" class="btn btn-secondary">修改密码</button>
+        </div>
+      </form>
+    </div>
+    <% } %>
+
+    <% if (!showPassword) { %>
+    <!-- 恋爱类型结果 -->
+    <div class="card">
+      <h2 style="margin-bottom: 8px;">📝 恋爱人格结果</h2>
+      <p style="color: var(--muted-foreground); margin-bottom: 24px;">通过恋爱类型测试，发现您真正的浪漫人格</p>
+
+    <% if (typeof isDev !== 'undefined' && isDev) { %>
+        <button type="button" id="devFillBtn" class="btn btn-secondary" style="margin-bottom: 20px;">🔧 一键填写（测试）</button>
+    <% } %>
+
+    <% if (lovetypeResult) { %>
     <div class="lovetype-result-card">
       <div class="lovetype-result-header">
         <span class="lovetype-badge"><%= lovetypeResult.code %></span>
@@ -441,8 +465,9 @@
       </div>
     </div>
   <% } %>
+  <% } %>
 
-  <% if (!lovetypeResult || (typeof editMode !== 'undefined' && editMode)) { %>
+  <% if (!showPassword && (!lovetypeResult || (typeof editMode !== 'undefined' && editMode))) { %>
   <form action="/survey/submit" method="POST">
 
     <!-- 一、基础信息 -->

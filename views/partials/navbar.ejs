@@ -1,0 +1,41 @@
+<!-- 导航栏 -->
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="logo">心有所<span>SHU</span></a>
+    <div class="nav-links">
+      <a href="/">主页</a>
+      <a href="/matches">匹配</a>
+      <% if (typeof user !== 'undefined' && user) { %>
+        <!-- 昵称下拉菜单 -->
+        <div class="dropdown">
+          <button class="dropdown-toggle" style="background: none; border: none; cursor: pointer; padding: 6px 12px; font-size: 0.9rem; color: var(--foreground); display: flex; align-items: center; gap: 4px;">
+            <%= typeof nickname !== 'undefined' && nickname ? nickname : (user.name || user.email.split('@')[0]) %>
+            <span style="font-size: 10px;">▼</span>
+          </button>
+          <div class="dropdown-menu">
+            <div style="padding: 10px 16px; border-bottom: 1px solid var(--border);">
+              <div style="font-size: 0.85rem; color: var(--muted-foreground);">个人信息</div>
+              <div style="font-size: 0.9rem; margin-top: 4px;"><%= typeof nickname !== 'undefined' && nickname ? nickname : '未设置' %></div>
+              <div style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 2px;"><%= user.email %></div>
+            </div>
+            <% if (typeof hasProfile !== 'undefined' && hasProfile) { %>
+              <a href="/profile?edit=1">✏️ 修改问卷</a>
+              <a href="/profile">💕 查看恋爱人格</a>
+            <% } else { %>
+              <a href="/profile" style="color: var(--error);">📝 填写问卷</a>
+              <div style="padding: 8px 16px; font-size: 0.8rem; color: var(--muted-foreground);">
+                提示：请先完成问卷
+              </div>
+            <% } %>
+            <% if (typeof showPassword !== 'undefined' && showPassword) { %>
+              <a href="/profile/password">🔐 修改密码</a>
+            <% } %>
+            <a href="/logout">🚪 退出登录</a>
+          </div>
+        </div>
+      <% } else { %>
+        <a href="/login" class="btn" style="padding: 6px 14px; font-size: 0.85rem;">登录</a>
+      <% } %>
+    </div>
+  </div>
+</nav>

@@ -221,19 +221,19 @@ function calculateMatchScore(myProfile, theirProfile) {
  * @returns {Array} 匹配结果列表
  */
 async function findMatches(userId) {
-  const myUser = await dbModule.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  const myUser = await dbModule.queryOne('SELECT * FROM users WHERE id = $1', [userId]);
   if (!myUser) return [];
 
-  const myProfile = await dbModule.prepare('SELECT * FROM profiles WHERE user_id = ?').get(userId);
+  const myProfile = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userId]);
   if (!myProfile) return [];
 
   // 获取所有其他用户资料
-  const allProfiles = await dbModule.prepare(`
+  const allProfiles = await dbModule.query(`
     SELECT u.id, u.email, u.name, p.*
     FROM users u
     JOIN profiles p ON u.id = p.user_id
-    WHERE u.id != ? AND u.verified = 1
-  `).all(userId);
+    WHERE u.id != $1 AND u.verified = 1
+  `, [userId]);
 
   if (allProfiles.length === 0) return [];
 
@@ -286,27 +286,22 @@ async function saveWeeklyMatches() {
   const weekNumber = getWeekNumber();
 
   // 检查本周是否已匹配
-  const existing = await dbModule.prepare('SELECT id FROM matches WHERE week_number = ?').get(weekNumber);
+  const existing = await dbModule.queryOne('SELECT id FROM matches WHERE week_number = $1', [weekNumber]);
   if (existing) {
     return { success: false, message: '本周已执行匹配' };
   }
 
   // 获取所有已填写问卷的用户
-  const users = await dbModule.prepare(`
+  const users = await dbModule.query(`
     SELECT u.id, u.email, u.name
     FROM users u
     JOIN profiles p ON u.id = p.user_id
     WHERE u.verified = 1
-  `).all();
+  `);
 
   if (users.length < 2) {
     return { success: false, message: '用户数量不足' };
   }
-
-  const insertMatch = dbModule.prepare(`
-    INSERT INTO matches (user_id_1, user_id_2, score, week_number)
-    VALUES (?, ?, ?, ?)
-  `);
 
   // 为每个用户找出最佳匹配（贪婪算法）
   const matched = new Set();
@@ -319,7 +314,10 @@ async function saveWeeklyMatches() {
 
     if (matches.length > 0) {
       const bestMatch = matches[0];
-      await insertMatch.run(user.id, bestMatch.user_id, bestMatch.score, weekNumber);
+      await dbModule.execute(`
+        INSERT INTO matches (user_id_1, user_id_2, score, week_number)
+        VALUES ($1, $2, $3, $4)
+      `, [user.id, bestMatch.user_id, bestMatch.score, weekNumber]);
       matched.add(user.id);
       matched.add(bestMatch.user_id);
 
