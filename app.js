@@ -268,7 +268,7 @@ app.post('/forgot', wrapAsync(async (req, res) => {
       email
     });
   }
-});
+}));
 
 // 密码重置页
 app.get('/reset/:code', wrapAsync(async (req, res) => {
@@ -289,7 +289,7 @@ app.get('/reset/:code', wrapAsync(async (req, res) => {
   }
 
   res.render('reset', { title: '重置密码', code: resetCode });
-});
+}));
 
 // 处理密码重置
 app.post('/reset/:code', wrapAsync(async (req, res) => {
@@ -345,7 +345,7 @@ app.post('/reset/:code', wrapAsync(async (req, res) => {
   } catch (error) {
     res.redirect('/login');
   }
-});
+}));
 
 // 注册
 app.post('/register', wrapAsync(async (req, res) => {
@@ -454,7 +454,7 @@ app.post('/register', wrapAsync(async (req, res) => {
     messageType,
     loginMethod: 'login'
   });
-});
+}));
 
 // 登录
 app.post('/login', wrapAsync(async (req, res) => {
@@ -526,7 +526,7 @@ app.post('/login', wrapAsync(async (req, res) => {
   }
 
   res.redirect('/');
-});
+}));
 
 // 退出登录
 app.get('/logout', wrapAsync(async (req, res) => {
@@ -536,7 +536,7 @@ app.get('/logout', wrapAsync(async (req, res) => {
     console.error('退出登录失败:', error);
   }
   res.redirect('/login');
-});
+}));
 
 // 注册页（已合并到登录流程）
 app.get('/register', (req, res) => {
@@ -628,7 +628,7 @@ app.post('/login/code', wrapAsync(async (req, res) => {
       loginMethod: 'code'
     });
   }
-});
+}));
 
 // 验证码登录
 app.get('/login/verify/:code', wrapAsync(async (req, res) => {
@@ -690,7 +690,7 @@ app.get('/login/verify/:code', wrapAsync(async (req, res) => {
   }
 
   res.redirect('/');
-});
+}));
 
 // 验证注册邮箱
 app.get('/register/verify/:token', wrapAsync(async (req, res) => {
@@ -762,7 +762,7 @@ app.get('/register/verify/:token', wrapAsync(async (req, res) => {
       loginMethod: 'login'
     });
   }
-});
+}));
 
 // 注册页（已合并到登录流程）
 app.get('/register', (req, res) => {
@@ -782,7 +782,7 @@ app.get('/profile', isLoggedIn, wrapAsync(async (req, res) => {
   model.passwordMessage = req.query.passwordMsg || (res.locals.passwordMessage || '');
   model.passwordMessageType = res.locals.passwordMessageType || '';
   res.render('profile', model);
-});
+}));
 
 // 提交问卷
 app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
@@ -857,7 +857,7 @@ app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
   }
 
   res.redirect('/profile?msg=问卷已保存&type=success');
-});
+}));
 
 // 旧版保存个人资料（兼容）
 app.post('/profile', isLoggedIn, (req, res) => {
@@ -875,7 +875,7 @@ app.get('/profile/password', isLoggedIn, wrapAsync(async (req, res) => {
   model.passwordMessage = req.query.msg || '';
   model.passwordMessageType = req.query.type || '';
   res.render('profile', model);
-});
+}));
 
 // 修改密码
 app.post('/profile/password', isLoggedIn, wrapAsync(async (req, res) => {
@@ -942,7 +942,7 @@ app.post('/profile/password', isLoggedIn, wrapAsync(async (req, res) => {
       passwordMessageType: 'error'
     }));
   }
-});
+}));
 
 // 匹配结果页
 app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
@@ -973,21 +973,21 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     matches: matches,
     isAdmin: req.isAdmin
   });
-});
+}));
 
 // API: 获取匹配列表
 app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
   const matchService = require('./matchService');
   const matches = await matchService.findMatches(req.user.id);
   res.json({ success: true, data: matches });
-});
+}));
 
 // API: 获取前5名
 app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
   const matchService = require('./matchService');
   const matches = await matchService.getTopMatches(req.user.id, 5);
   res.json({ success: true, data: matches });
-});
+}));
 
 // 管理页
 app.get('/admin', isLoggedIn, wrapAsync(async (req, res) => {
@@ -1010,13 +1010,13 @@ app.get('/admin', isLoggedIn, wrapAsync(async (req, res) => {
     messageType: req.query.type,
     isAdmin: true
   });
-});
+}));
 
 // 手动触发匹配
 app.get('/admin/match', isLoggedIn, wrapAsync(async (req, res) => {
   if (!req.isAdmin) return res.redirect('/');
   return res.redirect('/admin?msg=' + encodeURIComponent('请使用页面表单触发匹配') + '&type=error');
-});
+}));
 
 app.post('/admin/match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
   if (!req.isAdmin) return res.redirect('/');
@@ -1092,7 +1092,7 @@ async function start() {
   app.listen(PORT, () => {
     console.log(`
   ╔════════════════════════════════════════╗
-  ║     💕 心有所SHU 服务器已启动          ║
+  ║       心有所SHU 服务器已启动         ║
   ║     访问: http://localhost:${PORT}        ║
   ╚════════════════════════════════════════╝
     `);

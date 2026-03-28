@@ -176,14 +176,11 @@
       <button class="close-btn" onclick="toggleDevModal()">×</button>
     </div>
     <div class="dev-modal-body">
-      <div class="dev-section">
-        <div class="dev-section-title">快速登录</div>
-        <a href="/login/verify/abc123456" class="dev-btn primary">🚀 测试用户一键登录</a>
-      </div>
+      <% if (typeof isDev !== 'undefined' && isDev) { %>
       <div class="dev-section">
         <div class="dev-section-title">环境信息</div>
         <div class="dev-info">
-          <strong>环境:</strong> development<br>
+          <strong>环境:</strong> <%= isProduction ? 'production' : 'development' %><br>
           <strong>端口:</strong> <%= typeof port !== 'undefined' ? port : '3000' %>
         </div>
       </div>

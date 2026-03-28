@@ -4,7 +4,7 @@
 
 ## 访问地址
 
-**后端服务**: https://xin-yousuo-shu.onrender.com
+**快速开始**: https://shudate.xyz
 
 > ⚠️ 注意：Render 免费版会自动休眠，首次访问可能需要等待几秒启动
 
@@ -29,7 +29,7 @@
 
 ### 1.4 在线地址
 
-- **后端服务**: https://xin-yousuo-shu.onrender.com
+- **后端服务**: https://shudate.xyz
 
 ---
 
@@ -48,23 +48,32 @@
 
 ### 2.2 问卷系统
 
-24道选择题，分为4个模块：
+问卷系统分为三部分：
 
-### 一、基础信息（13题）
-- 性别、期望对象性别、学历阶段
-- 年级、期望对象年级、交友目的
-- 校区、期望对象校区、身高、期望对象身高
-- 家乡、期望对象家乡
+#### 基础信息问卷（约17题）
+- 性别、年龄、期望性别、期望年龄范围
+- 年级、校区、跨校区意愿
+- 身高、期望身高范围
+- 家乡、期望家乡
 - 期望对象核心特质
+- 交友目的
 
-### 二、恋爱观念（5题）
-- 沟通频率、消费观念
-- 婚前同居态度、婚姻规划、相处模式
+#### 恋爱观念问卷（约7题）
+- 沟通频率、婚前同居态度、婚姻规划、相处模式
+- 消费观念（5级量表）
 
-### 三、生活习惯（6题）
-- 作息习惯、烟酒态度
-- 宠物态度、社交公开度
-- 社交边界、兴趣爱好（多选）
+#### 生活习惯问卷（约14题）
+- 作息习惯、饮食偏好、辣度接受度、约会偏好
+- 吸烟习惯、对伴侣吸烟态度、饮酒习惯、对伴侣饮酒态度
+- 宠物态度、社交公开度、社交边界
+
+#### 兴趣爱好（约55题多选）
+- 户外与运动圈、泛娱乐与次文化圈
+- 文艺类、生活方式与社交圈、极客与硬核圈
+
+#### LoveType16 恋爱类型测试（23题）
+- 5级量表评估恋爱行为偏好
+- 计算16种恋爱类型
 
 ### 2.3 匹配系统
 
@@ -102,7 +111,6 @@
 
 | 功能 | 说明 |
 |------|------|
-| 测试用户一键登录 | 使用 `/login/verify/abc123456` 快速登录测试账号 |
 | 环境信息 | 显示当前环境（development）和端口 |
 | 管理后台快捷入口 | 快速跳转到管理页面 |
 | 退出登录 | 快速退出当前账号 |
@@ -158,10 +166,13 @@ shu-date/
 |------|------|------|
 | id | SERIAL | 主键 |
 | email | TEXT | 邮箱（唯一） |
-| name | TEXT | 昵称 |
+| nickname | TEXT | 昵称 |
+| password_hash | TEXT | 密码哈希 |
 | verified | INTEGER | 是否验证 |
 | login_code | TEXT | 登录验证码 |
 | login_code_expire | TIMESTAMP | 验证码过期时间 |
+| reset_code | TEXT | 密码重置码 |
+| reset_code_expire | TIMESTAMP | 重置码过期时间 |
 | created_at | TIMESTAMP | 创建时间 |
 
 #### profiles 表
@@ -170,29 +181,38 @@ shu-date/
 | id | SERIAL | 主键 |
 | user_id | INTEGER | 用户ID（外键） |
 | gender | TEXT | 性别 |
+| age | INTEGER | 年龄 |
 | preferred_gender | TEXT | 期望性别 |
+| age_min | INTEGER | 期望最小年龄 |
+| age_max | INTEGER | 期望最大年龄 |
 | purpose | TEXT | 交友目的 |
 | my_grade | TEXT | 我的年级 |
-| preferred_grade | TEXT | 期望年级 |
 | campus | TEXT | 所在校区 |
-| cross_campus | TEXT | 跨校区态度 |
-| height | TEXT | 身高 |
-| preferred_height | TEXT | 身高偏好 |
+| accepted_campus | TEXT | 接受跨校区（逗号分隔） |
+| height_min | INTEGER | 我的身高 |
+| preferred_height_min | INTEGER | 期望最小身高 |
+| preferred_height_max | INTEGER | 期望最大身高 |
 | hometown | TEXT | 家乡 |
 | preferred_hometown | TEXT | 期望家乡 |
 | core_traits | TEXT | 核心特质（逗号分隔） |
-| long_distance | TEXT | 异地恋态度 |
 | communication | TEXT | 沟通频率 |
-| spending | TEXT | 消费观念 |
 | cohabitation | TEXT | 婚前同居态度 |
 | marriage_plan | TEXT | 婚姻规划 |
 | relationship_style | TEXT | 相处模式 |
-| sleep_schedule | TEXT | 作息习惯 |
-| smoke_alcohol | TEXT | 烟酒态度 |
+| sleep_pattern | TEXT | 作息习惯 |
+| diet_preference | TEXT | 饮食偏好 |
+| spice_tolerance | TEXT | 辣度接受度 |
+| date_preference | TEXT | 约会偏好 |
+| spending_style | TEXT | 消费观念（-2到2） |
+| smoking_habit | TEXT | 吸烟习惯 |
+| partner_smoking | TEXT | 对伴侣吸烟态度 |
+| drinking_habit | TEXT | 饮酒习惯 |
+| partner_drinking | TEXT | 对伴侣饮酒态度 |
 | pet | TEXT | 宠物态度 |
 | social_public | TEXT | 社交公开度 |
 | social_boundary | TEXT | 社交边界 |
 | interests | TEXT | 兴趣标签（逗号分隔） |
+| partner_interest | TEXT | 期望伴侣兴趣 |
 | lovetype_answers | TEXT | 恋爱类型测试答案 |
 | lovetype_code | TEXT | 恋爱类型代码 |
 | lovetype_scores | TEXT | 恋爱类型分数 |
@@ -217,18 +237,26 @@ shu-date/
 |------|------|------|------|
 | GET | / | 首页 | 公开 |
 | GET | /login | 登录页 | 公开 |
-| POST | /login | 发送登录链接 | 公开 |
-| GET | /login/verify/:code | 登录链接验证 | 公开 |
-| GET | /register | 注册页 | 公开 |
+| POST | /login | 密码登录 | 公开 |
+| POST | /login/code | 验证码登录 | 公开 |
+| GET | /forgot | 忘记密码页 | 公开 |
+| POST | /forgot | 发送重置邮件 | 公开 |
+| GET | /reset/:code | 重置密码页 | 公开 |
+| POST | /reset/:code | 设置新密码 | 公开 |
+| POST | /register | 注册新用户 | 公开 |
+| GET | /register/verify/:token | 注册邮箱验证 | 公开 |
 | GET | /logout | 登出 | 已登录 |
 | GET | /profile | 问卷页 | 已登录 |
 | POST | /survey/submit | 提交问卷 | 已登录 |
 | POST | /profile | 更新问卷 | 已登录 |
+| GET | /profile/password | 修改密码页 | 已登录 |
+| POST | /profile/password | 修改密码 | 已登录 |
 | GET | /matches | 匹配结果 | 已登录 |
 | GET | /api/matches | 获取匹配列表 | 已登录 |
 | GET | /api/match/top | 获取最佳匹配 | 已登录 |
 | GET | /admin | 管理后台 | 管理员 |
 | POST | /admin/match | 手动触发匹配 | 管理员 |
+| GET | /version | 版本信息 | 公开 |
 
 ---
 
@@ -268,7 +296,7 @@ shu-date/
 **生产环境特性**：
 - 完全隐藏开发者工具
 - 强制要求 `SESSION_SECRET`
-- Cookie 设置 `secure: true`
+- Cookie 设置 `secure: true`（根据 NODE_ENV 自动切换）
 - 必须配置 `RESEND_API_KEY` 才能发送邮件
 
 ### 5.4 本地开发配置示例
@@ -289,7 +317,7 @@ PORT=3000
 
 ### 6.1 线上地址
 
-- **后端服务**: https://xin-yousuo-shu.onrender.com
+- **后端服务**: https://shudate.xyz
 
 ### 6.2 Render 配置方法
 
@@ -347,9 +375,6 @@ npm install
 
 # 启动开发服务
 npm run dev
-
-# 启动并清空数据库（模拟线上环境）
-npm run dev:clean
 
 # 访问
 http://localhost:3000

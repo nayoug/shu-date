@@ -1,6 +1,6 @@
 {
   "name": "xin-yousuo-shu",
-  "version": "01.0",
+  "version": "0.1.2",
   "description": "上海大学校园交友匹配网站",
   "main": "app.js",
   "scripts": {
