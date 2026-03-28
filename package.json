@@ -5,8 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "node app.js",
-    "seed:test-data": "node generateTestData.js"
+    "dev": "node app.js"
   },
   "dependencies": {
     "dotenv": "^16.6.1",

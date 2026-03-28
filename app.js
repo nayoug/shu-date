@@ -14,6 +14,13 @@ function verifyPassword(password, hash) {
   return hashPassword(password) === hash;
 }
 
+// Async wrapper: 将 promise rejection 转为传递给 next(err)
+function wrapAsync(fn) {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+}
+
 let db;
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
@@ -46,20 +53,25 @@ app.use(session({
 
 // 登录中间件
 async function isLoggedIn(req, res, next) {
-  if (req.session.userId) {
-    const user = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
-    if (user) {
-      const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [user.id]);
-      req.user = { ...user, hasProfile: !!profile };
-      req.isAdmin = user.email === 'admin@shu.edu.cn';
-      // 同步更新 session 中的 nickname
-      if (user.nickname) {
-        req.session.nickname = user.nickname;
+  try {
+    if (req.session.userId) {
+      const user = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
+      if (user) {
+        const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [user.id]);
+        req.user = { ...user, hasProfile: !!profile };
+        req.isAdmin = user.email === 'admin@shu.edu.cn';
+        // 同步更新 session 中的 nickname
+        if (user.nickname) {
+          req.session.nickname = user.nickname;
+        }
+        return next();
       }
-      return next();
     }
+    res.redirect('/login');
+  } catch (err) {
+    console.error('isLoggedIn 中间件错误:', err.message);
+    res.redirect('/login');
   }
-  res.redirect('/login');
 }
 
 function normalizeEmail(email) {
@@ -163,7 +175,7 @@ function buildProfilePageModel(req, profile) {
 // ============ 路由 ============
 
 // 首页
-app.get('/', async (req, res) => {
+app.get('/', wrapAsync(async (req, res) => {
   let user = null;
   if (req.session.userId) {
     const u = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
@@ -181,7 +193,7 @@ app.get('/', async (req, res) => {
     message: req.query.msg,
     messageType: req.query.type
   });
-});
+}));
 
 // 登录页
 app.get('/login', (req, res) => {
@@ -201,7 +213,7 @@ app.get('/forgot', (req, res) => {
 });
 
 // 发送密码重置邮件
-app.post('/forgot', async (req, res) => {
+app.post('/forgot', wrapAsync(async (req, res) => {
   const { email } = req.body;
   const lowerEmail = email.toLowerCase();
 
@@ -259,7 +271,7 @@ app.post('/forgot', async (req, res) => {
 });
 
 // 密码重置页
-app.get('/reset/:code', async (req, res) => {
+app.get('/reset/:code', wrapAsync(async (req, res) => {
   const resetCode = req.params.code;
 
   const user = await db.queryOne(
@@ -280,7 +292,7 @@ app.get('/reset/:code', async (req, res) => {
 });
 
 // 处理密码重置
-app.post('/reset/:code', async (req, res) => {
+app.post('/reset/:code', wrapAsync(async (req, res) => {
   const { code } = req.params;
   const { password, confirmPassword } = req.body;
 
@@ -336,7 +348,7 @@ app.post('/reset/:code', async (req, res) => {
 });
 
 // 注册
-app.post('/register', async (req, res) => {
+app.post('/register', wrapAsync(async (req, res) => {
   const { email, password, nickname } = req.body;
   const lowerEmail = email.toLowerCase();
 
@@ -445,7 +457,7 @@ app.post('/register', async (req, res) => {
 });
 
 // 登录
-app.post('/login', async (req, res) => {
+app.post('/login', wrapAsync(async (req, res) => {
   const { email, password } = req.body;
   const lowerEmail = email.toLowerCase();
 
@@ -517,7 +529,7 @@ app.post('/login', async (req, res) => {
 });
 
 // 退出登录
-app.get('/logout', async (req, res) => {
+app.get('/logout', wrapAsync(async (req, res) => {
   try {
     await destroySession(req);
   } catch (error) {
@@ -533,7 +545,7 @@ app.get('/register', (req, res) => {
 
 
 // 发送登录验证码（已有账户）
-app.post('/login/code', async (req, res) => {
+app.post('/login/code', wrapAsync(async (req, res) => {
   const { email } = req.body;
   const lowerEmail = email.toLowerCase();
 
@@ -619,7 +631,7 @@ app.post('/login/code', async (req, res) => {
 });
 
 // 验证码登录
-app.get('/login/verify/:code', async (req, res) => {
+app.get('/login/verify/:code', wrapAsync(async (req, res) => {
   const loginCode = req.params.code;
 
   // 检查是否为测试用户 (id=1, login_code='abc123456')，测试用户不刷新验证码
@@ -681,7 +693,7 @@ app.get('/login/verify/:code', async (req, res) => {
 });
 
 // 验证注册邮箱
-app.get('/register/verify/:token', async (req, res) => {
+app.get('/register/verify/:token', wrapAsync(async (req, res) => {
   try {
     const token = req.params.token;
     const decoded = Buffer.from(token, 'base64').toString('utf8');
@@ -758,7 +770,7 @@ app.get('/register', (req, res) => {
 });
 
 // 个人资料页（问卷）
-app.get('/profile', isLoggedIn, async (req, res) => {
+app.get('/profile', isLoggedIn, wrapAsync(async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
   const hasProfile = !!profile;
   const model = buildProfilePageModel(req, profile);
@@ -773,7 +785,7 @@ app.get('/profile', isLoggedIn, async (req, res) => {
 });
 
 // 提交问卷
-app.post('/survey/submit', isLoggedIn, async (req, res) => {
+app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
   const data = req.body;
 
   const processMultiSelect = (val) => {
@@ -853,7 +865,7 @@ app.post('/profile', isLoggedIn, (req, res) => {
 });
 
 // 修改密码页面
-app.get('/profile/password', isLoggedIn, async (req, res) => {
+app.get('/profile/password', isLoggedIn, wrapAsync(async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
   const hasProfile = !!profile;
   const model = buildProfilePageModel(req, profile);
@@ -866,7 +878,7 @@ app.get('/profile/password', isLoggedIn, async (req, res) => {
 });
 
 // 修改密码
-app.post('/profile/password', isLoggedIn, async (req, res) => {
+app.post('/profile/password', isLoggedIn, wrapAsync(async (req, res) => {
   const { currentPassword, newPassword, confirmPassword } = req.body;
 
   // 获取当前用户的 profile
@@ -933,7 +945,7 @@ app.post('/profile/password', isLoggedIn, async (req, res) => {
 });
 
 // 匹配结果页
-app.get('/matches', isLoggedIn, async (req, res) => {
+app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
   if (!req.user.verified) {
     return res.render('matches', {
       title: '匹配结果',
@@ -964,21 +976,21 @@ app.get('/matches', isLoggedIn, async (req, res) => {
 });
 
 // API: 获取匹配列表
-app.get('/api/matches', isLoggedIn, async (req, res) => {
+app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
   const matchService = require('./matchService');
   const matches = await matchService.findMatches(req.user.id);
   res.json({ success: true, data: matches });
 });
 
 // API: 获取前5名
-app.get('/api/match/top', isLoggedIn, async (req, res) => {
+app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
   const matchService = require('./matchService');
   const matches = await matchService.getTopMatches(req.user.id, 5);
   res.json({ success: true, data: matches });
 });
 
 // 管理页
-app.get('/admin', isLoggedIn, async (req, res) => {
+app.get('/admin', isLoggedIn, wrapAsync(async (req, res) => {
   if (!req.isAdmin) return res.redirect('/');
 
   const users = await db.query(`
@@ -1001,16 +1013,16 @@ app.get('/admin', isLoggedIn, async (req, res) => {
 });
 
 // 手动触发匹配
-app.get('/admin/match', isLoggedIn, async (req, res) => {
+app.get('/admin/match', isLoggedIn, wrapAsync(async (req, res) => {
   if (!req.isAdmin) return res.redirect('/');
   return res.redirect('/admin?msg=' + encodeURIComponent('请使用页面表单触发匹配') + '&type=error');
 });
 
-app.post('/admin/match', isLoggedIn, requireValidCsrf, async (req, res) => {
+app.post('/admin/match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
   if (!req.isAdmin) return res.redirect('/');
   const result = await runWeeklyMatch();
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
-});
+}));
 
 // 登出
 app.get('/logout', (req, res) => {
@@ -1088,5 +1100,13 @@ async function start() {
 }
 
 start().catch(console.error);
+
+// 统一错误处理中间件
+app.use((err, req, res, next) => {
+  console.error('❌ 服务器错误:', err.message);
+  res.status(500).render('error', {
+    message: isProduction ? '服务器内部错误' : err.message
+  });
+});
 
 module.exports = app;
