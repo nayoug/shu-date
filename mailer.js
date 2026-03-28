@@ -65,12 +65,10 @@ async function sendLoginEmail(email, loginCode) {
 }
 
 // 发送注册验证邮件
-async function sendVerifyEmail(email) {
+async function sendVerifyEmail(email, verificationToken) {
   const r = getResend();
-  // 生成验证链接，包含邮箱和时间戳
-  const timestamp = Date.now();
-  const verifyToken = Buffer.from(`${email}:${timestamp}`).toString('base64');
-  const verifyUrl = `${process.env.BASE_URL}/register/verify/${verifyToken}`;
+  // 生成验证链接，使用服务端提供的token
+  const verifyUrl = `${process.env.BASE_URL}/register/verify/${verificationToken}`;
 
   if (!r) {
     if (!isProduction) {
@@ -96,7 +94,7 @@ async function sendVerifyEmail(email) {
           <p>或复制以下链接到浏览器打开：</p>
           <p style="word-break: break-all; color: #666;">${verifyUrl}</p>
           <p style="color: #999; font-size: 12px; margin-top: 30px;">
-            链接有效期为24小时。如非本人操作，请忽略此邮件。
+            链接有效期为30分钟。如非本人操作，请忽略此邮件。
           </p>
         </div>
       `

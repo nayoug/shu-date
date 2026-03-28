@@ -24,13 +24,15 @@ async function initDatabase() {
       verified INTEGER DEFAULT 0,
       login_code TEXT,
       login_code_expire TIMESTAMP,
+      verification_token TEXT,
+      verification_expire TIMESTAMP,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);
 
-  // 确保 password_hash 和 nickname 字段存在（升级时）
-  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT');
-  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS nickname TEXT');
+  // 确保新字段存在（升级时）
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token TEXT');
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_expire TIMESTAMP');
 
   // profiles 表
   await pool.query(`

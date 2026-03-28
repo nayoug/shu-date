@@ -165,14 +165,14 @@ shu-date/
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | SERIAL | 主键 |
-| email | TEXT | 邮箱（唯一） |
+| email | TEXT | 邮箱（唯一，小写存储） |
 | nickname | TEXT | 昵称 |
-| password_hash | TEXT | 密码哈希 |
-| verified | INTEGER | 是否验证 |
+| password_hash | TEXT | 密码哈希（bcrypt） |
+| verified | INTEGER | 是否验证（0/1） |
+| verification_token | TEXT | 注册验证 token（一次性） |
+| verification_expire | TIMESTAMP | 验证 token 过期时间 |
 | login_code | TEXT | 登录验证码 |
-| login_code_expire | TIMESTAMP | 验证码过期时间 |
-| reset_code | TEXT | 密码重置码 |
-| reset_code_expire | TIMESTAMP | 重置码过期时间 |
+| login_code_expire | TIMESTAMP | 登录验证码过期时间（30分钟） |
 | created_at | TIMESTAMP | 创建时间 |
 
 #### profiles 表

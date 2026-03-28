@@ -1,17 +1,39 @@
 const express = require('express');
 const session = require('express-session');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const path = require('path');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
 
-// 密码哈希工具函数
-function hashPassword(password) {
-  return crypto.createHash('sha256').update(password).digest('hex');
+// bcrypt 工作因子
+const BCRYPT_ROUNDS = 10;
+
+// 密码哈希函数 - 使用 bcrypt
+async function hashPassword(password) {
+  return bcrypt.hash(password, BCRYPT_ROUNDS);
 }
 
-function verifyPassword(password, hash) {
-  return hashPassword(password) === hash;
+// 密码验证函数 - 支持自动升级旧 SHA256 哈希
+async function verifyPassword(password, hash, db, userId) {
+  // 检测哈希格式
+  // bcrypt: $2[aby]$[rounds]$[salt+hash] (约60字符)
+  // SHA256: 64字符十六进制
+  if (hash.length === 64 && /^[a-f0-9]+$/i.test(hash)) {
+    // 旧 SHA256 格式 - 验证并升级
+    const oldHash = crypto.createHash('sha256').update(password).digest('hex');
+    if (oldHash === hash) {
+      // 密码正确，升级到 bcrypt
+      const newHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+      await db.execute('UPDATE users SET password_hash = $1 WHERE id = $2', [newHash, userId]);
+      console.log(`用户 ${userId} 密码哈希已从 SHA256 升级到 bcrypt`);
+      return true;
+    }
+    return false;
+  }
+
+  // bcrypt 格式
+  return bcrypt.compare(password, hash);
 }
 
 // Async wrapper: 将 promise rejection 转为传递给 next(err)
@@ -166,6 +188,7 @@ function buildProfilePageModel(req, profile) {
     lovetypeResult: showResult && lovetypeAssessment ? lovetypeAssessment.result : null,
     isAdmin: req.isAdmin,
     isDev: !isProduction,
+    isProduction,
     message: req.query.msg,
     messageType: req.query.type,
     editMode: req.query.edit === '1'
@@ -329,7 +352,7 @@ app.post('/reset/:code', wrapAsync(async (req, res) => {
   }
 
   // 更新密码
-  const passwordHash = hashPassword(password);
+  const passwordHash = await hashPassword(password);
   await db.execute(
     'UPDATE users SET password_hash = $1, login_code = NULL, login_code_expire = NULL WHERE id = $2',
     [passwordHash, user.id]
@@ -395,14 +418,15 @@ app.post('/register', wrapAsync(async (req, res) => {
       return res.redirect('/login?method=login&msg=' + encodeURIComponent('该邮箱已完成注册，请直接登录') + '&type=info');
     }
     // 用户存在但未完成注册，更新信息
-    const passwordHash = hashPassword(password);
+    const passwordHash = await hashPassword(password);
+    const verificationToken = generateToken();
     await db.execute(
-      'UPDATE users SET password_hash = $1, nickname = $2 WHERE id = $3',
-      [passwordHash, nickname.trim(), existingUser.id]
+      'UPDATE users SET password_hash = $1, nickname = $2, verification_token = $3, verification_expire = $4, verified = 0 WHERE id = $5',
+      [passwordHash, nickname.trim(), verificationToken, new Date(Date.now() + 30 * 60 * 1000), existingUser.id]
     );
     // 发送验证邮件
     const { sendVerifyEmail } = require('./mailer');
-    const verifyResult = await sendVerifyEmail(email);
+    const verifyResult = await sendVerifyEmail(email, verificationToken);
     let message = '请前往邮箱点击验证链接完成验证。';
     let messageType = 'success';
     if (verifyResult && verifyResult.simulated) {
@@ -417,10 +441,11 @@ app.post('/register', wrapAsync(async (req, res) => {
   }
 
   // 创建新用户（未验证状态）
-  const passwordHash = hashPassword(password);
+  const passwordHash = await hashPassword(password);
+  const verificationToken = generateToken();
   const writeResult = await db.execute(
-    'INSERT INTO users (email, password_hash, nickname, verified) VALUES ($1, $2, $3, 0)',
-    [email, passwordHash, nickname.trim()]
+    'INSERT INTO users (email, password_hash, nickname, verified, verification_token, verification_expire) VALUES ($1, $2, $3, 0, $4, $5)',
+    [email, passwordHash, nickname.trim(), verificationToken, new Date(Date.now() + 30 * 60 * 1000)]
   );
 
   if (!writeResult || writeResult.changes !== 1) {
@@ -435,7 +460,7 @@ app.post('/register', wrapAsync(async (req, res) => {
 
   // 发送验证邮件
   const { sendVerifyEmail } = require('./mailer');
-  const verifyResult = await sendVerifyEmail(email);
+  const verifyResult = await sendVerifyEmail(email, verificationToken);
 
   // 无论邮件是否发送成功，都显示验证提示（邮件发送失败时显示模拟链接）
   let message = '注册成功！请前往邮箱点击验证链接完成验证。';
@@ -486,8 +511,8 @@ app.post('/login', wrapAsync(async (req, res) => {
   }
 
   // 验证密码
-
-  if (!verifyPassword(password, user.password_hash)) {
+  const passwordValid = await verifyPassword(password, user.password_hash, db, user.id);
+  if (!passwordValid) {
     return res.render('login', {
       title: '登录',
       message: '密码错误，请重试',
@@ -571,7 +596,7 @@ app.post('/login/code', wrapAsync(async (req, res) => {
 
   // 生成登录验证码
   const loginCode = generateToken(24);
-  const expireTime = new Date(Date.now() + 10 * 60 * 1000);
+  const expireTime = new Date(Date.now() + 30 * 60 * 1000);
   let writeResult;
 
   if (user) {
@@ -696,28 +721,27 @@ app.get('/login/verify/:code', wrapAsync(async (req, res) => {
 app.get('/register/verify/:token', wrapAsync(async (req, res) => {
   try {
     const token = req.params.token;
-    const decoded = Buffer.from(token, 'base64').toString('utf8');
-    const [email, timestamp] = decoded.split(':');
 
-    // 检查token是否过期（24小时）
-    const now = Date.now();
-    const tokenTime = parseInt(timestamp);
-    if (isNaN(tokenTime) || now - tokenTime > 24 * 60 * 60 * 1000) {
+    // 按token查询用户
+    const user = await db.queryOne(
+      'SELECT id, email, nickname, verified, verification_expire, verification_token FROM users WHERE verification_token = $1',
+      [token]
+    );
+
+    if (!user) {
       return res.render('login', {
         title: '登录',
-        message: '验证链接已过期，请重新注册',
+        message: '验证链接无效',
         messageType: 'error',
         loginMethod: 'login'
       });
     }
 
-    // 查找用户并验证
-    const user = await db.queryOne('SELECT id, email, nickname, verified FROM users WHERE email = $1', [email]);
-
-    if (!user) {
+    // 检查token是否过期
+    if (!user.verification_expire || new Date(user.verification_expire) < new Date()) {
       return res.render('login', {
         title: '登录',
-        message: '验证链接无效，用户不存在',
+        message: '验证链接已过期，请重新注册',
         messageType: 'error',
         loginMethod: 'login'
       });
@@ -732,9 +756,9 @@ app.get('/register/verify/:token', wrapAsync(async (req, res) => {
       });
     }
 
-    // 更新为已验证
+    // 更新为已验证，并使token失效
     const result = await db.execute(
-      'UPDATE users SET verified = 1 WHERE id = $1',
+      'UPDATE users SET verified = 1, verification_token = NULL, verification_expire = NULL WHERE id = $1',
       [user.id]
     );
 
@@ -763,11 +787,6 @@ app.get('/register/verify/:token', wrapAsync(async (req, res) => {
     });
   }
 }));
-
-// 注册页（已合并到登录流程）
-app.get('/register', (req, res) => {
-  res.redirect('/login');
-});
 
 // 个人资料页（问卷）
 app.get('/profile', isLoggedIn, wrapAsync(async (req, res) => {
@@ -916,7 +935,8 @@ app.post('/profile/password', isLoggedIn, wrapAsync(async (req, res) => {
 
   // 如果之前没有密码，则跳过验证
   if (user.password_hash) {
-    if (!verifyPassword(currentPassword, user.password_hash)) {
+    const currentPasswordValid = await verifyPassword(currentPassword, user.password_hash, db, req.session.userId);
+    if (!currentPasswordValid) {
       return res.render('profile', Object.assign(baseModel, {
         passwordMessage: '当前密码错误',
         passwordMessageType: 'error'
@@ -925,7 +945,7 @@ app.post('/profile/password', isLoggedIn, wrapAsync(async (req, res) => {
   }
 
   // 更新密码
-  const passwordHash = hashPassword(newPassword);
+  const passwordHash = await hashPassword(newPassword);
   const result = await db.execute(
     'UPDATE users SET password_hash = $1 WHERE id = $2',
     [passwordHash, req.session.userId]
@@ -1024,12 +1044,6 @@ app.post('/admin/match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
 }));
 
-// 登出
-app.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/');
-});
-
 // ============ 匹配逻辑 ============
 
 function getWeekNumber() {
@@ -1092,7 +1106,7 @@ async function start() {
   app.listen(PORT, () => {
     console.log(`
   ╔════════════════════════════════════════╗
-  ║       心有所SHU 服务器已启动         ║
+  ║     💕 心有所SHU 服务器已启动          ║
   ║     访问: http://localhost:${PORT}        ║
   ╚════════════════════════════════════════╝
     `);
