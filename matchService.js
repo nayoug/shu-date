@@ -54,6 +54,27 @@ function intSimilarity(val1, val2) {
   return 1 - (diff / 4); // 最大差为4，转换为0-1
 }
 
+function parseNullableInt(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = parseInt(value, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function isHeightWithinRange(height, min, max) {
+  const normalizedHeight = parseNullableInt(height);
+  const normalizedMin = parseNullableInt(min);
+  const normalizedMax = parseNullableInt(max);
+
+  // 缺少任一侧的实际身高或偏好上下限时，不因缺值直接过滤掉候选人。
+  if (normalizedHeight === null || normalizedMin === null || normalizedMax === null) {
+    return true;
+  }
+
+  const lowerBound = Math.min(normalizedMin, normalizedMax);
+  const upperBound = Math.max(normalizedMin, normalizedMax);
+  return normalizedHeight >= lowerBound && normalizedHeight <= upperBound;
+}
+
 // ============ 过滤阶段 ============
 
 function filterCandidates(myProfile, allProfiles) {
@@ -95,16 +116,19 @@ function filterCandidates(myProfile, allProfiles) {
     }
 
     // 4. 身高偏好过滤
-    if (myProfile.preferred_height_min !== null && myProfile.preferred_height_min !== undefined &&
-        myProfile.preferred_height_max !== null && myProfile.preferred_height_max !== undefined &&
-        p.height_min !== null && p.height_min !== undefined) {
-      // 我的身高要在对方偏好范围内
-      if (p.height_min > myProfile.preferred_height_max || p.height_min < myProfile.preferred_height_min) {
-        // 再次检查：对方的实际身高是否在我的偏好范围内
-        if (myProfile.preferred_height_min > p.height_min || myProfile.preferred_height_max < p.height_min) {
-          return false;
-        }
-      }
+    if (!isHeightWithinRange(
+      p.height_min,
+      myProfile.preferred_height_min,
+      myProfile.preferred_height_max
+    )) {
+      return false;
+    }
+    if (!isHeightWithinRange(
+      myProfile.height_min,
+      p.preferred_height_min,
+      p.preferred_height_max
+    )) {
+      return false;
     }
 
     // 5. 家乡偏好过滤
