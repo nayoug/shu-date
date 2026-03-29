@@ -238,7 +238,7 @@ app.get('/forgot', (req, res) => {
 // 发送密码重置邮件
 app.post('/forgot', wrapAsync(async (req, res) => {
   const { email } = req.body;
-  const lowerEmail = email.toLowerCase();
+  const lowerEmail = normalizeEmail(email);
 
   // 验证邮箱格式
   const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
@@ -247,19 +247,19 @@ app.post('/forgot', wrapAsync(async (req, res) => {
       title: '忘记密码',
       message: '请输入 @shu.edu.cn 结尾的学校邮箱',
       messageType: 'error',
-      email
+      email: lowerEmail
     });
   }
 
   // 查找用户
-  const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
+  const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [lowerEmail]);
 
   if (!user) {
     return res.render('forgot', {
       title: '忘记密码',
       message: '该邮箱未注册，请先注册',
       messageType: 'error',
-      email
+      email: lowerEmail
     });
   }
 
@@ -274,21 +274,21 @@ app.post('/forgot', wrapAsync(async (req, res) => {
 
   // 发送重置邮件
   const { sendLoginEmail } = require('./mailer');
-  const result = await sendLoginEmail(email, resetCode);
+  const result = await sendLoginEmail(lowerEmail, resetCode);
 
   if (result.success || (result.simulated && !isProduction)) {
     res.render('forgot', {
       title: '忘记密码',
       message: '重置链接已发送到你的邮箱，请查收',
       messageType: 'success',
-      email
+      email: lowerEmail
     });
   } else {
     res.render('forgot', {
       title: '忘记密码',
       message: '邮件发送失败，请稍后重试',
       messageType: 'error',
-      email
+      email: lowerEmail
     });
   }
 }));
@@ -373,7 +373,7 @@ app.post('/reset/:code', wrapAsync(async (req, res) => {
 // 注册
 app.post('/register', wrapAsync(async (req, res) => {
   const { email, password, nickname } = req.body;
-  const lowerEmail = email.toLowerCase();
+  const lowerEmail = normalizeEmail(email);
 
   // 验证邮箱格式
   const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
@@ -382,7 +382,7 @@ app.post('/register', wrapAsync(async (req, res) => {
       title: '登录',
       message: '请使用 @shu.edu.cn 结尾的学校邮箱',
       messageType: 'error',
-      email,
+      email: lowerEmail,
       loginMethod: 'register'
     });
   }
@@ -393,7 +393,7 @@ app.post('/register', wrapAsync(async (req, res) => {
       title: '登录',
       message: '密码长度至少6位',
       messageType: 'error',
-      email,
+      email: lowerEmail,
       loginMethod: 'register'
     });
   }
@@ -404,13 +404,13 @@ app.post('/register', wrapAsync(async (req, res) => {
       title: '登录',
       message: '请输入昵称',
       messageType: 'error',
-      email,
+      email: lowerEmail,
       loginMethod: 'register'
     });
   }
 
   // 检查用户是否已存在
-  const existingUser = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
+  const existingUser = await db.queryOne('SELECT * FROM users WHERE email = $1', [lowerEmail]);
 
   if (existingUser) {
     // 检查是否已完成注册（密码和昵称都有）
@@ -426,7 +426,7 @@ app.post('/register', wrapAsync(async (req, res) => {
     );
     // 发送验证邮件
     const { sendVerifyEmail } = require('./mailer');
-    const verifyResult = await sendVerifyEmail(email, verificationToken);
+    const verifyResult = await sendVerifyEmail(lowerEmail, verificationToken);
     let message = '请前往邮箱点击验证链接完成验证。';
     let messageType = 'success';
     if (verifyResult && verifyResult.simulated) {
@@ -445,7 +445,7 @@ app.post('/register', wrapAsync(async (req, res) => {
   const verificationToken = generateToken();
   const writeResult = await db.execute(
     'INSERT INTO users (email, password_hash, nickname, verified, verification_token, verification_expire) VALUES ($1, $2, $3, 0, $4, $5)',
-    [email, passwordHash, nickname.trim(), verificationToken, new Date(Date.now() + 30 * 60 * 1000)]
+    [lowerEmail, passwordHash, nickname.trim(), verificationToken, new Date(Date.now() + 30 * 60 * 1000)]
   );
 
   if (!writeResult || writeResult.changes !== 1) {
@@ -453,14 +453,14 @@ app.post('/register', wrapAsync(async (req, res) => {
       title: '登录',
       message: '注册失败，请稍后重试',
       messageType: 'error',
-      email,
+      email: lowerEmail,
       loginMethod: 'register'
     });
   }
 
   // 发送验证邮件
   const { sendVerifyEmail } = require('./mailer');
-  const verifyResult = await sendVerifyEmail(email, verificationToken);
+  const verifyResult = await sendVerifyEmail(lowerEmail, verificationToken);
 
   // 无论邮件是否发送成功，都显示验证提示（邮件发送失败时显示模拟链接）
   let message = '注册成功！请前往邮箱点击验证链接完成验证。';
@@ -484,7 +484,7 @@ app.post('/register', wrapAsync(async (req, res) => {
 // 登录
 app.post('/login', wrapAsync(async (req, res) => {
   const { email, password } = req.body;
-  const lowerEmail = email.toLowerCase();
+  const lowerEmail = normalizeEmail(email);
 
   // 验证邮箱格式
   const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -493,21 +493,21 @@ app.post('/login', wrapAsync(async (req, res) => {
       title: '登录',
       message: '请输入有效的邮箱地址',
       messageType: 'error',
-      email,
+      email: lowerEmail,
       loginMethod: 'login'
     });
   }
 
   // 查找用户
-  const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
+  const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [lowerEmail]);
 
   if (!user) {
-    return res.redirect('/login?method=register&email=' + encodeURIComponent(email) + '&msg=' + encodeURIComponent('账号不存在，请先注册') + '&type=error');
+    return res.redirect('/login?method=register&email=' + encodeURIComponent(lowerEmail) + '&msg=' + encodeURIComponent('账号不存在，请先注册') + '&type=error');
   }
 
   // 检查是否完成注册（需要有密码和昵称和邮箱）
   if (!user.password_hash || !user.nickname || !user.email) {
-    return res.redirect('/login?method=register&email=' + encodeURIComponent(email) + '&msg=' + encodeURIComponent('你还未设置密码，请先完成注册') + '&type=warning');
+    return res.redirect('/login?method=register&email=' + encodeURIComponent(lowerEmail) + '&msg=' + encodeURIComponent('你还未设置密码，请先完成注册') + '&type=warning');
   }
 
   // 验证密码
@@ -517,7 +517,7 @@ app.post('/login', wrapAsync(async (req, res) => {
       title: '登录',
       message: '密码错误，请重试',
       messageType: 'error',
-      email,
+      email: lowerEmail,
       loginMethod: 'login'
     });
   }
@@ -528,7 +528,7 @@ app.post('/login', wrapAsync(async (req, res) => {
       title: '登录',
       message: '邮箱还未验证，请先查收验证邮件完成验证',
       messageType: 'error',
-      email,
+      email: lowerEmail,
       loginMethod: 'login'
     });
   }
@@ -545,7 +545,7 @@ app.post('/login', wrapAsync(async (req, res) => {
       title: '登录',
       message: '登录失败，请重试',
       messageType: 'error',
-      email,
+      email: lowerEmail,
       loginMethod: 'login'
     });
   }
@@ -572,7 +572,7 @@ app.get('/register', (req, res) => {
 // 发送登录验证码（已有账户）
 app.post('/login/code', wrapAsync(async (req, res) => {
   const { email } = req.body;
-  const lowerEmail = email.toLowerCase();
+  const lowerEmail = normalizeEmail(email);
 
   // 验证邮箱格式
   const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
@@ -581,17 +581,17 @@ app.post('/login/code', wrapAsync(async (req, res) => {
       title: '登录',
       message: '请使用 @shu.edu.cn 结尾的学校邮箱',
       messageType: 'error',
-      email,
+      email: lowerEmail,
       loginMethod: 'code'
     });
   }
 
   // 检查用户是否存在
-  let user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
+  let user = await db.queryOne('SELECT * FROM users WHERE email = $1', [lowerEmail]);
 
   // 如果用户存在但没有密码或昵称，视为未完成注册
   if (user && (!user.password_hash || !user.nickname || !user.email)) {
-    return res.redirect('/login?method=register&email=' + encodeURIComponent(email) + '&msg=' + encodeURIComponent('你还未设置密码，请先完成注册') + '&type=warning');
+    return res.redirect('/login?method=register&email=' + encodeURIComponent(lowerEmail) + '&msg=' + encodeURIComponent('你还未设置密码，请先完成注册') + '&type=warning');
   }
 
   // 生成登录验证码
@@ -608,9 +608,9 @@ app.post('/login/code', wrapAsync(async (req, res) => {
     // 自动注册新用户（默认已验证）
     writeResult = await db.execute(
       'INSERT INTO users (email, login_code, login_code_expire, verified) VALUES ($1, $2, $3, 1)',
-      [email, loginCode, expireTime.toISOString()]
+      [lowerEmail, loginCode, expireTime.toISOString()]
     );
-    user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email]);
+    user = await db.queryOne('SELECT * FROM users WHERE email = $1', [lowerEmail]);
   }
 
   if (!writeResult || writeResult.changes !== 1 || !user) {
@@ -618,21 +618,21 @@ app.post('/login/code', wrapAsync(async (req, res) => {
       title: '登录',
       message: '登录链接生成失败，请稍后重试',
       messageType: 'error',
-      email,
+      email: lowerEmail,
       loginMethod: 'code'
     });
   }
 
   // 发送登录邮件
   const { sendLoginEmail } = require('./mailer');
-  const result = await sendLoginEmail(email, loginCode);
+  const result = await sendLoginEmail(lowerEmail, loginCode);
 
   if (result.success) {
     res.render('login', {
       title: '登录',
       message: '验证码已发送到你的邮箱，点击邮件中的链接即可登录。由于校内网关限制，邮件可能会有 1-2 分钟延迟，请耐心等待',
       messageType: 'success',
-      email,
+      email: lowerEmail,
       loginMethod: 'code'
     });
   } else if (result.simulated && !isProduction) {
@@ -640,7 +640,7 @@ app.post('/login/code', wrapAsync(async (req, res) => {
       title: '登录',
       message: '当前未配置邮件服务。开发环境可直接使用下方测试链接登录。',
       messageType: 'info',
-      email,
+      email: lowerEmail,
       debugLoginUrl: result.url,
       loginMethod: 'code'
     });
@@ -649,7 +649,7 @@ app.post('/login/code', wrapAsync(async (req, res) => {
       title: '登录',
       message: '邮件发送失败，请稍后重试或联系管理员',
       messageType: 'error',
-      email,
+      email: lowerEmail,
       loginMethod: 'code'
     });
   }
