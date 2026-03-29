@@ -546,15 +546,15 @@ tr:hover td {
     grid-template-columns: 1fr;
   }
 
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="search"],
-  input[type="tel"],
-  input[type="url"],
-  input[type="number"],
-  textarea,
-  select {
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group input[type="password"],
+  .form-group input[type="search"],
+  .form-group input[type="tel"],
+  .form-group input[type="url"],
+  .form-group input[type="number"],
+  .form-group textarea,
+  .form-group select {
     font-size: 16px;
   }
 }
