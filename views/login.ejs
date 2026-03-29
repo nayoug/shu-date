@@ -80,13 +80,13 @@
       <!-- 注册表单 -->
       <form action="/register" method="POST" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>">
         <div class="form-group">
-          <input type="text" name="nickname" placeholder="昵称" required style="text-align: center; font-size: 16px;">
+          <input type="text" name="nickname" placeholder="昵称" autocomplete="nickname" required style="text-align: center; font-size: 16px;">
         </div>
         <div class="form-group">
-          <input type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" required style="text-align: center; font-size: 16px;">
+          <input type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="email" autocapitalize="none" autocorrect="off" inputmode="email" required style="text-align: center; font-size: 16px;">
         </div>
         <div class="form-group">
-          <input type="password" name="password" placeholder="设置密码（至少6位）" required minlength="6" style="text-align: center; font-size: 16px;">
+          <input type="password" name="password" placeholder="设置密码（至少6位）" autocomplete="new-password" required minlength="6" style="text-align: center; font-size: 16px;">
         </div>
         <button type="submit" class="btn" style="width: 100%;">注册</button>
       </form>
@@ -94,10 +94,10 @@
       <!-- 登录表单 -->
       <form action="/login" method="POST" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>">
         <div class="form-group">
-          <input type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" required style="text-align: center; font-size: 16px;">
+          <input type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" autocapitalize="none" autocorrect="off" inputmode="email" required style="text-align: center; font-size: 16px;">
         </div>
         <div class="form-group">
-          <input type="password" name="password" placeholder="登录密码" required style="text-align: center; font-size: 16px;">
+          <input type="password" name="password" placeholder="登录密码" autocomplete="current-password" required style="text-align: center; font-size: 16px;">
         </div>
         <button type="submit" class="btn" style="width: 100%;">登录</button>
         <a href="/forgot" class="forgot-password">忘记密码？</a>
