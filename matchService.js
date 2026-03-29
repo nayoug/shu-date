@@ -23,6 +23,7 @@
 
 const dbModule = require('./database');
 const lovetypeService = require('./lovetypeService');
+const { getWeekNumber } = require('./weekNumber');
 
 // ============ 工具函数 ============
 
@@ -365,13 +366,6 @@ async function saveWeeklyMatches() {
   }
 
   return { success: true, message: `匹配完成，共 ${results.length} 对`, results };
-}
-
-function getWeekNumber() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 1);
-  const diff = now - start;
-  return Math.floor(diff / 604800000);
 }
 
 module.exports = {

@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const packageJson = require('./package.json');
+const { getWeekNumber } = require('./weekNumber');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
 
@@ -1012,7 +1013,7 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
   }
 
   const weekNumber = getWeekNumber();
-  const weeklyMatch = await db.queryOne(`
+  const weeklyMatches = await db.query(`
     SELECT
       m.score,
       partner.id AS user_id,
@@ -1034,10 +1035,13 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     WHERE m.week_number = $2
       AND ($1 = m.user_id_1 OR $1 = m.user_id_2)
     ORDER BY m.matched_at DESC, m.id DESC
-    LIMIT 1
   `, [req.user.id, weekNumber]);
 
-  const matches = weeklyMatch ? [weeklyMatch] : [];
+  if (weeklyMatches.length > 1) {
+    console.error(`⚠️ 用户 ${req.user.id} 在第 ${weekNumber} 周存在 ${weeklyMatches.length} 条正式匹配记录，页面将展示最新一条`);
+  }
+
+  const matches = weeklyMatches.length > 0 ? [weeklyMatches[0]] : [];
 
   res.render('matches', {
     title: '匹配结果',
@@ -1052,18 +1056,18 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
   });
 }));
 
-// API: 获取匹配列表
+// API: 获取实时推荐列表
 app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
   const matchService = require('./matchService');
   const matches = await matchService.findMatches(req.user.id);
-  res.json({ success: true, data: matches });
+  res.json({ success: true, source: 'recommendation', data: matches });
 }));
 
-// API: 获取前5名
+// API: 获取前5名实时推荐
 app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
   const matchService = require('./matchService');
   const matches = await matchService.getTopMatches(req.user.id, 5);
-  res.json({ success: true, data: matches });
+  res.json({ success: true, source: 'recommendation', data: matches });
 }));
 
 // 管理页
@@ -1102,13 +1106,6 @@ app.post('/admin/match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res
 }));
 
 // ============ 匹配逻辑 ============
-
-function getWeekNumber() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 1);
-  const diff = now - start;
-  return Math.floor(diff / 604800000);
-}
 
 async function runWeeklyMatch() {
   const matchService = require('./matchService');
