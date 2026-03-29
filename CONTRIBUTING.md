@@ -1,4 +1,4 @@
-# Contribution Guide
+# 贡献指南 / Contribution Guide
 
 欢迎提交 Issue 和 PR。
 
