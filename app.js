@@ -67,10 +67,10 @@ app.use(session({
   cookie: {
     httpOnly: true,
     sameSite: 'lax',
-    secure: false,
+    secure: isProduction,
     maxAge: 7 * 24 * 60 * 60 * 1000
   },
-  proxy: false
+  proxy: isProduction
 }));
 
 // 登录中间件
@@ -659,25 +659,12 @@ app.post('/login/code', wrapAsync(async (req, res) => {
 app.get('/login/verify/:code', wrapAsync(async (req, res) => {
   const loginCode = req.params.code;
 
-  // 检查是否为测试用户 (id=1, login_code='abc123456')，测试用户不刷新验证码
-  const isTestUser = loginCode === 'abc123456';
-
-  let user;
-  if (isTestUser) {
-    // 测试用户: 只查询不更新
-    user = await db.queryOne(`
-      SELECT id, nickname, email FROM users
-      WHERE login_code = $1
-    `, [loginCode]);
-  } else {
-    // 普通用户: 使用后清空验证码
-    user = await db.queryOne(`
-      UPDATE users
-      SET login_code = NULL, login_code_expire = NULL
-      WHERE login_code = $1 AND login_code_expire > NOW()
-      RETURNING id, nickname, email
-    `, [loginCode]);
-  }
+  const user = await db.queryOne(`
+    UPDATE users
+    SET login_code = NULL, login_code_expire = NULL
+    WHERE login_code = $1 AND login_code_expire > NOW()
+    RETURNING id, nickname, email
+  `, [loginCode]);
 
   if (!user) {
     const expiredToken = await db.queryOne('SELECT id FROM users WHERE login_code = $1', [req.params.code]);
@@ -695,11 +682,6 @@ app.get('/login/verify/:code', wrapAsync(async (req, res) => {
     req.session.userId = user.id;
     req.session.nickname = user.nickname || user.email.split('@')[0];
     await saveSession(req);
-
-    // 测试用户: 重定向到首页，确保 session cookie 正确传递
-    if (isTestUser) {
-      return res.redirect('/');
-    }
   } catch (error) {
     console.error('建立登录会话失败:', error);
     try {
