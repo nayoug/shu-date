@@ -1092,21 +1092,28 @@ async function runWeeklyMatch() {
   }
 
   const { sendMatchEmail } = require('./mailer');
+  const emailTasks = [];
   for (const pair of result.results || []) {
-    await sendMatchEmail(
+    emailTasks.push(sendMatchEmail(
       pair.user1.email,
       pair.user1.nickname || '同学',
       pair.user2.nickname || 'TA',
       pair.user2.my_grade,
       null
-    );
-    await sendMatchEmail(
+    ));
+    emailTasks.push(sendMatchEmail(
       pair.user2.email,
       pair.user2.nickname || '同学',
       pair.user1.nickname || 'TA',
       pair.user1.my_grade,
       null
-    );
+    ));
+  }
+
+  const emailResults = await Promise.all(emailTasks);
+  const failedEmailCount = emailResults.filter(item => !item?.success).length;
+  if (failedEmailCount > 0) {
+    console.error(`❌ 本次匹配共有 ${failedEmailCount} 封邮件发送失败`);
   }
 
   return result;
