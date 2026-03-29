@@ -65,6 +65,7 @@ function isHeightWithinRange(height, min, max) {
   const normalizedMin = parseNullableInt(min);
   const normalizedMax = parseNullableInt(max);
 
+  // 缺少任一侧的实际身高或偏好上下限时，不因缺值直接过滤掉候选人。
   if (normalizedHeight === null || normalizedMin === null || normalizedMax === null) {
     return true;
   }
