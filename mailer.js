@@ -21,6 +21,49 @@ function isMailConfigured() {
   return !!getResend();
 }
 
+// 发送密码重置邮件
+async function sendPasswordResetEmail(email, resetCode) {
+  const r = getResend();
+  const resetUrl = `${process.env.BASE_URL}/reset/${resetCode}`;
+
+  if (!r) {
+    if (!isProduction) {
+      console.log('邮件模拟模式已启用，请使用页面展示的测试重置链接。');
+      return { success: false, simulated: true, url: resetUrl };
+    }
+    return { success: false, error: 'mail-not-configured' };
+  }
+
+  try {
+    await r.emails.send({
+      from: process.env.FROM_EMAIL || '心有所SHU <onboarding@resend.dev>',
+      to: email,
+      subject: '【心有所SHU】密码重置链接',
+      html: `
+        <div style="font-family: 'Microsoft YaHei', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #e74c3c;">🎓 密码重置 - 心有所SHU</h2>
+          <p>同学你好！</p>
+          <p>点击以下链接重置密码：</p>
+          <p style="margin: 20px 0;">
+            <a href="${resetUrl}" style="background: #e74c3c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">重置密码</a>
+          </p>
+          <p>或复制以下链接到浏览器打开：</p>
+          <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+          <p style="color: #999; font-size: 12px; margin-top: 30px;">
+            链接有效期为30分钟。如非本人操作，请忽略此邮件。
+          </p>
+        </div>
+      `
+    });
+
+    console.log(`✅ 密码重置邮件已发送至 ${email}`);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ 发送重置邮件失败:', error.message);
+    return { success: false, url: resetUrl, error: error.message };
+  }
+}
+
 // 发送登录验证码邮件
 async function sendLoginEmail(email, loginCode) {
   const r = getResend();
@@ -152,5 +195,6 @@ module.exports = {
   isMailConfigured,
   sendLoginEmail,
   sendMatchEmail,
-  sendVerifyEmail
+  sendVerifyEmail,
+  sendPasswordResetEmail
 };

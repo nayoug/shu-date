@@ -279,7 +279,6 @@ app.get('/login', (req, res) => {
 
 // 忘记密码页
 app.get('/forgot', (req, res) => {
-  if (req.session.userId) return res.redirect('/');
   res.render('forgot', { title: '忘记密码' });
 });
 
@@ -321,8 +320,8 @@ app.post('/forgot', wrapAsync(async (req, res) => {
   );
 
   // 发送重置邮件
-  const { sendLoginEmail } = require('./mailer');
-  const result = await sendLoginEmail(lowerEmail, resetCode);
+  const { sendPasswordResetEmail } = require('./mailer');
+  const result = await sendPasswordResetEmail(lowerEmail, resetCode);
 
   if (result.success || (result.simulated && !isProduction)) {
     res.render('forgot', {
