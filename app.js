@@ -1001,7 +1001,8 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: false,
-      showPassword: true
+      showPassword: true,
+      matchSource: 'weekly'
     });
   }
 
@@ -1010,8 +1011,33 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     return res.redirect('/profile');
   }
 
-  const matchService = require('./matchService');
-  const matches = await matchService.getTopMatches(req.user.id, 10);
+  const weekNumber = getWeekNumber();
+  const weeklyMatch = await db.queryOne(`
+    SELECT
+      m.score,
+      partner.id AS user_id,
+      partner.email,
+      partner.nickname,
+      partner.name,
+      p.my_grade,
+      p.gender,
+      p.campus,
+      p.interests,
+      p.lovetype_code
+    FROM matches m
+    JOIN users partner
+      ON partner.id = CASE
+        WHEN m.user_id_1 = $1 THEN m.user_id_2
+        ELSE m.user_id_1
+      END
+    LEFT JOIN profiles p ON p.user_id = partner.id
+    WHERE m.week_number = $2
+      AND ($1 = m.user_id_1 OR $1 = m.user_id_2)
+    ORDER BY m.matched_at DESC, m.id DESC
+    LIMIT 1
+  `, [req.user.id, weekNumber]);
+
+  const matches = weeklyMatch ? [weeklyMatch] : [];
 
   res.render('matches', {
     title: '匹配结果',
@@ -1020,7 +1046,9 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     hasProfile: true,
     showPassword: true,
     matches: matches,
-    isAdmin: req.isAdmin
+    isAdmin: req.isAdmin,
+    matchSource: 'weekly',
+    weekNumber
   });
 }));
 

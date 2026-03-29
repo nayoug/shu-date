@@ -20,18 +20,18 @@
     <% } else if (!matches || matches.length === 0) { %>
     <div class="card" style="text-align: center;">
       <div style="font-size: 4rem; margin-bottom: 16px;">🤔</div>
-      <h2>暂无匹配</h2>
+      <h2>本周暂无正式匹配结果</h2>
       <p style="color: var(--muted-foreground); margin-bottom: 24px;">
-        内测阶段暂不支持匹配功能。
+        本周匹配尚未发布，或你本周暂未匹配成功。
       </p>
     </div>
     <% } else { %>
     <div class="card">
       <h2 style="display: flex; align-items: center; gap: 10px;">
-        💕 匹配结果
+        💕 本周正式匹配结果
       </h2>
       <p style="color: var(--muted-foreground); margin-bottom: 24px;">
-        根据你的问卷，为你推荐以下同学：
+        这是本周已经发布并落库的正式匹配结果：
       </p>
 
       <div style="display: grid; gap: 16px;">
@@ -51,19 +51,23 @@
               <strong>兴趣爱好:</strong> <%= m.interests || '-' %>
             </div>
           </div>
+          <% if (m.score !== null && m.score !== undefined) { %>
           <div class="match-score" style="
             background: <%= m.score >= 0.7 ? 'oklch(0.95 0.08 145)' : m.score >= 0.5 ? 'oklch(0.95 0.08 80)' : 'oklch(0.95 0.08 25)' %>;
             color: <%= m.score >= 0.7 ? 'oklch(0.4 0.12 145)' : m.score >= 0.5 ? 'oklch(0.45 0.12 80)' : 'oklch(0.45 0.15 25)' %>;
           ">
             <%= Math.round(m.score * 100) %>%
           </div>
+          <% } %>
         </div>
         <% }); %>
       </div>
 
+      <% if (matches.some(function(m) { return m.score !== null && m.score !== undefined; })) { %>
       <p style="margin-top: 24px; color: var(--muted-foreground); font-size: 0.85rem; text-align: center;">
         💡 匹配度算法：兴趣爱好30% + 生活习惯30% + 恋爱观念40%，再结合 LoveType 兼容性做加减分
       </p>
+      <% } %>
     </div>
     <% } %>
   </div>
