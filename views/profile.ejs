@@ -352,17 +352,17 @@
 
       <form action="/profile/password" method="POST" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">当前密码</label>
-          <input type="password" name="currentPassword" placeholder="若未设置密码则留空" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          <label for="currentPassword" style="display: block; margin-bottom: 6px; font-size: 0.9rem;">当前密码</label>
+          <input type="password" id="currentPassword" name="currentPassword" autocomplete="current-password" placeholder="若未设置密码则留空" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
         </div>
         <div></div>
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">新密码</label>
-          <input type="password" name="newPassword" placeholder="至少6位" minlength="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          <label for="newPassword" style="display: block; margin-bottom: 6px; font-size: 0.9rem;">新密码</label>
+          <input type="password" id="newPassword" name="newPassword" autocomplete="new-password" placeholder="至少6位" minlength="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
         </div>
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">确认新密码</label>
-          <input type="password" name="confirmPassword" placeholder="再次输入新密码" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          <label for="confirmPassword" style="display: block; margin-bottom: 6px; font-size: 0.9rem;">确认新密码</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" placeholder="再次输入新密码" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
         </div>
         <div style="grid-column: 1 / -1;">
           <button type="submit" class="btn btn-secondary">修改密码</button>
