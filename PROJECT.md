@@ -296,7 +296,7 @@ shu-date/
 **生产环境特性**：
 - 完全隐藏开发者工具
 - 强制要求 `SESSION_SECRET`
-- Session Cookie 的 `secure` / `proxy` 会根据 `NODE_ENV` 自动切换
+- Session Cookie 当前配置为 `secure: false` / `proxy: false`（不会随 `NODE_ENV` 自动切换）
 - 必须配置 `RESEND_API_KEY` 才能发送邮件
 
 ### 5.4 本地开发配置示例
