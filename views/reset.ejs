@@ -28,10 +28,10 @@
 
       <form action="/reset/<%= code %>" method="POST">
         <div class="form-group">
-          <input type="password" name="password" placeholder="新密码（至少6位）" required minlength="6" style="text-align: center; font-size: 16px;">
+          <input type="password" name="password" placeholder="新密码（至少6位）" autocomplete="new-password" aria-label="新密码" required minlength="6" style="text-align: center; font-size: 16px;">
         </div>
         <div class="form-group">
-          <input type="password" name="confirmPassword" placeholder="确认新密码" required style="text-align: center; font-size: 16px;">
+          <input type="password" name="confirmPassword" placeholder="确认新密码" autocomplete="new-password" aria-label="确认新密码" required style="text-align: center; font-size: 16px;">
         </div>
         <button type="submit" class="btn" style="width: 100%;">重置密码</button>
       </form>
