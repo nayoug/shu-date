@@ -3,6 +3,7 @@ const session = require('express-session');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const packageJson = require('./package.json');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
 
@@ -43,10 +44,23 @@ function wrapAsync(fn) {
   };
 }
 
+function normalizeShortCommitSha(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const match = value.trim().match(/[a-f0-9]{7,40}/i);
+  return match ? match[0].slice(0, 7).toLowerCase() : null;
+}
+
 let db;
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET;
+const appVersion = process.env.APP_VERSION || packageJson.version;
+const fullCommitSha = process.env.GIT_COMMIT || null;
+const shortCommitSha = normalizeShortCommitSha(process.env.GIT_COMMIT_SHORT) || normalizeShortCommitSha(fullCommitSha);
+const deployTime = process.env.DEPLOY_TIME || null;
 
 if (isProduction) {
   if (!sessionSecret) {
@@ -242,6 +256,15 @@ app.get('/', wrapAsync(async (req, res) => {
     messageType: req.query.type
   });
 }));
+
+app.get('/version', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    version: appVersion,
+    commit: shortCommitSha,
+    deployedAt: deployTime
+  });
+});
 
 // 登录页
 app.get('/login', (req, res) => {
