@@ -44,13 +44,22 @@ function wrapAsync(fn) {
   };
 }
 
+function normalizeShortCommitSha(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const match = value.trim().match(/[a-f0-9]{7,40}/i);
+  return match ? match[0].slice(0, 7).toLowerCase() : null;
+}
+
 let db;
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET;
 const appVersion = process.env.APP_VERSION || packageJson.version;
 const fullCommitSha = process.env.GIT_COMMIT || null;
-const shortCommitSha = process.env.GIT_COMMIT_SHORT || (fullCommitSha ? fullCommitSha.slice(0, 7) : null);
+const shortCommitSha = normalizeShortCommitSha(process.env.GIT_COMMIT_SHORT) || normalizeShortCommitSha(fullCommitSha);
 const deployTime = process.env.DEPLOY_TIME || null;
 
 if (isProduction) {
