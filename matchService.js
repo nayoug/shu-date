@@ -253,7 +253,7 @@ async function findMatches(userId) {
 
   // 获取所有其他用户资料
   const allProfiles = await dbModule.query(`
-    SELECT u.id, u.email, u.name, p.*
+    SELECT u.id, u.email, u.nickname, u.name, p.*
     FROM users u
     JOIN profiles p ON u.id = p.user_id
     WHERE u.id != $1 AND u.verified = 1
@@ -272,6 +272,7 @@ async function findMatches(userId) {
     return {
       user_id: candidate.id,
       email: candidate.email,
+      nickname: candidate.nickname || candidate.name,
       name: candidate.name,
       my_grade: candidate.my_grade,
       gender: candidate.gender,
@@ -317,7 +318,7 @@ async function saveWeeklyMatches() {
 
   // 获取所有已填写问卷的用户
   const users = await dbModule.query(`
-    SELECT u.id, u.email, u.name
+    SELECT u.id, u.email, u.nickname, u.name, p.my_grade
     FROM users u
     JOIN profiles p ON u.id = p.user_id
     WHERE u.verified = 1
@@ -345,7 +346,21 @@ async function saveWeeklyMatches() {
       matched.add(user.id);
       matched.add(bestMatch.user_id);
 
-      results.push({ user: user.email, match: bestMatch.email, score: bestMatch.score });
+      results.push({
+        score: bestMatch.score,
+        user1: {
+          id: user.id,
+          email: user.email,
+          nickname: user.nickname || user.name || user.email.split('@')[0],
+          my_grade: user.my_grade
+        },
+        user2: {
+          id: bestMatch.user_id,
+          email: bestMatch.email,
+          nickname: bestMatch.nickname || bestMatch.name || bestMatch.email.split('@')[0],
+          my_grade: bestMatch.my_grade
+        }
+      });
     }
   }
 

@@ -1083,46 +1083,39 @@ function getWeekNumber() {
 }
 
 async function runWeeklyMatch() {
-  const weekNumber = getWeekNumber();
-  const existing = await db.queryOne('SELECT id FROM matches WHERE week_number = $1', [weekNumber]);
-  if (existing) {
-    return { success: false, message: '本周已执行匹配' };
+  const matchService = require('./matchService');
+  const result = await matchService.saveWeeklyMatches();
+
+  if (!result.success) {
+    return result;
   }
 
-  const users = await db.query(`
-    SELECT u.id, u.email, u.nickname
-    FROM users u
-    JOIN profiles p ON u.id = p.user_id
-    WHERE u.verified = 1
-  `);
-
-  if (users.length < 2) {
-    return { success: false, message: '用户数量不足，需要至少2位用户' };
+  const { sendMatchEmail } = require('./mailer');
+  const emailTasks = [];
+  for (const pair of result.results || []) {
+    emailTasks.push(sendMatchEmail(
+      pair.user1.email,
+      pair.user1.nickname || '同学',
+      pair.user2.nickname || 'TA',
+      pair.user2.my_grade,
+      null
+    ));
+    emailTasks.push(sendMatchEmail(
+      pair.user2.email,
+      pair.user2.nickname || '同学',
+      pair.user1.nickname || 'TA',
+      pair.user1.my_grade,
+      null
+    ));
   }
 
-  const shuffled = users.sort(() => Math.random() - 0.5);
-  const pairs = [];
-
-  for (let i = 0; i < shuffled.length - 1; i += 2) {
-    pairs.push([shuffled[i], shuffled[i + 1]]);
-  }
-  if (shuffled.length % 2 === 1 && shuffled.length > 2) {
-    pairs.push([shuffled[shuffled.length - 1], shuffled[0]]);
+  const emailResults = await Promise.all(emailTasks);
+  const failedEmailCount = emailResults.filter(item => !item?.success).length;
+  if (failedEmailCount > 0) {
+    console.error(`❌ 本次匹配共有 ${failedEmailCount} 封邮件发送失败`);
   }
 
-  for (const [u1, u2] of pairs) {
-    await db.execute('INSERT INTO matches (user_id_1, user_id_2, week_number) VALUES ($1, $2, $3)',
-      [u1.id, u2.id, weekNumber]);
-
-    const p1 = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u1.id]);
-    const p2 = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u2.id]);
-
-    const { sendMatchEmail } = require('./mailer');
-    sendMatchEmail(u1.email, u1.nickname || '同学', u2.nickname || 'TA', p2?.my_grade, p2?.major);
-    sendMatchEmail(u2.email, u2.nickname || '同学', u1.nickname || 'TA', p1?.my_grade, p1?.major);
-  }
-
-  return { success: true, message: `匹配完成，共 ${pairs.length} 对` };
+  return result;
 }
 
 // 初始化数据库并启动
