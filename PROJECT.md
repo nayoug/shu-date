@@ -50,26 +50,23 @@
 
 问卷系统分为三部分：
 
-#### 基础信息问卷（约17题）
-- 性别、年龄、期望性别、期望年龄范围
-- 年级、校区、跨校区意愿
-- 身高、期望身高范围
-- 家乡、期望家乡
+#### 基础信息（共8题）
+- 性别、期望对象性别、学历阶段
+- 年龄、期望对象年龄、校区、期望对象校区
+- 交友目的、身高、期望对象身高
+- 家乡、期望对象家乡
 - 期望对象核心特质
-- 交友目的
 
-#### 恋爱观念问卷（约7题）
-- 沟通频率、婚前同居态度、婚姻规划、相处模式
-- 消费观念（5级量表）
+#### 恋爱观念问卷（共14题）
+- 相处节奏、仪式感、相处模式
+- 日常作息、饮食偏好、吃辣能力
+- 约会选择、消费风格
+- 饮酒态度、吸烟态度、动物态度
+- 性观念、冲突应对、见面频率
 
-#### 生活习惯问卷（约14题）
-- 作息习惯、饮食偏好、辣度接受度、约会偏好
-- 吸烟习惯、对伴侣吸烟态度、饮酒习惯、对伴侣饮酒态度
-- 宠物态度、社交公开度、社交边界
-
-#### 兴趣爱好（约55题多选）
-- 户外与运动圈、泛娱乐与次文化圈
-- 文艺类、生活方式与社交圈、极客与硬核圈
+#### 个人特征与匹配偏好（共3题）
+- 自身性格特质、期望对象性格特质
+- 兴趣爱好、期望对象兴趣爱好
 
 #### LoveType16 恋爱类型测试（23题）
 - 5级量表评估恋爱行为偏好
@@ -181,41 +178,51 @@ shu-date/
 | id | SERIAL | 主键 |
 | user_id | INTEGER | 用户ID（外键） |
 | gender | TEXT | 性别 |
-| age | INTEGER | 年龄 |
 | preferred_gender | TEXT | 期望性别 |
+| my_grade | TEXT | 我的年级 |
+| age | INTEGER | 年龄 |
 | age_min | INTEGER | 期望最小年龄 |
 | age_max | INTEGER | 期望最大年龄 |
 | purpose | TEXT | 交友目的 |
-| my_grade | TEXT | 我的年级 |
 | campus | TEXT | 所在校区 |
 | accepted_campus | TEXT | 接受跨校区（逗号分隔） |
-| height_min | INTEGER | 我的身高 |
+| height | INTEGER | 我的身高 |
 | preferred_height_min | INTEGER | 期望最小身高 |
 | preferred_height_max | INTEGER | 期望最大身高 |
 | hometown | TEXT | 家乡 |
 | preferred_hometown | TEXT | 期望家乡 |
 | core_traits | TEXT | 核心特质（逗号分隔） |
-| communication | TEXT | 沟通频率 |
-| cohabitation | TEXT | 婚前同居态度 |
-| marriage_plan | TEXT | 婚姻规划 |
-| relationship_style | TEXT | 相处模式 |
-| sleep_pattern | TEXT | 作息习惯 |
-| diet_preference | TEXT | 饮食偏好 |
-| spice_tolerance | TEXT | 辣度接受度 |
-| date_preference | TEXT | 约会偏好 |
-| spending_style | TEXT | 消费观念（-2到2） |
-| smoking_habit | TEXT | 吸烟习惯 |
-| partner_smoking | TEXT | 对伴侣吸烟态度 |
-| drinking_habit | TEXT | 饮酒习惯 |
-| partner_drinking | TEXT | 对伴侣饮酒态度 |
-| pet | TEXT | 宠物态度 |
-| social_public | TEXT | 社交公开度 |
-| social_boundary | TEXT | 社交边界 |
+
+| relationship_rhythm | INTEGER | 恋爱节奏 |
+| romantic_ritual | INTEGER | 仪式感 |
+| relationship_style | INTEGER | 相处模式 |
+| sleep_pattern | INTEGER | 作息习惯 |
+| diet_preference | INTEGER | 饮食偏好 |
+| spice_tolerance | INTEGER | 辣度接受度 |
+| date_preference | INTEGER | 约会偏好 |
+| spending_style | INTEGER | 消费观念 |
+| drinking_habit | INTEGER | 饮酒习惯 |
+| partner_drinking | INTEGER | 对伴侣饮酒态度 |
+| smoking_habit | INTEGER | 吸烟习惯 |
+| partner_smoking | INTEGER | 对伴侣吸烟态度 |
+| pet_attitude | INTEGER | 宠物态度 |
+| sexual_timing | INTEGER | 性观念 |
+| conflict_style | INTEGER | 应对冲突 |
+| meeting_frequency | INTEGER | 见面频率 |
+| drinking_habit | INTEGER | 饮酒习惯 |
+| partner_drinking | INTEGER | 对伴侣饮酒态度 |
+| smoking_habit | INTEGER | 吸烟习惯 |
+| partner_smoking | INTEGER | 对伴侣吸烟态度 |
+
+| my_traits | TEXT | 性格特质（逗号分隔） |
+| partner_traits | TEXT | 伴侣性格特质（逗号分隔） |
 | interests | TEXT | 兴趣标签（逗号分隔） |
-| partner_interest | TEXT | 期望伴侣兴趣 |
+| partner_interest | INTEGER | 期望伴侣兴趣 |
+
 | lovetype_answers | TEXT | 恋爱类型测试答案 |
 | lovetype_code | TEXT | 恋爱类型代码 |
 | lovetype_scores | TEXT | 恋爱类型分数 |
+
 | created_at | TIMESTAMP | 创建时间 |
 | updated_at | TIMESTAMP | 更新时间 |
 

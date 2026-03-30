@@ -701,7 +701,6 @@ app.get('/profile', isLoggedIn, wrapAsync(async (req, res) => {
   model.passwordMessageType = res.locals.passwordMessageType || '';
   res.render('profile', model);
 }));
-
 // 提交问卷
 app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
   const data = req.body;
@@ -719,46 +718,70 @@ app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
 
   const fields = [
     // 基础信息
-    'gender', 'age', 'preferred_gender', 'purpose', 'my_grade',
-    'age_min', 'age_max', 'campus', 'accepted_campus',
-    'height_min', 'preferred_height_min', 'preferred_height_max',
-    // 择偶偏好
+    'gender', 'preferred_gender', 'my_grade', 'age',
+    'age_min', 'age_max', 'purpose',
+    'campus', 'accepted_campus',
+    'height', 'preferred_height_min', 'preferred_height_max',
     'hometown', 'preferred_hometown', 'core_traits',
     // 恋爱观念
-    'communication', 'cohabitation', 'marriage_plan', 'relationship_style',
-    // 生活习惯
-    'sleep_pattern', 'diet_preference', 'spice_tolerance', 'date_preference', 'spending_style',
-    'smoking_habit', 'partner_smoking', 'drinking_habit', 'partner_drinking',
-    'pet', 'social_public', 'social_boundary',
-    // 兴趣爱好
+    'relationship_rhythm', 'romantic_ritual', 'relationship_style',
+    'sleep_pattern', 'diet_preference', 'spice_tolerance', 'date_preference',
+    'spending_style', 'drinking_habit', 'partner_drinking', 'smoking_habit', 'partner_smoking',
+    'pet_attitude', 'sexual_timing', 'conflict_style', 'meeting_frequency',
+    // 个人特征与匹配偏好
+    'my_traits', 'partner_traits',
     'interests', 'partner_interest',
     // LoveType16
     'lovetype_answers', 'lovetype_code', 'lovetype_scores'
   ];
 
   const values = {};
-  fields.forEach(f => {
-    if (f === 'core_traits' || f === 'interests' || f === 'accepted_campus') {
-      values[f] = processMultiSelect(data[f]);
-    } else if (f === 'lovetype_answers') {
-      values[f] = JSON.stringify(lovetypeAssessment.answers);
-    } else if (f === 'lovetype_code') {
-      values[f] = lovetypeAssessment.code;
-    } else if (f === 'lovetype_scores') {
-      values[f] = JSON.stringify(lovetypeAssessment.scores);
-    } else if (f === 'age_min' || f === 'age_max' ||
-               f === 'height_min' ||
-               f === 'preferred_height_min' || f === 'preferred_height_max' ||
-               f === 'sleep_pattern' || f === 'diet_preference' ||
-               f === 'spice_tolerance' || f === 'date_preference' ||
-               f === 'spending_style' || f === 'smoking_habit' ||
-               f === 'partner_smoking' || f === 'drinking_habit' ||
-               f === 'partner_drinking' || f === 'partner_interest') {
-      // 整数字段
-      values[f] = data[f] ? parseInt(data[f], 10) : null;
-    } else {
-      values[f] = data[f] || null;
+  // 多选字段
+  const multiSelectFields = [
+    'accepted_campus', 'core_traits',
+    'my_traits', 'partner_traits', 'interests'
+  ];
+  // 整数字段
+  const integerFields = [
+    // 基础信息
+    'age', 'age_min', 'age_max',
+    'height', 'preferred_height_min', 'preferred_height_max',
+    // 恋爱观念
+    'relationship_rhythm', 'romantic_ritual', 'relationship_style', 
+    'sleep_pattern', 'diet_preference', 'spice_tolerance', 'date_preference',
+    'spending_style', 'drinking_habit', 'partner_drinking', 'smoking_habit', 'partner_smoking', 
+    'pet_attitude', 'sexual_timing', 'conflict_style', 'meeting_frequency',
+    // 个人特征与匹配偏好
+    'partner_interest'
+  ];
+
+  fields.forEach(field => {
+    // 多选
+    if (multiSelectFields.includes(field)) {
+      values[field] = processMultiSelect(data[field]);
+      return;
     }
+    // LoveType16
+    if (field === 'lovetype_answers') {
+      values[field] = JSON.stringify(lovetypeAssessment.answers);
+      return;
+    }
+    if (field === 'lovetype_code') {
+      values[field] = lovetypeAssessment.code;
+      return;
+    }
+    if (field === 'lovetype_scores') {
+      values[field] = JSON.stringify(lovetypeAssessment.scores);
+      return;
+    }
+    // 整数
+    if (integerFields.includes(field)) {
+      const parsed = data[field] ? parseInt(data[field], 10) : null;
+      values[field] = (parsed !== null && !isNaN(parsed)) ? parsed : null;
+      return;
+    }
+    // 默认
+    values[field] = data[field] || null;
   });
 
   const existing = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
@@ -1089,9 +1112,7 @@ start().catch(console.error);
 // 统一错误处理中间件
 app.use((err, req, res, next) => {
   console.error('❌ 服务器错误:', err.message);
-  res.status(500).render('error', {
-    message: isProduction ? '服务器内部错误' : err.message
-  });
+  res.status(500).send(`<html><body><h1>服务器错误</h1><p>${isProduction ? '服务器内部错误' : err.message}</p></body></html>`);
 });
 
 module.exports = app;
