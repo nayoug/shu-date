@@ -43,6 +43,13 @@
     .forgot-password:hover {
       color: var(--primary);
     }
+    .inline-error {
+      color: var(--error);
+      font-size: 0.85rem;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -74,8 +81,8 @@
 
       <!-- 登录方式切换 -->
       <div class="login-tabs">
-        <div class="login-tab <%= (loginMethod === 'register') ? 'active' : '' %>" onclick="switchLoginMethod('register')">注册</div>
-        <div class="login-tab <%= (loginMethod === 'login') ? 'active' : '' %>" onclick="switchLoginMethod('login')">登录</div>
+        <div class="login-tab <%= (loginMethod === 'register') ? 'active' : '' %>" onclick="switchLoginMethod(event, 'register')">注册</div>
+        <div class="login-tab <%= (loginMethod === 'login') ? 'active' : '' %>" onclick="switchLoginMethod(event, 'login')">登录</div>
       </div>
 
       <!-- 注册表单 -->
@@ -83,9 +90,12 @@
         <div class="form-group">
           <input type="text" name="nickname" placeholder="昵称" autocomplete="nickname" aria-label="昵称" required style="text-align: center; font-size: 16px;">
         </div>
-        <div class="form-group">
-          <input type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="email" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required style="text-align: center; font-size: 16px;">
+        <div class="form-group email-prefix-group">
+          <input type="text" name="emailPrefix" placeholder="学号/邮箱前缀" autocomplete="email" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" required style="text-align: center; font-size: 16px;">
+          <span class="email-suffix">@shu.edu.cn</span>
         </div>
+        <p class="inline-error" id="registerError">请输入有效的邮箱前缀</p>
+        <input type="hidden" name="email" id="registerEmail">
         <div class="form-group">
           <input type="password" name="password" placeholder="设置密码（至少6位）" autocomplete="new-password" aria-label="设置密码" required minlength="6" style="text-align: center; font-size: 16px;">
         </div>
@@ -94,9 +104,12 @@
 
       <!-- 登录表单 -->
       <form action="/login" method="POST" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>">
-        <div class="form-group">
-          <input type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="登录邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required style="text-align: center; font-size: 16px;">
+        <div class="form-group email-prefix-group">
+          <input type="text" name="emailPrefix" placeholder="学号/邮箱前缀" value="<%= typeof email !== 'undefined' && email ? email.split('@')[0] : '' %>" autocomplete="username" aria-label="登录邮箱" autocapitalize="none" autocorrect="off" required style="text-align: center; font-size: 16px;">
+          <span class="email-suffix">@shu.edu.cn</span>
         </div>
+        <p class="inline-error" id="loginError">请输入有效的邮箱前缀</p>
+        <input type="hidden" name="email" id="loginEmail">
         <div class="form-group">
           <input type="password" name="password" placeholder="登录密码" autocomplete="current-password" aria-label="登录密码" required style="text-align: center; font-size: 16px;">
         </div>
@@ -115,12 +128,12 @@
   </footer>
 
   <script>
-    function switchLoginMethod(method) {
+    function switchLoginMethod(evt, method) {
       // 更新 tab 状态
       document.querySelectorAll('.login-tab').forEach(tab => {
         tab.classList.remove('active');
       });
-      event.target.classList.add('active');
+      evt.target.classList.add('active');
 
       // 更新表单显示
       document.querySelectorAll('.login-form').forEach(form => {
@@ -133,6 +146,49 @@
         document.querySelector('form[action="/login"]').classList.add('active');
       }
     }
+
+    // 表单提交前拼接完整邮箱
+    function cleanPrefix(prefix) {
+      prefix = prefix.trim();
+      // 如果用户输入了完整邮箱，提取前缀
+      if (prefix.includes('@')) {
+        prefix = prefix.split('@')[0];
+      }
+      // 只保留合法字符
+      prefix = prefix.replace(/[^a-zA-Z0-9._-]/g, '');
+      return prefix;
+    }
+
+    document.querySelector('form[action="/register"]').addEventListener('submit', function(e) {
+      const errorEl = document.getElementById('registerError');
+      errorEl.style.display = 'none';
+      const prefix = cleanPrefix(this.querySelector('input[name="emailPrefix"]').value);
+      if (!prefix) {
+        e.preventDefault();
+        errorEl.style.display = 'block';
+        return;
+      }
+      this.querySelector('#registerEmail').value = prefix + '@shu.edu.cn';
+    });
+
+    document.querySelector('form[action="/login"]').addEventListener('submit', function(e) {
+      const errorEl = document.getElementById('loginError');
+      errorEl.style.display = 'none';
+      const prefix = cleanPrefix(this.querySelector('input[name="emailPrefix"]').value);
+      if (!prefix) {
+        e.preventDefault();
+        errorEl.style.display = 'block';
+        return;
+      }
+      this.querySelector('#loginEmail').value = prefix + '@shu.edu.cn';
+    });
+
+    // 输入时隐藏错误提示
+    document.querySelectorAll('input[name="emailPrefix"]').forEach(input => {
+      input.addEventListener('input', function() {
+        document.querySelectorAll('.inline-error').forEach(el => el.style.display = 'none');
+      });
+    });
   </script>
 </body>
 </html>

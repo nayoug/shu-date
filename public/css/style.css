@@ -190,6 +190,28 @@ body {
   margin-top: 6px;
 }
 
+/* 邮箱前缀输入组 */
+.email-prefix-group {
+  display: flex;
+  align-items: center;
+}
+
+.email-prefix-group input {
+  flex: 1;
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.email-suffix {
+  background: #f0f0f0;
+  padding: 12px 12px;
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: #666;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
 /* 复选框组 */
 .checkbox-group {
   display: flex;

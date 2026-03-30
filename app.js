@@ -534,12 +534,12 @@ app.post('/login', wrapAsync(async (req, res) => {
   const { email, password } = req.body;
   const lowerEmail = normalizeEmail(email);
 
-  // 验证邮箱格式
-  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  // 验证邮箱格式 - 只接受 @shu.edu.cn
+  const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
   if (!emailPattern.test(lowerEmail)) {
     return res.render('login', {
       title: '登录',
-      message: '请输入有效的邮箱地址',
+      message: '请使用 @shu.edu.cn 结尾的学校邮箱',
       messageType: 'error',
       email: lowerEmail,
       loginMethod: 'login'
