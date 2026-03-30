@@ -2,22 +2,23 @@
  * 匹配服务 - 完整匹配算法（2026-03 新版问卷）
  *
  * 过滤条件：
- * - 性别偏好
+ * - 性别偏好（gender, preferred_gender）
  * - 年龄范围（age_min, age_max）
  * - 校区接受度（accepted_campus）
  * - 身高偏好范围（preferred_height_min, preferred_height_max）
  * - 家乡偏好（hometown, preferred_hometown）
  *
  * 相似度计算：
- * - 兴趣标签 Jaccard
- * - 生活方式相似度（作息、饮食、口味、约会、消费、烟酒）
- * - 恋爱观匹配度（沟通、同居、婚姻、相处模式）
- * - 兴趣爱好相似度偏好（partner_interest）
+ * - 兴趣标签 Jaccard（interests, partner_interest）
+ * - 生活方式相似度（作息、饮食、口味、约会、消费、烟酒、宠物等）
+ * - 恋爱观匹配度（关系节奏、浪漫仪式、相处模式、冲突处理、见面频率等）
+ * - 特征匹配度（my_traits, partner_traits）
  *
  * 综合评分：
- * - interest: 0.25
- * - lifestyle: 0.35
- * - love_values: 0.25
+ * - interest: 0.20
+ * - lifestyle: 0.30
+ * - love_values: 0.30
+ * - traits: 0.05
  * - lovetype: 0.15
  */
 
@@ -116,16 +117,16 @@ function filterCandidates(myProfile, allProfiles) {
       if (!acceptedCampuses.includes(myProfile.campus)) return false;
     }
 
-    // 4. 身高偏好过滤
+    // 4. 身高偏好过滤（使用 height 字段）
     if (!isHeightWithinRange(
-      p.height_min,
+      p.height,
       myProfile.preferred_height_min,
       myProfile.preferred_height_max
     )) {
       return false;
     }
     if (!isHeightWithinRange(
-      myProfile.height_min,
+      myProfile.height,
       p.preferred_height_min,
       p.preferred_height_max
     )) {
@@ -181,7 +182,8 @@ function calculateLifestyleScore(myProfile, theirProfile) {
     'date_preference',  // 周末约会
     'spending_style',   // 消费风格
     'smoking_habit',    // 吸烟习惯
-    'drinking_habit'   // 饮酒习惯
+    'drinking_habit',   // 饮酒习惯
+    'pet_attitude'      // 宠物态度
   ];
 
   let score = 0;
@@ -199,25 +201,40 @@ function calculateLifestyleScore(myProfile, theirProfile) {
 }
 
 function calculateLoveValueScore(myProfile, theirProfile) {
-  // 恋爱观念相关字段 - 使用选项匹配
+  // 恋爱观念相关字段 - 使用整数相似度（-2到2）
   const loveFields = [
-    'communication',      // 沟通频率
-    'cohabitation',      // 婚前同居
-    'marriage_plan',     // 婚姻规划
-    'relationship_style' // 相处模式
+    'relationship_rhythm',   // 关系节奏
+    'romantic_ritual',       // 浪漫仪式
+    'relationship_style',    // 相处模式
+    'sexual_timing',         // 亲密时机
+    'conflict_style',        // 冲突处理
+    'meeting_frequency'      // 见面频率
   ];
 
   let score = 0;
   let count = 0;
 
   for (const field of loveFields) {
-    if (myProfile[field] && theirProfile[field]) {
-      score += optionMatch(myProfile[field], theirProfile[field]);
+    if (myProfile[field] !== null && myProfile[field] !== undefined &&
+        theirProfile[field] !== null && theirProfile[field] !== undefined) {
+      score += intSimilarity(myProfile[field], theirProfile[field]);
       count++;
     }
   }
 
   return count > 0 ? score / count : 0.5;
+}
+
+// 特征匹配度（性格特质）
+function calculateTraitsScore(myProfile, theirProfile) {
+  // 我的特质与对方期望的特质匹配
+  const myTraitsMatch = jaccardSimilarity(myProfile.my_traits, theirProfile.partner_traits);
+  // 对方的特质与我期望的特质匹配
+  const theirTraitsMatch = jaccardSimilarity(theirProfile.my_traits, myProfile.partner_traits);
+
+  // 双向匹配取平均
+  if (myTraitsMatch === 0 && theirTraitsMatch === 0) return 0.5;
+  return (myTraitsMatch + theirTraitsMatch) / 2;
 }
 
 // ============ 主匹配函数 ============
@@ -226,13 +243,15 @@ function calculateMatchScore(myProfile, theirProfile) {
   const interestScore = calculateInterestScoreWithPreference(myProfile, theirProfile);
   const lifestyleScore = calculateLifestyleScore(myProfile, theirProfile);
   const loveValueScore = calculateLoveValueScore(myProfile, theirProfile);
+  const traitsScore = calculateTraitsScore(myProfile, theirProfile);
   const lovetypeAdjustment = lovetypeService.getCompatibilityAdjustment(myProfile.lovetype_code, theirProfile.lovetype_code);
 
-  // 综合评分权重（根据新问卷调整）
+  // 综合评分权重（2026-03 新版问卷）
   const baseScore =
-    interestScore * 0.25 +
-    lifestyleScore * 0.35 +
-    loveValueScore * 0.25;
+    interestScore * 0.20 +
+    lifestyleScore * 0.30 +
+    loveValueScore * 0.30 +
+    traitsScore * 0.05;
 
   // LoveType兼容性和基础分结合
   const finalScore = Math.max(0, Math.min(1, baseScore + lovetypeAdjustment));
@@ -278,7 +297,7 @@ async function findMatches(userId) {
       my_grade: candidate.my_grade,
       gender: candidate.gender,
       age: candidate.age,
-      height_min: candidate.height_min,
+      height: candidate.height,
       campus: candidate.campus,
       hometown: candidate.hometown,
       interests: candidate.interests,

@@ -50,7 +50,6 @@
 
 问卷系统分为三部分：
 
-<<<<<<< HEAD
 #### 基础信息问卷（约17题）
 - 性别、年龄、期望性别、期望年龄范围
 - 年级、校区、跨校区意愿
@@ -71,25 +70,6 @@
 #### 兴趣爱好（约55题多选）
 - 户外与运动圈、泛娱乐与次文化圈
 - 文艺类、生活方式与社交圈、极客与硬核圈
-=======
-#### 基础信息（共8题）
-- 性别、期望对象性别、学历阶段
-- 年龄、期望对象年龄、校区、期望对象校区
-- 交友目的、身高、期望对象身高
-- 家乡、期望对象家乡
-- 期望对象核心特质
-
-#### 恋爱观念问卷（共14题）
-- 相处节奏、仪式感、相处模式
-- 日常作息、饮食偏好、吃辣能力
-- 约会选择、消费风格
-- 饮酒态度、吸烟态度、动物态度
-- 性观念、冲突应对、见面频率
-
-#### 个人特征与匹配偏好（共3题）
-- 自身性格特质、期望对象性格特质
-- 兴趣爱好、期望对象兴趣爱好
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
 
 #### LoveType16 恋爱类型测试（23题）
 - 5级量表评估恋爱行为偏好
@@ -201,7 +181,6 @@ shu-date/
 | id | SERIAL | 主键 |
 | user_id | INTEGER | 用户ID（外键） |
 | gender | TEXT | 性别 |
-<<<<<<< HEAD
 | age | INTEGER | 年龄 |
 | preferred_gender | TEXT | 期望性别 |
 | age_min | INTEGER | 期望最小年龄 |
@@ -211,23 +190,11 @@ shu-date/
 | campus | TEXT | 所在校区 |
 | accepted_campus | TEXT | 接受跨校区（逗号分隔） |
 | height_min | INTEGER | 我的身高 |
-=======
-| preferred_gender | TEXT | 期望性别 |
-| my_grade | TEXT | 我的年级 |
-| age | INTEGER | 年龄 |
-| age_min | INTEGER | 期望最小年龄 |
-| age_max | INTEGER | 期望最大年龄 |
-| purpose | TEXT | 交友目的 |
-| campus | TEXT | 所在校区 |
-| accepted_campus | TEXT | 接受跨校区（逗号分隔） |
-| height | INTEGER | 我的身高 |
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
 | preferred_height_min | INTEGER | 期望最小身高 |
 | preferred_height_max | INTEGER | 期望最大身高 |
 | hometown | TEXT | 家乡 |
 | preferred_hometown | TEXT | 期望家乡 |
 | core_traits | TEXT | 核心特质（逗号分隔） |
-<<<<<<< HEAD
 | communication | TEXT | 沟通频率 |
 | cohabitation | TEXT | 婚前同居态度 |
 | marriage_plan | TEXT | 婚姻规划 |
@@ -249,39 +216,6 @@ shu-date/
 | lovetype_answers | TEXT | 恋爱类型测试答案 |
 | lovetype_code | TEXT | 恋爱类型代码 |
 | lovetype_scores | TEXT | 恋爱类型分数 |
-=======
-
-| relationship_rhythm | INTEGER | 恋爱节奏 |
-| romantic_ritual | INTEGER | 仪式感 |
-| relationship_style | INTEGER | 相处模式 |
-| sleep_pattern | INTEGER | 作息习惯 |
-| diet_preference | INTEGER | 饮食偏好 |
-| spice_tolerance | INTEGER | 辣度接受度 |
-| date_preference | INTEGER | 约会偏好 |
-| spending_style | INTEGER | 消费观念 |
-| drinking_habit | INTEGER | 饮酒习惯 |
-| partner_drinking | INTEGER | 对伴侣饮酒态度 |
-| smoking_habit | INTEGER | 吸烟习惯 |
-| partner_smoking | INTEGER | 对伴侣吸烟态度 |
-| pet_attitude | INTEGER | 宠物态度 |
-| sexual_timing | INTEGER | 性观念 |
-| conflict_style | INTEGER | 应对冲突 |
-| meeting_frequency | INTEGER | 见面频率 |
-| drinking_habit | INTEGER | 饮酒习惯 |
-| partner_drinking | INTEGER | 对伴侣饮酒态度 |
-| smoking_habit | INTEGER | 吸烟习惯 |
-| partner_smoking | INTEGER | 对伴侣吸烟态度 |
-
-| my_traits | TEXT | 性格特质（逗号分隔） |
-| partner_traits | TEXT | 伴侣性格特质（逗号分隔） |
-| interests | TEXT | 兴趣标签（逗号分隔） |
-| partner_interest | INTEGER | 期望伴侣兴趣 |
-
-| lovetype_answers | TEXT | 恋爱类型测试答案 |
-| lovetype_code | TEXT | 恋爱类型代码 |
-| lovetype_scores | TEXT | 恋爱类型分数 |
-
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
 | created_at | TIMESTAMP | 创建时间 |
 | updated_at | TIMESTAMP | 更新时间 |
 
@@ -322,132 +256,8 @@ shu-date/
 | GET | /api/match/top | 获取前 5 名实时推荐 | 已登录 |
 | GET | /admin | 管理后台 | 管理员 |
 | POST | /admin/match | 手动触发匹配 | 管理员 |
-<<<<<<< HEAD
 | GET | /api/scheduler/status | 获取调度器状态 | 管理员 |
 | POST | /api/scheduler/trigger | 手动触发定时任务 | 管理员 |
-=======
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
-| GET | /version | 版本信息 | 公开 |
-
----
-
-## 五、环境变量
-
-### 5.1 核心环境变量
-
-| 变量名 | 必需 | 说明 |
-|--------|------|------|
-| `DATABASE_URL` | 是 | PostgreSQL 连接串 |
-| `SESSION_SECRET` | 生产必需 | Session 加密密钥 |
-| `BASE_URL` | 是 | 应用基础URL |
-| `NODE_ENV` | 否 | 环境模式 |
-
-### 5.2 邮件相关环境变量
-
-| 变量名 | 必需 | 说明 |
-|--------|------|------|
-| `RESEND_API_KEY` | 生产必需 | Resend API Key |
-| `FROM_EMAIL` | 否 | 发件人邮箱 |
-
-### 5.3 环境区分
-
-系统根据 `NODE_ENV` 变量区分测试环境和正式环境：
-
-| 环境 | NODE_ENV | 特性 |
-|------|----------|------|
-| 本地开发 | `development` 或未设置 | 显示开发者工具面板 |
-| 正式部署 | `production` | 隐藏所有开发调试功能 |
-
-**开发环境特性**：
-- 页面右上角显示开发者工具按钮（🔧）
-- 工具面板包含：测试用户一键登录、环境信息、快捷操作
-- 问卷页显示"一键填写（测试）"按钮
-- 不需要配置 RESEND_API_KEY 也可测试登录流程
-
-**生产环境特性**：
-- 完全隐藏开发者工具
-- 强制要求 `SESSION_SECRET`
-- Session Cookie 的 `secure` / `proxy` 会根据 `NODE_ENV` 自动切换
-- 必须配置 `RESEND_API_KEY` 才能发送邮件
-
-### 5.4 本地开发配置示例
-
-```bash
-# .env 文件（开发环境）
-NODE_ENV=development
-DATABASE_URL=postgresql://postgres.xxx:密码@xxx.supabase.com:6543/postgres
-BASE_URL=http://localhost:3000
-SESSION_SECRET=任意随机字符串
-PORT=3000
-
-```
-
----
-
-## 六、部署信息
-
-### 6.1 线上地址
-
-- **应用地址**: https://shudate.xyz
-
-### 6.2 Render 配置方法
-
-1. 登录 Render 后台
-2. 选择服务 → Environment
-3. 添加以下变量：
-   ```
-   NODE_ENV=production
-   DATABASE_URL=你的Supabase连接字符串
-   RESEND_API_KEY=re_xxx
-   FROM_EMAIL=no-reply@你的域名
-   SESSION_SECRET=32位以上随机字符串
-   BASE_URL=https://你的域名
-   ```
-4. 保存后自动重新部署
-
-### 6.3 已知限制
-
-| 问题 | 原因 | 解决方案 |
-|------|------|----------|
-| 服务休眠 | 30分钟无访问自动休眠 | 升级付费版或定时唤醒 |
-
----
-
-## 七、开发进展
-
-### 7.1 已完成功能
-
-- [x] 邮箱密码注册登录
-- [x] 邮箱验证功能
-- [x] 忘记密码/重置密码
-- [x] 修改密码功能
-- [x] 24题恋爱匹配问卷
-- [x] 智能匹配算法
-- [x] 匹配结果查看
-- [x] 管理后台
-- [x] 部署上线
-- [x] 测试模式（无需真实邮件）
-- [x] 恋爱类型测试服务
-- [x] 统一导航栏
-<<<<<<< HEAD
-- [x] 自动每周匹配任务（定时调度器）
-
-### 7.2 待优化事项
-
-- [ ] 完善错误处理和提示
-- [ ] 添加用户昵称/头像功能
-- [ ] 移动端适配优化
-- [x] 匹配结果展示优化（2026-03-30 完成）
-=======
-
-### 7.2 待优化事项
-
-- [ ] 自动每周匹配任务
-- [ ] 完善错误处理和提示
-- [ ] 添加用户昵称/头像功能
-- [ ] 匹配结果展示优化
-- [ ] 移动端适配优化
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
 
 ### 7.3 开发环境启动
 
@@ -473,7 +283,6 @@ http://localhost:3000
 
 ## 八、更新日志
 
-<<<<<<< HEAD
 ### 2026-03-30 - V0.1.4
 - 优化匹配结果页面 UI（matches.ejs）
 - 新增圆环匹配度动画展示
@@ -492,8 +301,6 @@ http://localhost:3000
 - 新增 API 端点：POST /api/scheduler/trigger（手动触发匹配任务）
 - 匹配完成后自动发送通知邮件
 
-=======
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
 ### 2026-03-28 - V0.1.2
 - 新增密码注册功能（邮箱+昵称+密码）
 - 新增邮箱验证流程（验证邮件+验证链接）

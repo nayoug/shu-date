@@ -6,7 +6,6 @@
   <title>匹配结果 - 心有所SHU</title>
   <link rel="stylesheet" href="/css/style.css">
   <%- include('partials/head-icons') %>
-<<<<<<< HEAD
   <style>
     /* 页面头部 */
     .page-header {
@@ -432,14 +431,11 @@
       }
     }
   </style>
-=======
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
 </head>
 <body>
   <%- include('partials/navbar') %>
 
   <div class="container">
-<<<<<<< HEAD
     <!-- 页面头部 -->
     <div class="page-header">
       <h1>💕 匹配结果</h1>
@@ -643,68 +639,11 @@
             color: <%= h.score >= 0.7 ? '#166534' : h.score >= 0.5 ? '#92400e' : '#991b1b' %>;
           ">
             <%= Math.round(h.score * 100) %>%
-=======
-    <% if (!user.verified) { %>
-    <div class="card" style="text-align: center;">
-      <div style="font-size: 4rem; margin-bottom: 16px;">⚠️</div>
-      <h2>邮箱未验证</h2>
-      <p style="color: var(--muted-foreground);">请先完成邮箱验证后查看匹配结果。</p>
-    </div>
-    <% } else if (!matches || matches.length === 0) { %>
-    <div class="card" style="text-align: center;">
-      <div style="font-size: 4rem; margin-bottom: 16px;">🤔</div>
-      <h2>本周暂无正式匹配结果</h2>
-      <p style="color: var(--muted-foreground); margin-bottom: 24px;">
-        本周匹配尚未发布，或你本周暂未匹配成功。
-      </p>
-    </div>
-    <% } else { %>
-    <div class="card">
-      <h2 style="display: flex; align-items: center; gap: 10px;">
-        💕 本周正式匹配结果
-      </h2>
-      <p style="color: var(--muted-foreground); margin-bottom: 24px;">
-        这是本周已经发布并落库的正式匹配结果：
-      </p>
-
-      <div style="display: grid; gap: 16px;">
-        <% matches.forEach(function(m, index) { %>
-        <div class="match-card" style="display: flex; align-items: center; gap: 20px; padding: 20px;">
-          <div style="font-size: 2rem; font-weight: 700; color: var(--primary); min-width: 50px;">
-            #<%= index + 1 %>
-          </div>
-          <div style="flex: 1;">
-            <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px;">
-              <span><strong>年级:</strong> <%= m.my_grade || '-' %></span>
-              <span><strong>性别:</strong> <%= m.gender || '-' %></span>
-              <span><strong>校区:</strong> <%= m.campus || '-' %></span>
-              <span><strong>LoveType:</strong> <%= m.lovetype_code || '-' %></span>
-            </div>
-            <div style="color: var(--muted-foreground); font-size: 0.9rem;">
-              <strong>兴趣爱好:</strong> <%= m.interests || '-' %>
-            </div>
-          </div>
-          <% if (m.score !== null && m.score !== undefined) { %>
-          <div class="match-score" style="
-            background: <%= m.score >= 0.7 ? 'oklch(0.95 0.08 145)' : m.score >= 0.5 ? 'oklch(0.95 0.08 80)' : 'oklch(0.95 0.08 25)' %>;
-            color: <%= m.score >= 0.7 ? 'oklch(0.4 0.12 145)' : m.score >= 0.5 ? 'oklch(0.45 0.12 80)' : 'oklch(0.45 0.15 25)' %>;
-          ">
-            <%= Math.round(m.score * 100) %>%
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
           </div>
           <% } %>
         </div>
         <% }); %>
       </div>
-<<<<<<< HEAD
-=======
-
-      <% if (matches.some(function(m) { return m.score !== null && m.score !== undefined; })) { %>
-      <p style="margin-top: 24px; color: var(--muted-foreground); font-size: 0.85rem; text-align: center;">
-        💡 匹配度算法：综合考虑兴趣爱好、生活习惯和恋爱观念，并结合 LoveType 兼容性做加减分
-      </p>
-      <% } %>
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
     </div>
     <% } %>
   </div>
@@ -713,7 +652,6 @@
     <p>© 2026 心有所SHU - 上海大学校园交友匹配系统</p>
   </footer>
 
-<<<<<<< HEAD
   <script>
     // 加载实时推荐
     async function loadRecommendations() {
@@ -768,9 +706,6 @@
 
   <% if (typeof isDev !== 'undefined' && isDev) { %>
   <!-- 开发者工具 -->
-=======
-  <% if (typeof isDev !== 'undefined' && isDev) { %>
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
   <style>
     .dev-tool-btn {
       position: fixed;
@@ -833,18 +768,11 @@
       text-align: center;
     }
     .dev-btn:hover { background: #667eea; color: white; border-color: #667eea; }
-<<<<<<< HEAD
     .dev-info { font-size: 12px; color: #666; background: #f0f0f0; padding: 8px 10px; border-radius: 6px; }
-=======
-    .dev-btn.primary { background: #667eea; color: white; border-color: #667eea; }
-    .dev-info { font-size: 12px; color: #666; background: #f0f0f0; padding: 8px 10px; border-radius: 6px; }
-    .dev-badge { background: #4caf50; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 8px; }
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
   </style>
   <button class="dev-tool-btn" onclick="toggleDevModal()">🔧</button>
   <div class="dev-modal" id="devModal">
     <div class="dev-modal-header">
-<<<<<<< HEAD
       <span>🛠️ 开发者工具</span>
       <button class="close-btn" onclick="toggleDevModal()">×</button>
     </div>
@@ -853,18 +781,164 @@
         <div class="dev-section-title">环境信息</div>
         <div class="dev-info"><strong>环境:</strong> development</div>
       </div>
-=======
-      <span>🛠️ 开发者工具<span class="dev-badge">DEV</span></span>
+      <div class="dev-section">
+        <div class="dev-section-title">快捷操作</div>
+        <a href="/admin" class="dev-btn">📊 管理后台</a>
+        <a href="/logout" class="dev-btn">🔓 退出登录</a>
+      </div>
+    </div>
+  </div>
+  <script>
+    function toggleDevModal() { document.getElementById('devModal').classList.toggle('show'); }
+    document.addEventListener('click', function(e) {
+      const m = document.getElementById('devModal'), b = document.querySelector('.dev-tool-btn');
+      if (m && b && !m.contains(e.target) && !b.contains(e.target)) m.classList.remove('show');
+    });
+  </script>
+  <% } %>
+</body>
+</html>
+      <p style="margin-top: 24px; color: var(--muted-foreground); font-size: 0.85rem; text-align: center;">
+        💡 匹配度算法：综合考虑兴趣爱好、生活习惯和恋爱观念，并结合 LoveType 兼容性做加减分
+      </p>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 心有所SHU - 上海大学校园交友匹配系统</p>
+  </footer>
+
+  <script>
+    // 加载实时推荐
+    async function loadRecommendations() {
+      const container = document.getElementById('recommendList');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div><p>正在计算最佳匹配...</p></div>';
+
+      try {
+        const response = await fetch('/api/match/top');
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+          container.innerHTML = data.data.map((m, i) => `
+            <div class="recommend-card">
+              <div class="card-header">
+                <div class="rank">${i + 1}</div>
+                <div class="mini-score">${Math.round(m.score * 100)}%</div>
+              </div>
+              <div class="info-row">
+                <span>🎓 ${m.my_grade || '-'}</span>
+                <span>👤 ${m.gender || '-'}</span>
+                <span>📍 ${m.campus || '-'}</span>
+              </div>
+              ${m.lovetype_code ? `<div class="lovetype-mini">${m.lovetype_code}</div>` : ''}
+              ${m.interests ? `
+                <div style="margin-top: 10px;">
+                  ${m.interests.split(',').slice(0, 3).map(tag =>
+                    `<span class="interest-tag" style="font-size: 0.75rem; padding: 4px 8px;">${tag.trim().replace(/^[^-]+-/, '')}</span>`
+                  ).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = `
+            <div class="card" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+              <p style="color: var(--muted-foreground);">暂无推荐数据，可能还没有足够的用户填写问卷</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        container.innerHTML = `
+          <div class="card" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+            <p style="color: var(--error);">加载失败，请稍后重试</p>
+          </div>
+        `;
+      }
+    }
+
+    // 页面加载时自动获取推荐
+    document.addEventListener('DOMContentLoaded', loadRecommendations);
+  </script>
+
+  <% if (typeof isDev !== 'undefined' && isDev) { %>
+  <!-- 开发者工具 -->
+  <style>
+    .dev-tool-btn {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+      z-index: 9999;
+    }
+    .dev-tool-btn:hover { transform: scale(1.1); }
+    .dev-modal {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 15px;
+      width: 300px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      z-index: 9998;
+      overflow: hidden;
+    }
+    .dev-modal.show { display: block; }
+    .dev-modal-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 16px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+    }
+    .dev-modal-header .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .dev-modal-body { padding: 16px; }
+    .dev-section { margin-bottom: 16px; }
+    .dev-section:last-child { margin-bottom: 0; }
+    .dev-section-title { font-size: 12px; color: #888; margin-bottom: 8px; }
+    .dev-btn {
+      display: block;
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      background: #f8f9fa;
+      color: #333;
+      text-decoration: none;
+      text-align: center;
+    }
+    .dev-btn:hover { background: #667eea; color: white; border-color: #667eea; }
+    .dev-info { font-size: 12px; color: #666; background: #f0f0f0; padding: 8px 10px; border-radius: 6px; }
+  </style>
+  <button class="dev-tool-btn" onclick="toggleDevModal()">🔧</button>
+  <div class="dev-modal" id="devModal">
+    <div class="dev-modal-header">
+      <span>🛠️ 开发者工具</span>
       <button class="close-btn" onclick="toggleDevModal()">×</button>
     </div>
     <div class="dev-modal-body">
-      <% if (typeof isDev !== 'undefined' && isDev) { %>
       <div class="dev-section">
         <div class="dev-section-title">环境信息</div>
-        <div class="dev-info"><strong>环境:</strong> <%= isProduction ? 'production' : 'development' %></div>
+        <div class="dev-info"><strong>环境:</strong> development</div>
       </div>
-      <% } %>
->>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
       <div class="dev-section">
         <div class="dev-section-title">快捷操作</div>
         <a href="/admin" class="dev-btn">📊 管理后台</a>
