@@ -165,10 +165,19 @@ const appVersion = process.env.APP_VERSION || packageJson.version;
 const fullCommitSha = process.env.GIT_COMMIT || process.env.RENDER_GIT_COMMIT || null;
 const shortCommitSha = normalizeShortCommitSha(process.env.GIT_COMMIT_SHORT) || normalizeShortCommitSha(fullCommitSha);
 const deployTime = resolveDeployTime();
+const adminEmails = new Set(
+  (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map(normalizeEmail)
+    .filter(Boolean)
+);
 
 if (isProduction) {
   if (!sessionSecret) {
     throw new Error('SESSION_SECRET must be set in production');
+  }
+  if (adminEmails.size === 0) {
+    console.warn('ADMIN_EMAILS is empty in production; admin routes will be inaccessible.');
   }
   app.set('trust proxy', 1);
 }
@@ -199,7 +208,7 @@ async function isLoggedIn(req, res, next) {
       if (user) {
         const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [user.id]);
         req.user = { ...user, hasProfile: !!profile };
-        req.isAdmin = user.email === 'admin@shu.edu.cn';
+        req.isAdmin = adminEmails.has(normalizeEmail(user.email));
         // 同步更新 session 中的 nickname
         if (user.nickname) {
           req.session.nickname = user.nickname;
@@ -228,6 +237,13 @@ function normalizeEmail(email) {
   }
 
   return email.trim().toLowerCase();
+}
+
+function requireAdmin(req, res, next) {
+  if (!req.isAdmin) {
+    return res.redirect('/');
+  }
+  next();
 }
 
 const loginRateLimiter = createRedirectRateLimiter({
@@ -1165,9 +1181,7 @@ app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
 }));
 
 // 管理页
-app.get('/admin', isLoggedIn, wrapAsync(async (req, res) => {
-  if (!req.isAdmin) return res.redirect('/');
-
+app.get('/admin', isLoggedIn, requireAdmin, wrapAsync(async (req, res) => {
   const users = await db.query(`
     SELECT u.*, CASE WHEN p.id IS NOT NULL THEN 1 ELSE 0 END as hasProfile
     FROM users u
@@ -1188,13 +1202,11 @@ app.get('/admin', isLoggedIn, wrapAsync(async (req, res) => {
 }));
 
 // 手动触发匹配
-app.get('/admin/match', isLoggedIn, wrapAsync(async (req, res) => {
-  if (!req.isAdmin) return res.redirect('/');
+app.get('/admin/match', isLoggedIn, requireAdmin, wrapAsync(async (req, res) => {
   return res.redirect('/admin?msg=' + encodeURIComponent('请使用页面表单触发匹配') + '&type=error');
 }));
 
-app.post('/admin/match', isLoggedIn, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
-  if (!req.isAdmin) return res.redirect('/');
+app.post('/admin/match', isLoggedIn, requireAdmin, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
   const result = await runWeeklyMatch();
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
 }));
