@@ -39,15 +39,6 @@ function jaccardSimilarity(set1, set2) {
   return intersection / set.size;
 }
 
-// 选项匹配度
-function optionMatch(myValue, theirValue) {
-  if (!myValue || !theirValue) return 0.5;
-  if (myValue === theirValue) return 1;
-  if (myValue === '不限') return 1;
-  if (theirValue === '不限') return 1;
-  return 0;
-}
-
 function parseNullableInt(value) {
   if (value === null || value === undefined || value === '') return null;
   const parsed = parseInt(value, 10);
@@ -61,8 +52,11 @@ function intSimilarity(val1, val2) {
 
   if (normalizedVal1 === null || normalizedVal2 === null) return 0.5;
 
-  const diff = Math.abs(normalizedVal1 - normalizedVal2);
-  return 1 - (diff / 4); // 最大差为4，转换为0-1
+  const clampedVal1 = Math.max(-2, Math.min(2, normalizedVal1));
+  const clampedVal2 = Math.max(-2, Math.min(2, normalizedVal2));
+  const diff = Math.abs(clampedVal1 - clampedVal2);
+  const similarity = 1 - (Math.min(diff, 4) / 4); // 最大差为4，转换为0-1
+  return Math.max(0, Math.min(1, similarity));
 }
 
 function isHeightWithinRange(height, min, max) {
