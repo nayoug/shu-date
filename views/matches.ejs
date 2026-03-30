@@ -31,7 +31,7 @@
         💕 本周正式匹配结果
       </h2>
       <p style="color: var(--muted-foreground); margin-bottom: 24px;">
-        这是本周已经发布并落库的正式匹配结果：
+        这是本周的正式匹配结果：
       </p>
 
       <div style="display: grid; gap: 16px;">
@@ -68,6 +68,35 @@
         💡 匹配度算法：综合考虑兴趣爱好、生活习惯和恋爱观念，并结合 LoveType 兼容性做加减分
       </p>
       <% } %>
+    </div>
+    <% } %>
+
+    <% // 历史匹配记录 %>
+    <% if (history && history.length > 0) { %>
+    <div class="card" style="margin-top: 24px;">
+      <h3 style="margin-bottom: 16px;">📜 历史匹配</h3>
+      <div style="display: grid; gap: 12px;">
+        <% history.forEach(function(h) { %>
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--muted); border-radius: 8px;">
+          <div>
+            <span style="font-weight: 600;"><%= h.nickname || h.name || 'TA' %></span>
+            <span style="color: var(--muted-foreground); margin-left: 8px;">(<%= h.gender || '-' %>)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: var(--muted-foreground); font-size: 0.85rem;">第 <%= h.week_number %> 周</span>
+            <% if (h.score !== null && h.score !== undefined) { %>
+            <span style="
+              background: <%= h.score >= 0.7 ? 'oklch(0.95 0.08 145)' : h.score >= 0.5 ? 'oklch(0.95 0.08 80)' : 'oklch(0.95 0.08 25)' %>;
+              color: <%= h.score >= 0.7 ? 'oklch(0.4 0.12 145)' : h.score >= 0.5 ? 'oklch(0.45 0.12 80)' : 'oklch(0.45 0.15 25)' %>;
+              padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;
+            ">
+              <%= Math.round(h.score * 100) %>%
+            </span>
+            <% } %>
+          </div>
+        </div>
+        <% }); %>
+      </div>
     </div>
     <% } %>
   </div>

@@ -79,12 +79,16 @@
       </div>
 
       <!-- 注册表单 -->
-      <form action="/register" method="POST" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>">
+      <form action="/register" method="POST" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>" onsubmit="return handleRegisterSubmit(event)">
         <div class="form-group">
           <input type="text" name="nickname" placeholder="昵称" autocomplete="nickname" aria-label="昵称" required style="text-align: center; font-size: 16px;">
         </div>
         <div class="form-group">
-          <input type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="email" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required style="text-align: center; font-size: 16px;">
+          <div style="display: flex; align-items: center; gap: 0;">
+            <input type="text" id="registerEmailPrefix" placeholder="请输入学校邮箱" value="<%= typeof email !== 'undefined' && email ? email.replace('@shu.edu.cn', '') : '' %>" required style="flex: 1; text-align: center; font-size: 16px; border-radius: 6px 0 0 6px; border-right: none;">
+            <span style="background: #f0f0f0; padding: 12px 14px; border: 1px solid #e0e0e0; border-radius: 0 6px 6px 0; color: #666; font-size: 14px; white-space: nowrap;">@shu.edu.cn</span>
+          </div>
+          <input type="hidden" name="email" id="registerEmailFull">
         </div>
         <div class="form-group">
           <input type="password" name="password" placeholder="设置密码（至少6位）" autocomplete="new-password" aria-label="设置密码" required minlength="6" style="text-align: center; font-size: 16px;">
@@ -93,9 +97,13 @@
       </form>
 
       <!-- 登录表单 -->
-      <form action="/login" method="POST" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>">
+      <form action="/login" method="POST" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>" onsubmit="return handleLoginSubmit(event)">
         <div class="form-group">
-          <input type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="登录邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required style="text-align: center; font-size: 16px;">
+          <div style="display: flex; align-items: center; gap: 0;">
+            <input type="text" id="loginEmailPrefix" placeholder="请输入学校邮箱" value="<%= typeof email !== 'undefined' && email ? email.replace('@shu.edu.cn', '') : '' %>" required style="flex: 1; text-align: center; font-size: 16px; border-radius: 6px 0 0 6px; border-right: none;">
+            <span style="background: #f0f0f0; padding: 12px 14px; border: 1px solid #e0e0e0; border-radius: 0 6px 6px 0; color: #666; font-size: 14px; white-space: nowrap;">@shu.edu.cn</span>
+          </div>
+          <input type="hidden" name="email" id="loginEmailFull">
         </div>
         <div class="form-group">
           <input type="password" name="password" placeholder="登录密码" autocomplete="current-password" aria-label="登录密码" required style="text-align: center; font-size: 16px;">
@@ -132,6 +140,26 @@
       } else {
         document.querySelector('form[action="/login"]').classList.add('active');
       }
+    }
+
+    function handleRegisterSubmit(e) {
+      const prefix = document.getElementById('registerEmailPrefix').value.trim();
+      if (!prefix) {
+        alert('请输入学校邮箱');
+        return false;
+      }
+      document.getElementById('registerEmailFull').value = prefix + '@shu.edu.cn';
+      return true;
+    }
+
+    function handleLoginSubmit(e) {
+      const prefix = document.getElementById('loginEmailPrefix').value.trim();
+      if (!prefix) {
+        alert('请输入学校邮箱');
+        return false;
+      }
+      document.getElementById('loginEmailFull').value = prefix + '@shu.edu.cn';
+      return true;
     }
   </script>
 </body>

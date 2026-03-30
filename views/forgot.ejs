@@ -27,9 +27,13 @@
         </div>
       <% } %>
 
-      <form action="/forgot" method="POST">
+      <form action="/forgot" method="POST" onsubmit="return handleForgotSubmit(event)">
         <div class="form-group">
-          <input type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required style="text-align: center; font-size: 16px;">
+          <div style="display: flex; align-items: center; gap: 0;">
+            <input type="text" id="emailPrefix" placeholder="请输入学校邮箱" value="<%= typeof email !== 'undefined' && email ? email.replace('@shu.edu.cn', '') : '' %>" required style="flex: 1; text-align: center; font-size: 16px; border-radius: 6px 0 0 6px; border-right: none;">
+            <span style="background: #f0f0f0; padding: 12px 14px; border: 1px solid #e0e0e0; border-radius: 0 6px 6px 0; color: #666; font-size: 14px; white-space: nowrap;">@shu.edu.cn</span>
+          </div>
+          <input type="hidden" name="email" id="emailFull">
         </div>
         <button type="submit" class="btn" style="width: 100%;">发送重置链接</button>
       </form>
@@ -43,5 +47,16 @@
   <footer class="footer">
     <p>© 2026 心有所SHU</p>
   </footer>
+  <script>
+  function handleForgotSubmit(e) {
+    const prefix = document.getElementById('emailPrefix').value.trim();
+    if (!prefix) {
+      alert('请输入学校邮箱');
+      return false;
+    }
+    document.getElementById('emailFull').value = prefix + '@shu.edu.cn';
+    return true;
+  }
+  </script>
 </body>
 </html>
