@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : '服务器异常' %> - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <%- include('partials/head-icons') %>
+</head>
+<body>
+  <div class="container" style="max-width: 640px; padding-top: 96px;">
+    <div class="card" style="text-align: center;">
+      <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
+      <p style="color: var(--muted-foreground); font-size: 0.9rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;">
+        <%= typeof statusCode !== 'undefined' ? statusCode : 500 %>
+      </p>
+      <h1 style="font-size: 2rem; margin-bottom: 12px;">服务器出了点问题</h1>
+      <p style="color: var(--muted-foreground); margin-bottom: 28px;">
+        <%= typeof message !== 'undefined' && message ? message : '服务器内部错误，请稍后再试。' %>
+      </p>
+      <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+        <a href="/" class="btn">返回首页</a>
+        <button type="button" class="btn" onclick="history.back()" style="background: var(--muted); color: var(--foreground);">
+          返回上一页
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
