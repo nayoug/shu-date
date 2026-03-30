@@ -48,17 +48,21 @@ function optionMatch(myValue, theirValue) {
   return 0;
 }
 
-// 整数相似度（用于-2到2的评分）
-function intSimilarity(val1, val2) {
-  if (val1 === null || val1 === undefined || val2 === null || val2 === undefined) return 0.5;
-  const diff = Math.abs(val1 - val2);
-  return 1 - (diff / 4); // 最大差为4，转换为0-1
-}
-
 function parseNullableInt(value) {
   if (value === null || value === undefined || value === '') return null;
   const parsed = parseInt(value, 10);
   return Number.isNaN(parsed) ? null : parsed;
+}
+
+// 整数相似度（用于-2到2的评分）
+function intSimilarity(val1, val2) {
+  const normalizedVal1 = parseNullableInt(val1);
+  const normalizedVal2 = parseNullableInt(val2);
+
+  if (normalizedVal1 === null || normalizedVal2 === null) return 0.5;
+
+  const diff = Math.abs(normalizedVal1 - normalizedVal2);
+  return 1 - (diff / 4); // 最大差为4，转换为0-1
 }
 
 function isHeightWithinRange(height, min, max) {
