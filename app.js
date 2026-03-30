@@ -188,6 +188,10 @@ function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面�
   });
 }
 
+function isApiRequest(req) {
+  return /^\/api(?:\/|$)/.test(req.path || '');
+}
+
 function regenerateSession(req) {
   return new Promise((resolve, reject) => {
     req.session.regenerate(error => {
@@ -1126,7 +1130,7 @@ async function start() {
 start().catch(console.error);
 
 app.use((req, res) => {
-  if (req.path.startsWith('/api/')) {
+  if (isApiRequest(req)) {
     return res.status(404).json({
       success: false,
       error: '接口不存在'
@@ -1144,7 +1148,11 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('❌ 服务器错误:', err.message);
 
-  if (req.path.startsWith('/api/')) {
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  if (isApiRequest(req)) {
     return res.status(500).json({
       success: false,
       error: isProduction ? '服务器内部错误' : err.message
