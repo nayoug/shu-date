@@ -172,6 +172,29 @@ function requireValidCsrf(req, res, next) {
   return res.redirect('/admin?msg=' + encodeURIComponent('请求无效，请刷新页面后重试') + '&type=error');
 }
 
+<<<<<<< HEAD
+=======
+function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面暂时不可用') {
+  res.status(status).render(view, locals, (renderErr, html) => {
+    if (!renderErr) {
+      return res.send(html);
+    }
+
+    console.error(`❌ 渲染 ${view} 失败:`, renderErr.message);
+    if (!res.headersSent) {
+      res
+        .status(status)
+        .type('text/plain; charset=utf-8')
+        .send(locals.message || fallbackMessage);
+    }
+  });
+}
+
+function isApiRequest(req) {
+  return /^\/api(?:\/|$)/.test(req.path || '');
+}
+
+>>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
 function regenerateSession(req) {
   return new Promise((resolve, reject) => {
     req.session.regenerate(error => {
@@ -701,7 +724,10 @@ app.get('/profile', isLoggedIn, wrapAsync(async (req, res) => {
   model.passwordMessageType = res.locals.passwordMessageType || '';
   res.render('profile', model);
 }));
+<<<<<<< HEAD
 
+=======
+>>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
 // 提交问卷
 app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
   const data = req.body;
@@ -719,6 +745,7 @@ app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
 
   const fields = [
     // 基础信息
+<<<<<<< HEAD
     'gender', 'age', 'preferred_gender', 'purpose', 'my_grade',
     'age_min', 'age_max', 'campus', 'accepted_campus',
     'height_min', 'preferred_height_min', 'preferred_height_max',
@@ -731,12 +758,27 @@ app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
     'smoking_habit', 'partner_smoking', 'drinking_habit', 'partner_drinking',
     'pet', 'social_public', 'social_boundary',
     // 兴趣爱好
+=======
+    'gender', 'preferred_gender', 'my_grade', 'age',
+    'age_min', 'age_max', 'purpose',
+    'campus', 'accepted_campus',
+    'height', 'preferred_height_min', 'preferred_height_max',
+    'hometown', 'preferred_hometown', 'core_traits',
+    // 恋爱观念
+    'relationship_rhythm', 'romantic_ritual', 'relationship_style',
+    'sleep_pattern', 'diet_preference', 'spice_tolerance', 'date_preference',
+    'spending_style', 'drinking_habit', 'partner_drinking', 'smoking_habit', 'partner_smoking',
+    'pet_attitude', 'sexual_timing', 'conflict_style', 'meeting_frequency',
+    // 个人特征与匹配偏好
+    'my_traits', 'partner_traits',
+>>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
     'interests', 'partner_interest',
     // LoveType16
     'lovetype_answers', 'lovetype_code', 'lovetype_scores'
   ];
 
   const values = {};
+<<<<<<< HEAD
   fields.forEach(f => {
     if (f === 'core_traits' || f === 'interests' || f === 'accepted_campus') {
       values[f] = processMultiSelect(data[f]);
@@ -759,6 +801,54 @@ app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
     } else {
       values[f] = data[f] || null;
     }
+=======
+  // 多选字段
+  const multiSelectFields = [
+    'accepted_campus', 'core_traits',
+    'my_traits', 'partner_traits', 'interests'
+  ];
+  // 整数字段
+  const integerFields = [
+    // 基础信息
+    'age', 'age_min', 'age_max',
+    'height', 'preferred_height_min', 'preferred_height_max',
+    // 恋爱观念
+    'relationship_rhythm', 'romantic_ritual', 'relationship_style', 
+    'sleep_pattern', 'diet_preference', 'spice_tolerance', 'date_preference',
+    'spending_style', 'drinking_habit', 'partner_drinking', 'smoking_habit', 'partner_smoking', 
+    'pet_attitude', 'sexual_timing', 'conflict_style', 'meeting_frequency',
+    // 个人特征与匹配偏好
+    'partner_interest'
+  ];
+
+  fields.forEach(field => {
+    // 多选
+    if (multiSelectFields.includes(field)) {
+      values[field] = processMultiSelect(data[field]);
+      return;
+    }
+    // LoveType16
+    if (field === 'lovetype_answers') {
+      values[field] = JSON.stringify(lovetypeAssessment.answers);
+      return;
+    }
+    if (field === 'lovetype_code') {
+      values[field] = lovetypeAssessment.code;
+      return;
+    }
+    if (field === 'lovetype_scores') {
+      values[field] = JSON.stringify(lovetypeAssessment.scores);
+      return;
+    }
+    // 整数
+    if (integerFields.includes(field)) {
+      const parsed = data[field] ? parseInt(data[field], 10) : null;
+      values[field] = (parsed !== null && !isNaN(parsed)) ? parsed : null;
+      return;
+    }
+    // 默认
+    values[field] = data[field] || null;
+>>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
   });
 
   const existing = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
@@ -1029,6 +1119,7 @@ app.post('/admin/match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
 }));
 
+<<<<<<< HEAD
 // API: 获取调度器状态
 app.get('/api/scheduler/status', isLoggedIn, wrapAsync(async (req, res) => {
   if (!req.isAdmin) return res.status(403).json({ error: '无权限' });
@@ -1050,6 +1141,8 @@ app.post('/api/scheduler/trigger', isLoggedIn, wrapAsync(async (req, res) => {
   }
 }));
 
+=======
+>>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
 // ============ 匹配逻辑 ============
 
 async function runWeeklyMatch() {
@@ -1094,12 +1187,15 @@ async function start() {
   db = dbModule;
   await db.initDatabase();
 
+<<<<<<< HEAD
   // 启动定时任务调度器（生产环境）
   if (isProduction) {
     const scheduler = require('./scheduler');
     scheduler.startScheduler();
   }
 
+=======
+>>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`
@@ -1108,6 +1204,7 @@ async function start() {
   ║     访问: http://localhost:${PORT}        ║
   ╚════════════════════════════════════════╝
     `);
+<<<<<<< HEAD
 
     // 开发环境提示
     if (!isProduction) {
@@ -1116,17 +1213,57 @@ async function start() {
       console.log('   如需测试定时任务，可访问 /admin 手动触发匹配');
       console.log('');
     }
+=======
+>>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
   });
 }
 
 start().catch(console.error);
 
+<<<<<<< HEAD
 // 统一错误处理中间件
 app.use((err, req, res, next) => {
   console.error('❌ 服务器错误:', err.message);
   res.status(500).render('error', {
     message: isProduction ? '服务器内部错误' : err.message
   });
+=======
+app.use((req, res) => {
+  if (isApiRequest(req)) {
+    return res.status(404).json({
+      success: false,
+      error: '接口不存在'
+    });
+  }
+
+  renderSafely(res, 404, '404', {
+    title: '页面不存在',
+    statusCode: 404,
+    message: '你访问的页面不存在，可能已被移动、删除，或者链接地址写错了。'
+  }, '页面不存在');
+});
+
+// 统一错误处理中间件
+app.use((err, req, res, next) => {
+  console.error('❌ 服务器错误:', err.message);
+
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  if (isApiRequest(req)) {
+    return res.status(500).json({
+      success: false,
+      error: isProduction ? '服务器内部错误' : err.message
+    });
+  }
+
+  renderSafely(res, 500, 'error', {
+    title: '服务器异常',
+    statusCode: 500,
+    message: isProduction ? '服务器开了点小差，请稍后再试。' : err.message
+  }, isProduction ? '服务器内部错误' : err.message);
+>>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
 });
 
 module.exports = app;

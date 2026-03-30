@@ -1,6 +1,10 @@
 {
   "name": "xin-yousuo-shu",
+<<<<<<< HEAD
   "version": "0.1.4",
+=======
+  "version": "0.1.2",
+>>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
   "description": "上海大学校园交友匹配网站",
   "main": "app.js",
   "scripts": {
@@ -13,7 +17,10 @@
     "ejs": "^3.1.9",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
+<<<<<<< HEAD
     "node-cron": "^4.2.1",
+=======
+>>>>>>> bc541fce7dc896d4878f0035d2558ab40703db33
     "pg": "^8.20.0",
     "resend": "^4.0.0"
   }
