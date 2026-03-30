@@ -1136,46 +1136,6 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     }
   } : null;
 
-  // 获取历史匹配记录
-  const historyRows = await db.query(`
-    SELECT
-      m.week_number,
-      m.score,
-      partner.id AS partner_id,
-      partner.nickname AS partner_nickname,
-      partner.name AS partner_name,
-      p.gender AS partner_gender,
-      p.my_grade AS partner_grade,
-      p.campus AS partner_campus,
-      p.interests AS partner_interests,
-      p.lovetype_code AS partner_lovetype_code
-    FROM matches m
-    JOIN users partner
-      ON partner.id = CASE
-        WHEN m.user_id_1 = $1 THEN m.user_id_2
-        ELSE m.user_id_1
-      END
-    LEFT JOIN profiles p ON p.user_id = partner.id
-    WHERE m.week_number < $2
-      AND ($1 = m.user_id_1 OR $1 = m.user_id_2)
-    ORDER BY m.week_number DESC, m.matched_at DESC
-    LIMIT 20
-  `, [req.user.id, weekNumber]);
-
-  const history = historyRows.map(h => ({
-    weekNumber: h.week_number,
-    score: h.score,
-    partner: {
-      id: h.partner_id,
-      nickname: h.partner_nickname || h.partner_name,
-      gender: h.partner_gender,
-      my_grade: h.partner_grade,
-      campus: h.partner_campus,
-      interests: h.partner_interests,
-      lovetype_code: h.partner_lovetype_code
-    }
-  }));
-
   res.render('matches', {
     title: '匹配结果',
     user: req.user,
@@ -1184,7 +1144,6 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     showPassword: true,
     weeklyMatch: weeklyMatch,
     matches: weeklyMatch ? [weeklyMatch.partner] : [],
-    history: history,
     isAdmin: req.isAdmin,
     matchSource: 'weekly',
     weekNumber
