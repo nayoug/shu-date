@@ -207,9 +207,6 @@ function calculateLoveValueScore(myProfile, theirProfile) {
     'sexual_timing',       // 亲密关系时机
     'conflict_style'       // 冲突处理
   ];
-  const loveOptionFields = [
-    'meeting_frequency'    // 见面频率
-  ];
 
   let score = 0;
   let count = 0;
@@ -218,13 +215,6 @@ function calculateLoveValueScore(myProfile, theirProfile) {
     if (myProfile[field] !== null && myProfile[field] !== undefined &&
         theirProfile[field] !== null && theirProfile[field] !== undefined) {
       score += intSimilarity(myProfile[field], theirProfile[field]);
-      count++;
-    }
-  }
-
-  for (const field of loveOptionFields) {
-    if (myProfile[field] && theirProfile[field]) {
-      score += optionMatch(myProfile[field], theirProfile[field]);
       count++;
     }
   }
