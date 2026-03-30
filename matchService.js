@@ -11,7 +11,7 @@
  * 相似度计算：
  * - 兴趣标签 Jaccard
  * - 生活方式相似度（作息、饮食、口味、约会、消费、烟酒）
- * - 恋爱观匹配度（沟通、同居、婚姻、相处模式）
+ * - 恋爱观匹配度（相处节奏、仪式感、相处模式、亲密关系时机、冲突处理）
  * - 兴趣爱好相似度偏好（partner_interest）
  *
  * 综合评分：
@@ -199,18 +199,30 @@ function calculateLifestyleScore(myProfile, theirProfile) {
 }
 
 function calculateLoveValueScore(myProfile, theirProfile) {
-  // 恋爱观念相关字段 - 使用选项匹配
-  const loveFields = [
-    'communication',      // 沟通频率
-    'cohabitation',      // 婚前同居
-    'marriage_plan',     // 婚姻规划
-    'relationship_style' // 相处模式
+  // 当前问卷中的恋爱观量表题
+  const loveScaleFields = [
+    'relationship_rhythm', // 相处节奏
+    'romantic_ritual',     // 仪式感
+    'relationship_style',  // 相处模式
+    'sexual_timing',       // 亲密关系时机
+    'conflict_style'       // 冲突处理
+  ];
+  const loveOptionFields = [
+    'meeting_frequency'    // 见面频率
   ];
 
   let score = 0;
   let count = 0;
 
-  for (const field of loveFields) {
+  for (const field of loveScaleFields) {
+    if (myProfile[field] !== null && myProfile[field] !== undefined &&
+        theirProfile[field] !== null && theirProfile[field] !== undefined) {
+      score += intSimilarity(myProfile[field], theirProfile[field]);
+      count++;
+    }
+  }
+
+  for (const field of loveOptionFields) {
     if (myProfile[field] && theirProfile[field]) {
       score += optionMatch(myProfile[field], theirProfile[field]);
       count++;
