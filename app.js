@@ -893,11 +893,6 @@ app.get('/profile', isLoggedIn, wrapAsync(async (req, res) => {
 app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
   const data = req.body;
 
-  const processMultiSelect = (val) => {
-    if (Array.isArray(val)) return val.join(',');
-    return val || '';
-  };
-
   const lovetypeAnswerMap = {};
   lovetypeService.LOVETYPE_QUESTIONS.forEach(question => {
     lovetypeAnswerMap[question.id] = data[`lovetype_${question.id}`] || '0';
@@ -946,7 +941,10 @@ app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
   fields.forEach(field => {
     // 多选
     if (multiSelectFields.includes(field)) {
-      values[field] = processMultiSelect(data[field]);
+      const raw = Array.isArray(data[field]) ? data[field] : [];
+      // core_traits 最多 3 项
+      const limit = field === 'core_traits' ? 3 : raw.length;
+      values[field] = raw.slice(0, limit).join(',');
       return;
     }
     // LoveType16

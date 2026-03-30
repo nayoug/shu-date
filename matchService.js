@@ -165,9 +165,8 @@ function scorePartnerTraits(myProfile, theirProfile) {
   return Math.min(30, matches.length * 6);
 }
 
-// 兴趣爱好 Jaccard × partner_interest 权重（满分12分）
-// 3 * (对方与我相同的兴趣个数 / 我填写的兴趣个数) * (partner_interest + 2)
-// partner_interest 范围 -2 到 2，partner_interest+2 范围 0 到 4
+// 兴趣爱好 标准 Jaccard × partner_interest 权重（满分12分）
+// Jaccard = |A ∩ B| / |A ∪ B|，权重范围 0~4
 function scoreInterests(myProfile, theirProfile) {
   const myInterests = parseTagsField(myProfile.interests);
   const theirInterests = parseTagsField(theirProfile.interests);
@@ -175,7 +174,8 @@ function scoreInterests(myProfile, theirProfile) {
   if (myInterests.length === 0) return 0;
 
   const matched = myInterests.filter(i => theirInterests.includes(i));
-  const jaccard = matched.length / myInterests.length; // 0 到 1
+  const union = [...new Set([...myInterests, ...theirInterests])];
+  const jaccard = union.length > 0 ? matched.length / union.length : 0; // 标准 Jaccard: intersection / union
 
   const partnerInterest = parseNullableInt(myProfile.partner_interest);
   const weight = (partnerInterest !== null ? partnerInterest + 2 : 2); // 缺值默认权重2
@@ -282,7 +282,7 @@ async function findMatches(userId) {
       interests: candidate.interests,
       lovetype_code: candidate.lovetype_code,
       lovetype_label: lovetypeService.getCompatibilityLabel(myProfile.lovetype_code, candidate.lovetype_code),
-      score: Math.round(score * 100) / 100,
+      score: Math.round((score / 120) * 100) / 100,
       score_ab: scoreAB,
       score_ba: scoreBA,
       score_breakdown: detailsA.breakdown
