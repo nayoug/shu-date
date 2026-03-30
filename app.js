@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const path = require('path');
@@ -43,6 +44,54 @@ function wrapAsync(fn) {
   return (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
+}
+
+const AUTH_RATE_LIMIT_MESSAGE = '请求过于频繁，请稍后再试。';
+
+function buildLoginRedirectPath(method, email) {
+  const params = new URLSearchParams({
+    method
+  });
+  if (email) {
+    params.set('email', email);
+  }
+  return `/login?${params.toString()}`;
+}
+
+function redirectWithMessage(res, path, message, type = 'error') {
+  const separator = path.includes('?') ? '&' : '?';
+  return res.redirect(`${path}${separator}msg=${encodeURIComponent(message)}&type=${encodeURIComponent(type)}`);
+}
+
+function getEmailScopedRateLimitKey(req) {
+  const ipKey = ipKeyGenerator(req.ip || '');
+  const email = normalizeEmail(req.body?.email);
+  return email ? `${ipKey}:email:${email}` : ipKey;
+}
+
+function getUserScopedRateLimitKey(req) {
+  const ipKey = ipKeyGenerator(req.ip || '');
+  const userId = req.session?.userId;
+  return userId ? `${ipKey}:user:${userId}` : ipKey;
+}
+
+function getResetScopedRateLimitKey(req) {
+  const ipKey = ipKeyGenerator(req.ip || '');
+  const code = req.params?.code || '';
+  return code ? `${ipKey}:reset:${code}` : ipKey;
+}
+
+function createRedirectRateLimiter({ windowMs, limit, keyGenerator, redirectTo, message = AUTH_RATE_LIMIT_MESSAGE }) {
+  return rateLimit({
+    windowMs,
+    limit,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    keyGenerator,
+    handler(req, res) {
+      return redirectWithMessage(res, redirectTo(req), message);
+    }
+  });
 }
 
 function normalizeShortCommitSha(value) {
@@ -126,6 +175,61 @@ function normalizeEmail(email) {
 
   return email.trim().toLowerCase();
 }
+
+const loginRateLimiter = createRedirectRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  keyGenerator: getEmailScopedRateLimitKey,
+  redirectTo(req) {
+    return buildLoginRedirectPath('login', normalizeEmail(req.body?.email));
+  }
+});
+
+const registerRateLimiter = createRedirectRateLimiter({
+  windowMs: 30 * 60 * 1000,
+  limit: 5,
+  keyGenerator: getEmailScopedRateLimitKey,
+  redirectTo(req) {
+    return buildLoginRedirectPath('register', normalizeEmail(req.body?.email));
+  }
+});
+
+const forgotRateLimiter = createRedirectRateLimiter({
+  windowMs: 30 * 60 * 1000,
+  limit: 5,
+  keyGenerator: getEmailScopedRateLimitKey,
+  redirectTo(req) {
+    const email = normalizeEmail(req.body?.email);
+    return email ? `/forgot?email=${encodeURIComponent(email)}` : '/forgot';
+  }
+});
+
+const resetRateLimiter = createRedirectRateLimiter({
+  windowMs: 30 * 60 * 1000,
+  limit: 8,
+  keyGenerator: getResetScopedRateLimitKey,
+  redirectTo(req) {
+    return `/reset/${encodeURIComponent(req.params?.code || '')}`;
+  }
+});
+
+const passwordChangeRateLimiter = createRedirectRateLimiter({
+  windowMs: 30 * 60 * 1000,
+  limit: 8,
+  keyGenerator: getUserScopedRateLimitKey,
+  redirectTo() {
+    return '/profile/password';
+  }
+});
+
+const adminActionRateLimiter = createRedirectRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 3,
+  keyGenerator: getUserScopedRateLimitKey,
+  redirectTo() {
+    return '/admin';
+  }
+});
 
 async function findUserByEmailInsensitive(email) {
   const normalizedEmail = normalizeEmail(email);
@@ -280,11 +384,16 @@ app.get('/login', (req, res) => {
 
 // 忘记密码页
 app.get('/forgot', (req, res) => {
-  res.render('forgot', { title: '忘记密码' });
+  res.render('forgot', {
+    title: '忘记密码',
+    message: req.query.msg,
+    messageType: req.query.type,
+    email: req.query.email || ''
+  });
 });
 
 // 发送密码重置邮件
-app.post('/forgot', wrapAsync(async (req, res) => {
+app.post('/forgot', forgotRateLimiter, wrapAsync(async (req, res) => {
   const { email } = req.body;
   const lowerEmail = normalizeEmail(email);
 
@@ -359,11 +468,16 @@ app.get('/reset/:code', wrapAsync(async (req, res) => {
     });
   }
 
-  res.render('reset', { title: '重置密码', code: resetCode });
+  res.render('reset', {
+    title: '重置密码',
+    code: resetCode,
+    message: req.query.msg,
+    messageType: req.query.type
+  });
 }));
 
 // 处理密码重置
-app.post('/reset/:code', wrapAsync(async (req, res) => {
+app.post('/reset/:code', resetRateLimiter, wrapAsync(async (req, res) => {
   const { code } = req.params;
   const { password, confirmPassword } = req.body;
 
@@ -419,7 +533,7 @@ app.post('/reset/:code', wrapAsync(async (req, res) => {
 }));
 
 // 注册
-app.post('/register', wrapAsync(async (req, res) => {
+app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
   const { email, password, nickname } = req.body;
   const lowerEmail = normalizeEmail(email);
 
@@ -530,7 +644,7 @@ app.post('/register', wrapAsync(async (req, res) => {
 }));
 
 // 登录
-app.post('/login', wrapAsync(async (req, res) => {
+app.post('/login', loginRateLimiter, wrapAsync(async (req, res) => {
   const { email, password } = req.body;
   const lowerEmail = normalizeEmail(email);
 
@@ -819,7 +933,7 @@ app.get('/profile/password', isLoggedIn, wrapAsync(async (req, res) => {
 }));
 
 // 修改密码
-app.post('/profile/password', isLoggedIn, wrapAsync(async (req, res) => {
+app.post('/profile/password', isLoggedIn, passwordChangeRateLimiter, wrapAsync(async (req, res) => {
   const { currentPassword, newPassword, confirmPassword } = req.body;
 
   // 获取当前用户的 profile
@@ -1046,7 +1160,7 @@ app.get('/admin/match', isLoggedIn, wrapAsync(async (req, res) => {
   return res.redirect('/admin?msg=' + encodeURIComponent('请使用页面表单触发匹配') + '&type=error');
 }));
 
-app.post('/admin/match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
+app.post('/admin/match', isLoggedIn, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
   if (!req.isAdmin) return res.redirect('/');
   const result = await runWeeklyMatch();
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
