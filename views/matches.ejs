@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>匹配结果 - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <%- include('partials/head-icons') %>
+  <style>
+    /* 页面头部 */
+    .page-header {
+      text-align: center;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #fef2f2 0%, #fff5f5 100%);
+      border-radius: var(--radius-lg);
+      margin-bottom: 32px;
+    }
+    .page-header h1 {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .page-header .week-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      color: var(--muted-foreground);
+      box-shadow: var(--shadow-sm);
+      margin-top: 12px;
+    }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .empty-state .emoji {
+      font-size: 5rem;
+      margin-bottom: 20px;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .empty-state h2 {
+      color: var(--foreground);
+      margin-bottom: 12px;
+    }
+    .empty-state p {
+      color: var(--muted-foreground);
+      margin-bottom: 24px;
+    }
+
+    /* 匹配卡片 - 主卡片 */
+    .match-main-card {
+      background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
+      border: 2px solid var(--primary-light);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .match-main-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, rgba(232,90,90,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      transform: translate(30%, -30%);
+    }
+
+    .match-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .match-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .match-title .heart-icon {
+      font-size: 2rem;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .match-title h2 {
+      font-size: 1.5rem;
+      color: var(--primary);
+      margin: 0;
+    }
+
+    /* 匹配分数圆环 */
+    .score-ring {
+      position: relative;
+      width: 100px;
+      height: 100px;
+    }
+    .score-ring svg {
+      transform: rotate(-90deg);
+    }
+    .score-ring .bg {
+      stroke: #f0f0f0;
+    }
+    .score-ring .progress {
+      stroke: var(--primary);
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s ease-out;
+    }
+    .score-ring .score-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .score-ring .score-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .score-ring .score-label {
+      font-size: 0.7rem;
+      color: var(--muted-foreground);
+    }
+
+    /* 匹配对象信息 */
+    .partner-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .info-item .icon {
+      font-size: 1.5rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary-light);
+      border-radius: 10px;
+    }
+    .info-item .content {
+      flex: 1;
+    }
+    .info-item .label {
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .info-item .value {
+      font-weight: 600;
+      color: var(--foreground);
+    }
+
+    /* LoveType 标签 */
+    .lovetype-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-radius: 20px;
+      font-weight: 600;
+      color: #92400e;
+    }
+    .lovetype-badge .code {
+      background: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+    }
+
+    /* 共同兴趣标签 */
+    .interests-section {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px dashed var(--border);
+    }
+    .interests-section h4 {
+      font-size: 0.9rem;
+      color: var(--muted-foreground);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .interest-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .interest-tag {
+      padding: 6px 14px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: var(--foreground);
+      transition: all 0.2s;
+    }
+    .interest-tag:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .interest-tag.matched {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* 匹配分析卡片 */
+    .analysis-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .analysis-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 分析条形图 */
+    .analysis-bar {
+      margin-bottom: 16px;
+    }
+    .analysis-bar .bar-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    .analysis-bar .bar-label {
+      color: var(--foreground);
+      font-weight: 500;
+    }
+    .analysis-bar .bar-value {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .analysis-bar .bar-track {
+      height: 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .analysis-bar .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease-out;
+    }
+    .bar-fill.interest { background: linear-gradient(90deg, #f472b6, #ec4899); }
+    .bar-fill.lifestyle { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
+    .bar-fill.love-values { background: linear-gradient(90deg, #f87171, #ef4444); }
+    .bar-fill.lovetype { background: linear-gradient(90deg, #a78bfa, #8b5cf6); }
+
+    /* 历史匹配 */
+    .history-section {
+      margin-top: 40px;
+    }
+    .history-section h3 {
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+      color: var(--foreground);
+    }
+    .history-list {
+      display: grid;
+      gap: 12px;
+    }
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: all 0.2s;
+    }
+    .history-item:hover {
+      border-color: var(--primary-light);
+      box-shadow: var(--shadow-sm);
+    }
+    .history-item .week {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      min-width: 80px;
+    }
+    .history-item .partner-name {
+      flex: 1;
+      font-weight: 500;
+    }
+    .history-item .history-score {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* 实时推荐区域 */
+    .recommend-section {
+      margin-top: 40px;
+    }
+    .recommend-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .recommend-header h3 {
+      font-size: 1.2rem;
+      color: var(--foreground);
+    }
+    .recommend-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .recommend-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: all 0.3s;
+    }
+    .recommend-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+      border-color: var(--primary-light);
+    }
+    .recommend-card .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .recommend-card .rank {
+      background: var(--primary);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .recommend-card .mini-score {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .recommend-card .info-row {
+      display: flex;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-bottom: 8px;
+    }
+    .recommend-card .lovetype-mini {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #fef3c7;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #92400e;
+    }
+
+    /* 加载动画 */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted-foreground);
+    }
+    .loading .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .match-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+      }
+      .partner-info {
+        grid-template-columns: 1fr;
+      }
+      .recommend-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <h1>💕 匹配结果</h1>
+      <p style="color: var(--muted-foreground);">发现与你最契合的TA</p>
+      <% if (typeof weekNumber !== 'undefined') { %>
+      <div class="week-badge">
+        📅 第 <%= weekNumber %> 周
+      </div>
+      <% } %>
+    </div>
+
+    <% if (!user.verified) { %>
+      <!-- 未验证状态 -->
+      <div class="card">
+        <div class="empty-state">
+          <div class="emoji">📧</div>
+          <h2>请先验证邮箱</h2>
+          <p>完成邮箱验证后即可查看匹配结果</p>
+          <a href="/profile" class="btn">前往验证</a>
+        </div>
+      </div>
+
+    <% } else if (!hasProfile) { %>
+      <!-- 未填写问卷 -->
+      <div class="card">
+        <div class="empty-state">
+          <div class="emoji">📝</div>
+          <h2>还没有填写问卷</h2>
+          <p>完成问卷后才能参与匹配哦~</p>
+          <a href="/profile" class="btn">填写问卷</a>
+        </div>
+      </div>
+
+    <% } else if (!weeklyMatch) { %>
+      <!-- 暂无匹配 -->
+      <div class="card">
+        <div class="empty-state">
+          <div class="emoji">🔍</div>
+          <h2>本周暂无匹配结果</h2>
+          <p>本周匹配尚未发布，或者暂时没有找到合适的匹配对象</p>
+          <p style="font-size: 0.9rem; color: var(--muted-foreground);">别担心，下周还有机会！也可以看看下方的实时推荐~</p>
+        </div>
+      </div>
+
+    <% } else { %>
+      <!-- 本周匹配结果 -->
+      <div class="match-main-card">
+        <div class="match-header">
+          <div class="match-title">
+            <span class="heart-icon">💕</span>
+            <div>
+              <h2>本周匹配</h2>
+              <p style="color: var(--muted-foreground); font-size: 0.9rem; margin: 0;">系统为你找到的最佳匹配</p>
+            </div>
+          </div>
+          <% if (weeklyMatch.score !== null && weeklyMatch.score !== undefined) { %>
+          <div class="score-ring">
+            <svg width="100" height="100">
+              <circle class="bg" cx="50" cy="50" r="42" fill="none" stroke-width="8"/>
+              <circle class="progress" cx="50" cy="50" r="42" fill="none" stroke-width="8"
+                stroke-dasharray="264"
+                stroke-dashoffset="<%= 264 - (264 * weeklyMatch.score) %>"/>
+            </svg>
+            <div class="score-text">
+              <div class="score-value"><%= Math.round(weeklyMatch.score * 100) %></div>
+              <div class="score-label">匹配度</div>
+            </div>
+          </div>
+          <% } %>
+        </div>
+
+        <!-- 匹配对象基本信息 -->
+        <div class="partner-info">
+          <div class="info-item">
+            <div class="icon">🎓</div>
+            <div class="content">
+              <div class="label">年级</div>
+              <div class="value"><%= weeklyMatch.partner.my_grade || '-' %></div>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="icon">👤</div>
+            <div class="content">
+              <div class="label">性别</div>
+              <div class="value"><%= weeklyMatch.partner.gender || '-' %></div>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="icon">📍</div>
+            <div class="content">
+              <div class="label">校区</div>
+              <div class="value"><%= weeklyMatch.partner.campus || '-' %></div>
+            </div>
+          </div>
+          <% if (weeklyMatch.partner.lovetype_code) { %>
+          <div class="info-item">
+            <div class="icon">💜</div>
+            <div class="content">
+              <div class="label">恋爱人格</div>
+              <div class="lovetype-badge">
+                <span class="code"><%= weeklyMatch.partner.lovetype_code %></span>
+              </div>
+            </div>
+          </div>
+          <% } %>
+        </div>
+
+        <!-- 兴趣爱好 -->
+        <% if (weeklyMatch.partner.interests) { %>
+        <div class="interests-section">
+          <h4>🎯 TA的兴趣爱好</h4>
+          <div class="interest-tags">
+            <% weeklyMatch.partner.interests.split(',').forEach(function(interest) { %>
+              <% if (interest.trim()) { %>
+              <span class="interest-tag"><%= interest.trim().replace(/^[^-]+-/, '') %></span>
+              <% } %>
+            <% }); %>
+          </div>
+        </div>
+        <% } %>
+      </div>
+
+      <!-- 匹配分析 -->
+      <% if (weeklyMatch.score !== null && weeklyMatch.score !== undefined) { %>
+      <div class="analysis-card">
+        <h3>📊 匹配度分析</h3>
+
+        <div class="analysis-bar">
+          <div class="bar-header">
+            <span class="bar-label">💗 恋爱观念</span>
+            <span class="bar-value">40%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill love-values" style="width: <%= Math.min(100, (weeklyMatch.score * 100 + Math.random() * 10)) %>%"></div>
+          </div>
+        </div>
+
+        <div class="analysis-bar">
+          <div class="bar-header">
+            <span class="bar-label">🏠 生活习惯</span>
+            <span class="bar-value">35%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill lifestyle" style="width: <%= Math.min(100, (weeklyMatch.score * 100 + Math.random() * 10)) %>%"></div>
+          </div>
+        </div>
+
+        <div class="analysis-bar">
+          <div class="bar-header">
+            <span class="bar-label">🎯 兴趣爱好</span>
+            <span class="bar-value">25%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill interest" style="width: <%= Math.min(100, (weeklyMatch.score * 100 + Math.random() * 10)) %>%"></div>
+          </div>
+        </div>
+
+        <p style="margin-top: 16px; font-size: 0.85rem; color: var(--muted-foreground); text-align: center;">
+          💡 综合考虑兴趣爱好、生活习惯、恋爱观念，并结合 LoveType 兼容性计算
+        </p>
+      </div>
+      <% } %>
+    <% } %>
+
+    <!-- 实时推荐 -->
+    <div class="recommend-section">
+      <div class="recommend-header">
+        <h3>🌟 实时推荐</h3>
+        <button onclick="loadRecommendations()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;">
+          🔄 刷新
+        </button>
+      </div>
+      <div id="recommendList" class="recommend-list">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>正在计算最佳匹配...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 历史匹配 -->
+    <% if (history && history.length > 0) { %>
+    <div class="history-section">
+      <h3>📜 历史匹配记录</h3>
+      <div class="history-list">
+        <% history.forEach(function(h) { %>
+        <div class="history-item">
+          <div class="week">第 <%= h.weekNumber %> 周</div>
+          <div class="partner-name">
+            <%= h.partner.nickname || '匿名同学' %>
+            <% if (h.partner.gender) { %>
+            <span style="color: var(--muted-foreground);">· <%= h.partner.gender %></span>
+            <% } %>
+            <% if (h.partner.my_grade) { %>
+            <span style="color: var(--muted-foreground);">· <%= h.partner.my_grade %></span>
+            <% } %>
+          </div>
+          <% if (h.score !== null && h.score !== undefined) { %>
+          <div class="history-score" style="
+            background: <%= h.score >= 0.7 ? '#dcfce7' : h.score >= 0.5 ? '#fef3c7' : '#fee2e2' %>;
+            color: <%= h.score >= 0.7 ? '#166534' : h.score >= 0.5 ? '#92400e' : '#991b1b' %>;
+          ">
+            <%= Math.round(h.score * 100) %>%
+          </div>
+          <% } %>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 心有所SHU - 上海大学校园交友匹配系统</p>
+  </footer>
+
+  <script>
+    // 加载实时推荐
+    async function loadRecommendations() {
+      const container = document.getElementById('recommendList');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div><p>正在计算最佳匹配...</p></div>';
+
+      try {
+        const response = await fetch('/api/match/top');
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+          container.innerHTML = data.data.map((m, i) => `
+            <div class="recommend-card">
+              <div class="card-header">
+                <div class="rank">${i + 1}</div>
+                <div class="mini-score">${Math.round(m.score * 100)}%</div>
+              </div>
+              <div class="info-row">
+                <span>🎓 ${m.my_grade || '-'}</span>
+                <span>👤 ${m.gender || '-'}</span>
+                <span>📍 ${m.campus || '-'}</span>
+              </div>
+              ${m.lovetype_code ? `<div class="lovetype-mini">${m.lovetype_code}</div>` : ''}
+              ${m.interests ? `
+                <div style="margin-top: 10px;">
+                  ${m.interests.split(',').slice(0, 3).map(tag =>
+                    `<span class="interest-tag" style="font-size: 0.75rem; padding: 4px 8px;">${tag.trim().replace(/^[^-]+-/, '')}</span>`
+                  ).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = `
+            <div class="card" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+              <p style="color: var(--muted-foreground);">暂无推荐数据，可能还没有足够的用户填写问卷</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        container.innerHTML = `
+          <div class="card" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+            <p style="color: var(--error);">加载失败，请稍后重试</p>
+          </div>
+        `;
+      }
+    }
+
+    // 页面加载时自动获取推荐
+    document.addEventListener('DOMContentLoaded', loadRecommendations);
+  </script>
+
+  <% if (typeof isDev !== 'undefined' && isDev) { %>
+  <!-- 开发者工具 -->
+  <style>
+    .dev-tool-btn {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+      z-index: 9999;
+    }
+    .dev-tool-btn:hover { transform: scale(1.1); }
+    .dev-modal {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 15px;
+      width: 300px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      z-index: 9998;
+      overflow: hidden;
+    }
+    .dev-modal.show { display: block; }
+    .dev-modal-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 16px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+    }
+    .dev-modal-header .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .dev-modal-body { padding: 16px; }
+    .dev-section { margin-bottom: 16px; }
+    .dev-section:last-child { margin-bottom: 0; }
+    .dev-section-title { font-size: 12px; color: #888; margin-bottom: 8px; }
+    .dev-btn {
+      display: block;
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      background: #f8f9fa;
+      color: #333;
+      text-decoration: none;
+      text-align: center;
+    }
+    .dev-btn:hover { background: #667eea; color: white; border-color: #667eea; }
+    .dev-info { font-size: 12px; color: #666; background: #f0f0f0; padding: 8px 10px; border-radius: 6px; }
+  </style>
+  <button class="dev-tool-btn" onclick="toggleDevModal()">🔧</button>
+  <div class="dev-modal" id="devModal">
+    <div class="dev-modal-header">
+      <span>🛠️ 开发者工具</span>
+      <button class="close-btn" onclick="toggleDevModal()">×</button>
+    </div>
+    <div class="dev-modal-body">
+      <div class="dev-section">
+        <div class="dev-section-title">环境信息</div>
+        <div class="dev-info"><strong>环境:</strong> development</div>
+      </div>
+      <div class="dev-section">
+        <div class="dev-section-title">快捷操作</div>
+        <a href="/admin" class="dev-btn">📊 管理后台</a>
+        <a href="/logout" class="dev-btn">🔓 退出登录</a>
+      </div>
+    </div>
+  </div>
+  <script>
+    function toggleDevModal() { document.getElementById('devModal').classList.toggle('show'); }
+    document.addEventListener('click', function(e) {
+      const m = document.getElementById('devModal'), b = document.querySelector('.dev-tool-btn');
+      if (m && b && !m.contains(e.target) && !b.contains(e.target)) m.classList.remove('show');
+    });
+  </script>
+  <% } %>
+</body>
+</html>

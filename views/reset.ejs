@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <%- include('partials/head-icons') %>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="logo">心有所<span>SHU</span></a>
+    </div>
+  </nav>
+
+  <div class="container" style="max-width: 400px; padding-top: 80px;">
+    <div class="card">
+      <h2 style="text-align: center; margin-bottom: 6px;">重置密码</h2>
+      <p style="text-align: center; color: var(--muted-foreground); font-size: 0.9rem; margin-bottom: 28px;">
+        设置你的新密码
+      </p>
+
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="alert alert-<%= messageType || 'info' %>">
+          <%- message %>
+        </div>
+      <% } %>
+
+      <form action="/reset/<%= code %>" method="POST">
+        <div class="form-group">
+          <input type="password" name="password" placeholder="新密码（至少6位）" autocomplete="new-password" aria-label="新密码" required minlength="6" style="text-align: center; font-size: 16px;">
+        </div>
+        <div class="form-group">
+          <input type="password" name="confirmPassword" placeholder="确认新密码" autocomplete="new-password" aria-label="确认新密码" required style="text-align: center; font-size: 16px;">
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">重置密码</button>
+      </form>
+
+      <p style="text-align: center; margin-top: 20px;">
+        <a href="/login" style="color: var(--primary);">← 返回登录</a>
+      </p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 心有所SHU</p>
+  </footer>
+</body>
+</html>

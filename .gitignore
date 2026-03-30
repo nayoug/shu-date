@@ -1,0 +1,5 @@
+node_modules/
+shu.db
+.env
+.DS_Store
+*.log
