@@ -1149,24 +1149,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">每天</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.meeting_frequency === '-2' ? 'selected' : '' %>">
-              <input type="radio" name="meeting_frequency" value="-2" <%= profile && profile.meeting_frequency === '-2' ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.meeting_frequency === -2 ? 'selected' : '' %>">
+              <input type="radio" name="meeting_frequency" value="-2" <%= profile && profile.meeting_frequency === -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.meeting_frequency === '-1' ? 'selected' : '' %>">
-              <input type="radio" name="meeting_frequency" value="-1" <%= profile && profile.meeting_frequency === '-1' ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.meeting_frequency === -1 ? 'selected' : '' %>">
+              <input type="radio" name="meeting_frequency" value="-1" <%= profile && profile.meeting_frequency === -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.meeting_frequency === '0' ? 'selected' : '' %>">
-              <input type="radio" name="meeting_frequency" value="0" <%= profile && profile.meeting_frequency === '0' ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.meeting_frequency === 0 ? 'selected' : '' %>">
+              <input type="radio" name="meeting_frequency" value="0" <%= profile && profile.meeting_frequency === 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.meeting_frequency === '1' ? 'selected' : '' %>">
-              <input type="radio" name="meeting_frequency" value="1" <%= profile && profile.meeting_frequency === '1' ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.meeting_frequency === 1 ? 'selected' : '' %>">
+              <input type="radio" name="meeting_frequency" value="1" <%= profile && profile.meeting_frequency === 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.meeting_frequency === '2' ? 'selected' : '' %>">
-              <input type="radio" name="meeting_frequency" value="2" <%= profile && profile.meeting_frequency === '2' ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.meeting_frequency === 2 ? 'selected' : '' %>">
+              <input type="radio" name="meeting_frequency" value="2" <%= profile && profile.meeting_frequency === 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
