@@ -611,14 +611,8 @@ app.get('/logout', wrapAsync(async (req, res) => {
   res.redirect('/login');
 }));
 
-// 注册页（已合并到登录流程）
-app.get('/register', (req, res) => {
-  res.redirect('/login');
-});
-
-
-// 注册页（已合并到登录流程）
-app.get('/register', (req, res) => {
+// 注册入口（已合并到登录页，此路由保留以防旧链接访问）
+app.get('/register', (_req, res) => {
   res.redirect('/login');
 });
 

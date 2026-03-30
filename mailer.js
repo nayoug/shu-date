@@ -193,7 +193,6 @@ async function sendMatchEmail(userEmail, userName, matchedName, matchedGrade, ma
 module.exports = {
   getResend,
   isMailConfigured,
-  sendLoginEmail,
   sendMatchEmail,
   sendVerifyEmail,
   sendPasswordResetEmail
