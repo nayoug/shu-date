@@ -495,6 +495,66 @@ tr:hover td {
   border-top: 1px solid var(--border);
 }
 
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.footer-links a {
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: var(--primary);
+}
+
+.info-page {
+  max-width: 860px;
+  padding-top: 48px;
+}
+
+.info-page .card {
+  margin-bottom: 0;
+}
+
+.info-meta {
+  color: var(--muted-foreground);
+  font-size: 0.88rem;
+  margin-bottom: 18px;
+}
+
+.info-lead {
+  color: var(--muted-foreground);
+  margin-bottom: 28px;
+}
+
+.info-section + .info-section {
+  border-top: 1px solid var(--border);
+  margin-top: 24px;
+  padding-top: 24px;
+}
+
+.info-section h2 {
+  font-size: 1.05rem;
+  margin-bottom: 10px;
+}
+
+.info-section p + p {
+  margin-top: 10px;
+}
+
+.info-section ul {
+  padding-left: 20px;
+}
+
+.info-section li + li {
+  margin-top: 8px;
+}
+
 /* ===== 动画 ===== */
 @keyframes fadeIn {
   from {
@@ -570,6 +630,10 @@ tr:hover td {
 
   .btn {
     width: 100%;
+  }
+
+  .footer-links {
+    gap: 12px;
   }
 }
 
