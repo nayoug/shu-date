@@ -1,0 +1,31 @@
+<button class="dev-tool-btn" onclick="toggleDevModal()" title="开发者工具">🔧</button>
+<div class="dev-modal" id="devModal">
+  <div class="dev-modal-header">
+    <span>🛠️ 开发者工具<span class="dev-badge">DEV</span></span>
+    <button class="close-btn" onclick="toggleDevModal()">×</button>
+  </div>
+  <div class="dev-modal-body">
+    <div class="dev-section">
+      <div class="dev-section-title">环境信息</div>
+      <div class="dev-info"><strong>环境:</strong> <%= isProduction ? 'production' : 'development' %></div>
+    </div>
+    <div class="dev-section">
+      <div class="dev-section-title">快捷操作</div>
+      <a href="/admin" class="dev-btn">📊 管理后台</a>
+      <a href="/logout" class="dev-btn">🔓 退出登录</a>
+    </div>
+  </div>
+</div>
+<script>
+  function toggleDevModal() {
+    const modal = document.getElementById('devModal');
+    modal.classList.toggle('show');
+  }
+  document.addEventListener('click', function(e) {
+    const modal = document.getElementById('devModal');
+    const btn = document.querySelector('.dev-tool-btn');
+    if (modal && btn && !modal.contains(e.target) && !btn.contains(e.target)) {
+      modal.classList.remove('show');
+    }
+  });
+</script>

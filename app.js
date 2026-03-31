@@ -200,6 +200,12 @@ app.use(session({
   proxy: isProduction
 }));
 
+app.use((req, res, next) => {
+  res.locals.isDev = !isProduction;
+  res.locals.isProduction = isProduction;
+  next();
+});
+
 // 登录中间件
 async function isLoggedIn(req, res, next) {
   try {
