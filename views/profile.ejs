@@ -1518,6 +1518,32 @@
   .checkbox-group-grid {
     grid-template-columns: 1fr;
   }
+  .scale-horizontal {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .scale-label-text {
+    width: auto;
+    text-align: left;
+    padding: 0;
+  }
+  .scale-options-row {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    gap: 4px;
+  }
+  .scale-option {
+    max-width: none;
+  }
+  .scale-option .scale-circle,
+  .scale-circle {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    font-size: 11px;
+  }
 }
 </style>
 
