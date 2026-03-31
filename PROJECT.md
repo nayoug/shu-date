@@ -106,7 +106,7 @@
 |------|------|------|
 | 用户列表 | ✅ 已完成 | 查看所有注册用户 |
 | 手动匹配 | ✅ 已完成 | 触发本周匹配 |
-| 权限控制 | ✅ 已完成 | 仅 admin@shu.edu.cn 可访问 |
+| 权限控制 | ✅ 已完成 | 仅 `ADMIN_EMAILS` 白名单中的邮箱可访问 |
 
 ### 2.5 开发者工具
 
@@ -278,6 +278,7 @@ shu-date/
 | `DATABASE_URL` | 是 | PostgreSQL 连接串 |
 | `SESSION_SECRET` | 生产必需 | Session 加密密钥 |
 | `BASE_URL` | 是 | 应用基础URL |
+| `ADMIN_EMAILS` | 管理后台必需 | 逗号分隔的管理员邮箱白名单 |
 | `NODE_ENV` | 否 | 环境模式 |
 
 ### 5.2 邮件相关环境变量
@@ -394,7 +395,7 @@ http://localhost:3000
 | 角色 | 邮箱 | 说明 |
 |------|------|------|
 | 普通用户 | test@shu.edu.cn | 任意 @shu.edu.cn 邮箱 |
-| 管理员 | admin@shu.edu.cn | 可访问管理后台 |
+| 管理员 | 任意配置进 `ADMIN_EMAILS` 的邮箱 | 可访问管理后台 |
 
 ---
 
