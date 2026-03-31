@@ -272,6 +272,7 @@ shu-date/
 | POST | /settings/password | 修改密码 | 已登录 |
 | GET | /settings/delete | 注销账号页 | 已登录 |
 | POST | /settings/delete | 注销账号 | 已登录 |
+| GET | /notifications | 通知中心 | 已登录 |
 | GET | /matches | 查看本周正式匹配结果 | 已登录 |
 | GET | /api/matches | 获取实时推荐列表 | 已登录 |
 | GET | /api/match/top | 获取前 5 名实时推荐 | 已登录 |
