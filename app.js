@@ -1111,6 +1111,17 @@ app.get('/settings', isLoggedIn, wrapAsync(async (req, res) => {
   });
 }));
 
+// 通知中心
+app.get('/notifications', isLoggedIn, wrapAsync(async (req, res) => {
+  const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
+  res.render('notifications', {
+    title: '通知中心',
+    user: req.user,
+    nickname: req.session.nickname,
+    hasProfile: !!profile
+  });
+}));
+
 // 修改密码页面
 app.get('/settings/password', isLoggedIn, wrapAsync(async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
