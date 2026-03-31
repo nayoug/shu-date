@@ -923,8 +923,26 @@ app.get('/settings/password', isLoggedIn, (req, res) => {
   });
 });
 
+// 针对 /settings/password 使用的限流中间件，修正重定向目标
+function passwordChangeRateLimiterForSettings(req, res, next) {
+  const originalRedirect = res.redirect.bind(res);
+
+  res.redirect = function patchedRedirect(url, ...args) {
+    if (url === '/profile/password') {
+      url = '/settings/password';
+    }
+    return originalRedirect(url, ...args);
+  };
+
+  passwordChangeRateLimiter(req, res, function (err) {
+    // 恢复原始的 redirect 方法，避免影响后续中间件
+    res.redirect = originalRedirect;
+    return next(err);
+  });
+}
+
 // 修改密码
-app.post('/settings/password', isLoggedIn, passwordChangeRateLimiter, wrapAsync(async (req, res) => {
+app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings, wrapAsync(async (req, res) => {
   const { currentPassword, newPassword, confirmPassword } = req.body;
 
   if (!currentPassword || !newPassword || !confirmPassword) {
