@@ -1056,12 +1056,32 @@ app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req,
     }
   }
 
-  // 删除用户数据
+  // 删除用户数据（使用事务确保原子性）
   const userId = req.session.userId;
-  await db.execute('DELETE FROM profiles WHERE user_id = $1', [userId]);
-  await db.execute('DELETE FROM matches WHERE user_id_1 = $1 OR user_id_2 = $1', [userId]);
-  await db.execute('DELETE FROM users WHERE id = $1', [userId]);
 
+  try {
+    await db.execute('BEGIN');
+
+    await db.execute('DELETE FROM profiles WHERE user_id = $1', [userId]);
+    await db.execute('DELETE FROM matches WHERE user_id_1 = $1 OR user_id_2 = $1', [userId]);
+    await db.execute('DELETE FROM users WHERE id = $1', [userId]);
+
+    await db.execute('COMMIT');
+  } catch (error) {
+    try {
+      await db.execute('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Error rolling back account deletion transaction:', rollbackError);
+    }
+
+    console.error('Error deleting user account:', error);
+    return res.render('delete-account', {
+      nickname: req.session.nickname,
+      hasProfile: true,
+      deleteMessage: '账号注销失败，请稍后重试',
+      deleteMessageType: 'error'
+    });
+  }
   // 销毁 session
   req.session.destroy((err) => {
     if (err) {
