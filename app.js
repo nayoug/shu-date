@@ -927,8 +927,26 @@ app.get('/settings/password', isLoggedIn, wrapAsync(async (req, res) => {
   });
 }));
 
+// 针对 /settings/password 使用的限流中间件，修正重定向目标
+function passwordChangeRateLimiterForSettings(req, res, next) {
+  const originalRedirect = res.redirect.bind(res);
+
+  res.redirect = function patchedRedirect(url, ...args) {
+    if (url === '/profile/password') {
+      url = '/settings/password';
+    }
+    return originalRedirect(url, ...args);
+  };
+
+  passwordChangeRateLimiter(req, res, function (err) {
+    // 恢复原始的 redirect 方法，避免影响后续中间件
+    res.redirect = originalRedirect;
+    return next(err);
+  });
+}
+
 // 修改密码
-app.post('/settings/password', isLoggedIn, passwordChangeRateLimiter, wrapAsync(async (req, res) => {
+app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings, wrapAsync(async (req, res) => {
   const { currentPassword, newPassword, confirmPassword } = req.body;
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.session.userId]);
 
@@ -999,17 +1017,18 @@ app.post('/settings/password', isLoggedIn, passwordChangeRateLimiter, wrapAsync(
 }));
 
 // 注销账号页面
-app.get('/settings/delete', isLoggedIn, wrapAsync(async (req, res) => {
+app.get('/settings/delete', isLoggedIn, ensureCsrfToken, wrapAsync(async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
   res.render('delete-account', {
     user: req.user,
     nickname: req.session.nickname,
-    hasProfile: !!profile
+    hasProfile: !!profile,
+    csrfToken: req.csrfToken
   });
 }));
 
 // 注销账号
-app.post('/settings/delete', isLoggedIn, wrapAsync(async (req, res) => {
+app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
   const { email, password } = req.body;
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.session.userId]);
 
@@ -1026,8 +1045,9 @@ app.post('/settings/delete', isLoggedIn, wrapAsync(async (req, res) => {
   // 获取当前用户
   const user = await db.queryOne('SELECT id, email, password_hash FROM users WHERE id = $1', [req.session.userId]);
 
-  // 校验邮箱
-  if (user.email !== email) {
+  // 校验邮箱（对输入 email 做 normalize 后再比较）
+  const normalizedEmail = normalizeEmail(email);
+  if (user.email !== normalizedEmail) {
     return res.render('delete-account', {
       user: req.user,
       nickname: req.session.nickname,
@@ -1051,12 +1071,32 @@ app.post('/settings/delete', isLoggedIn, wrapAsync(async (req, res) => {
     }
   }
 
-  // 删除用户数据
+  // 删除用户数据（使用事务确保原子性）
   const userId = req.session.userId;
-  await db.execute('DELETE FROM profiles WHERE user_id = $1', [userId]);
-  await db.execute('DELETE FROM matches WHERE user_id_1 = $1 OR user_id_2 = $1', [userId]);
-  await db.execute('DELETE FROM users WHERE id = $1', [userId]);
 
+  try {
+    await db.execute('BEGIN');
+
+    await db.execute('DELETE FROM profiles WHERE user_id = $1', [userId]);
+    await db.execute('DELETE FROM matches WHERE user_id_1 = $1 OR user_id_2 = $1', [userId]);
+    await db.execute('DELETE FROM users WHERE id = $1', [userId]);
+
+    await db.execute('COMMIT');
+  } catch (error) {
+    try {
+      await db.execute('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Error rolling back account deletion transaction:', rollbackError);
+    }
+
+    console.error('Error deleting user account:', error);
+    return res.render('delete-account', {
+      nickname: req.session.nickname,
+      hasProfile: true,
+      deleteMessage: '账号注销失败，请稍后重试',
+      deleteMessageType: 'error'
+    });
+  }
   // 销毁 session
   req.session.destroy((err) => {
     if (err) {

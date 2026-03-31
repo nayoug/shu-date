@@ -37,6 +37,9 @@
           <input type="password" name="password" placeholder="请输入您的密码" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
         </div>
 
+        <% if (typeof csrfToken !== 'undefined') { %>
+          <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+        <% } %>
         <button type="submit" class="btn btn-danger">确认注销账号</button>
       </form>
 
