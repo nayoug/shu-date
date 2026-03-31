@@ -1553,11 +1553,6 @@
 <script>
 
 // 滑块选择函数
-const SLIDER_CONFIG = {
-  age:    { min: 16, max: 30 },
-  height: { min: 140, max: 210 }, 
-};
-
 function calcPercent(val, min, max) {
   return (val - min) / (max - min) * 100;
 }
@@ -1599,8 +1594,8 @@ function updatePreferredHeightDisplay() {
     minSlider.value = maxVal;
   }
 
-  setSliderBg(minSlider, calcPercent(minVal, 140, 210));
-  setSliderBg(maxSlider, calcPercent(maxVal, 140, 210));
+  setSliderBg(minSlider, calcPercent(minSlider.value, 140, 210));
+  setSliderBg(maxSlider, calcPercent(maxSlider.value, 140, 210));
 
   document.getElementById('preferredHeightMinValue').textContent = '最低 ' + minSlider.value + ' cm';
   document.getElementById('preferredHeightMaxValue').textContent = '最高 ' + maxSlider.value + ' cm';
