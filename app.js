@@ -209,18 +209,11 @@ app.use((req, res, next) => {
 // 登录中间件
 async function isLoggedIn(req, res, next) {
   try {
-    if (req.session.userId) {
-      const user = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
-      if (user) {
-        const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [user.id]);
-        req.user = { ...user, hasProfile: !!profile };
-        req.isAdmin = adminEmails.has(normalizeEmail(user.email));
-        // 同步更新 session 中的 nickname
-        if (user.nickname) {
-          req.session.nickname = user.nickname;
-        }
-        return next();
-      }
+    const user = await loadCurrentUserFromSession(req);
+    if (user) {
+      req.user = user;
+      req.isAdmin = adminEmails.has(normalizeEmail(user.email));
+      return next();
     }
     res.redirect('/login');
   } catch (err) {
@@ -243,6 +236,38 @@ function normalizeEmail(email) {
   }
 
   return email.trim().toLowerCase();
+}
+
+async function loadCurrentUserFromSession(req) {
+  if (!req.session?.userId) {
+    return null;
+  }
+
+  const currentUser = await db.queryOne(`
+    SELECT id, email, nickname, name, verified
+    FROM users
+    WHERE id = $1
+  `, [req.session.userId]);
+
+  if (!currentUser) {
+    return null;
+  }
+
+  const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [currentUser.id]);
+  const user = {
+    id: currentUser.id,
+    email: currentUser.email,
+    nickname: currentUser.nickname,
+    name: currentUser.name,
+    verified: currentUser.verified,
+    hasProfile: !!profile
+  };
+
+  if (user.nickname) {
+    req.session.nickname = user.nickname;
+  }
+
+  return user;
 }
 
 function requireAdmin(req, res, next) {
@@ -436,15 +461,7 @@ function buildProfilePageModel(req, profile) {
 }
 
 async function buildPublicNavigationModel(req) {
-  let user = null;
-
-  if (req.session?.userId) {
-    const currentUser = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
-    if (currentUser) {
-      const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [currentUser.id]);
-      user = { ...currentUser, hasProfile: !!profile };
-    }
-  }
+  const user = await loadCurrentUserFromSession(req);
 
   return {
     user,
@@ -591,19 +608,13 @@ async function renderInfoPage(req, res, pageKey) {
 
 // 首页
 app.get('/', wrapAsync(async (req, res) => {
-  let user = null;
-  if (req.session.userId) {
-    const u = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
-    if (u) {
-      const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u.id]);
-      user = { ...u, hasProfile: !!profile };
-    }
-  }
+  const user = await loadCurrentUserFromSession(req);
+
   res.render('index', {
     title: '首页',
-    user: user,
-    nickname: req.session.nickname,
-    hasProfile: user ? user.hasProfile : false,
+    user,
+    nickname: req.session.nickname || user?.nickname,
+    hasProfile: !!user?.hasProfile,
     showPassword: true,
     message: req.query.msg,
     messageType: req.query.type
