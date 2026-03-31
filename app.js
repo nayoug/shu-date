@@ -671,8 +671,8 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
   const existingUser = await findUserByEmailInsensitive(lowerEmail);
 
   if (existingUser) {
-    // 检查是否已完成注册（密码和昵称都有）
-    if (existingUser.password_hash && existingUser.nickname) {
+    // 检查是否已完成注册（密码和昵称都有且邮箱验证通过）
+    if (existingUser.password_hash && existingUser.nickname && existingUser.verified === 1) {
       return res.redirect('/login?method=login&msg=' + encodeURIComponent('该邮箱已完成注册，请直接登录') + '&type=info');
     }
     // 用户存在但未完成注册，更新信息
