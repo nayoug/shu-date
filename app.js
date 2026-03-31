@@ -224,18 +224,11 @@ app.use((req, res, next) => {
 // 登录中间件
 async function isLoggedIn(req, res, next) {
   try {
-    if (req.session.userId) {
-      const user = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
-      if (user) {
-        const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [user.id]);
-        req.user = { ...user, hasProfile: !!profile };
-        req.isAdmin = adminEmails.has(normalizeEmail(user.email));
-        // 同步更新 session 中的 nickname
-        if (user.nickname) {
-          req.session.nickname = user.nickname;
-        }
-        return next();
-      }
+    const user = await loadCurrentUserFromSession(req);
+    if (user) {
+      req.user = user;
+      req.isAdmin = adminEmails.has(normalizeEmail(user.email));
+      return next();
     }
     res.redirect('/login');
   } catch (err) {
@@ -258,6 +251,38 @@ function normalizeEmail(email) {
   }
 
   return email.trim().toLowerCase();
+}
+
+async function loadCurrentUserFromSession(req) {
+  if (!req.session?.userId) {
+    return null;
+  }
+
+  const currentUser = await db.queryOne(`
+    SELECT id, email, nickname, name, verified
+    FROM users
+    WHERE id = $1
+  `, [req.session.userId]);
+
+  if (!currentUser) {
+    return null;
+  }
+
+  const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [currentUser.id]);
+  const user = {
+    id: currentUser.id,
+    email: currentUser.email,
+    nickname: currentUser.nickname,
+    name: currentUser.name,
+    verified: currentUser.verified,
+    hasProfile: !!profile
+  };
+
+  if (user.nickname) {
+    req.session.nickname = user.nickname;
+  }
+
+  return user;
 }
 
 function requireAdmin(req, res, next) {
@@ -450,23 +475,161 @@ function buildProfilePageModel(req, profile) {
   };
 }
 
+async function buildPublicNavigationModel(req) {
+  const user = await loadCurrentUserFromSession(req);
+
+  return {
+    user,
+    nickname: req.session?.nickname || user?.nickname,
+    hasProfile: !!user?.hasProfile,
+    showPassword: !!user
+  };
+}
+
+const INFO_PAGE_UPDATED_AT = '2026-03-31';
+const INFO_PAGES = {
+  privacy: {
+    title: '隐私政策',
+    pageTitle: '隐私政策',
+    lead: '这是内测阶段的最小用户告知说明，用于解释平台当前会收集哪些信息、这些信息会被怎样使用，以及哪些内容可能会在匹配流程中展示给别人。',
+    sections: [
+      {
+        title: '我们会收集哪些信息',
+        bullets: [
+          '学校邮箱、密码哈希、昵称等账号信息。',
+          '问卷中的基础信息、匹配偏好、生活习惯、恋爱观量表、兴趣标签和 LoveType 结果。',
+          '匹配结果记录、必要的 Session 数据，以及用于排查问题的最小运行日志。'
+        ]
+      },
+      {
+        title: '这些信息会怎么用',
+        bullets: [
+          '完成注册、登录、邮箱验证、密码重置等账号功能。',
+          '计算匹配结果、生成每周正式匹配，并发送验证邮件、重置邮件和匹配通知。',
+          '在站内匹配结果页向你展示匹配对象的部分资料；通知邮件中也可能包含对方昵称和年级。'
+        ]
+      },
+      {
+        title: '谁可以看到这些信息',
+        bullets: [
+          '普通用户默认只能看到系统向自己返回的匹配结果，不会直接浏览全站用户列表。',
+          '匹配结果页当前会展示对方的年级、性别、校区、兴趣爱好和 LoveType；邮件通知中可能包含对方昵称与年级。',
+          '管理员可在后台查看注册邮箱、验证状态、是否填写资料、注册时间等基础管理信息，并在排查故障或处理反馈时接触相关数据。'
+        ]
+      },
+      {
+        title: '存储与安全',
+        bullets: [
+          '密码不会以明文保存，当前使用 bcrypt 哈希存储。',
+          'Session 已持久化到 PostgreSQL，默认有效期为 7 天，并定期清理过期记录。',
+          '我们会尽量减少不必要的数据暴露，但内测阶段仍不承诺达到正式商业服务的安全等级。'
+        ]
+      },
+      {
+        title: '联系与更新',
+        paragraphs: [
+          '如果你对数据使用方式、权限范围或删除流程有疑问，可以通过 guoy@shu.edu.cn 反馈。',
+          '本页会随产品迭代更新；继续使用服务，表示你接受当前公开说明。'
+        ]
+      }
+    ]
+  },
+  guide: {
+    title: '使用说明',
+    pageTitle: '使用说明与风险提示',
+    lead: '心有所SHU 当前仍处于校园内测阶段。下面这份说明聚焦在“如何使用”以及“使用时应注意哪些风险边界”，帮助你在现有产品能力下更稳妥地体验。',
+    sections: [
+      {
+        title: '基本使用流程',
+        bullets: [
+          '使用 @shu.edu.cn 邮箱注册并完成邮箱验证。',
+          '登录后填写问卷，补全基础信息、匹配偏好和 LoveType 结果。',
+          '等待管理员发布本周正式匹配结果，再前往“匹配”页面查看。'
+        ]
+      },
+      {
+        title: '当前产品边界',
+        bullets: [
+          '平台提供的是“认识人”的入口，不保证一定匹配到最合适的人，也不保证建立长期关系。',
+          '当前仍以小范围内测为主，功能、文案和算法都可能继续调整。',
+          '如果你发现显示异常、页面报错或明显不合理的匹配结果，请及时反馈。'
+        ]
+      },
+      {
+        title: '风险提示',
+        bullets: [
+          '请不要因为系统推荐就立即透露住址、身份证号、银行卡、验证码等敏感信息。',
+          '涉及转账、借款、代购、投资、兼职等请求时，请提高警惕并自行核验。',
+          '线下见面请优先选择校园内或公共场所，并告知信任的人你的行程。',
+          '请尊重对方意愿，不要因系统推荐而实施骚扰、跟踪、截图传播或其他不当行为。'
+        ]
+      },
+      {
+        title: '遇到问题怎么办',
+        paragraphs: [
+          '账号、验证、密码重置、问卷提交、匹配结果等问题，可以通过 guoy@shu.edu.cn 反馈。',
+          '如果只是想修改资料，优先使用站内的问卷编辑和密码修改入口。'
+        ]
+      }
+    ]
+  },
+  dataDeletion: {
+    title: '删除数据说明',
+    pageTitle: '账号与数据删除说明',
+    lead: '平台目前还没有自助“删除账号”按钮。如果你希望删除账号或删除相关数据，请按下面的方式联系管理员处理。',
+    sections: [
+      {
+        title: '如何申请删除',
+        bullets: [
+          '请使用你注册时绑定的 @shu.edu.cn 邮箱发送邮件到 guoy@shu.edu.cn。',
+          '邮件标题建议写成“心有所SHU 删除账号/删除数据申请”。',
+          '邮件正文建议注明注册邮箱、昵称，以及你想删除的是“整个账号”还是“部分资料”。'
+        ]
+      },
+      {
+        title: '删除后会发生什么',
+        bullets: [
+          '账号删除后，你将无法继续使用当前账号登录平台。',
+          '与你账号直接关联的问卷、匹配结果和 Session 数据会在可行范围内一并清理。',
+          '已经发送到邮件系统中的历史通知邮件不一定能被撤回。'
+        ]
+      },
+      {
+        title: '如果只是想更正资料',
+        paragraphs: [
+          '如果你只是想修改昵称、问卷答案或密码，通常不需要删除账号；直接使用站内编辑能力即可。',
+          '若你不确定应该“修改资料”还是“删除账号”，也可以先发邮件说明情况，我们会按现有能力给出建议。'
+        ]
+      }
+    ]
+  }
+};
+
+async function renderInfoPage(req, res, pageKey) {
+  const page = INFO_PAGES[pageKey];
+  const nav = await buildPublicNavigationModel(req);
+
+  res.render('info-page', {
+    ...nav,
+    title: page.title,
+    pageTitle: page.pageTitle,
+    lead: page.lead,
+    sections: page.sections,
+    updatedAt: INFO_PAGE_UPDATED_AT
+  });
+}
+
 // ============ 路由 ============
 
 // 首页
 app.get('/', wrapAsync(async (req, res) => {
-  let user = null;
-  if (req.session.userId) {
-    const u = await db.queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
-    if (u) {
-      const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [u.id]);
-      user = { ...u, hasProfile: !!profile };
-    }
-  }
+  const user = await loadCurrentUserFromSession(req);
+
   res.render('index', {
     title: '首页',
-    user: user,
-    nickname: req.session.nickname,
-    hasProfile: user ? user.hasProfile : false,
+    user,
+    nickname: req.session.nickname || user?.nickname,
+    hasProfile: !!user?.hasProfile,
     showPassword: true,
     message: req.query.msg,
     messageType: req.query.type
@@ -481,6 +644,18 @@ app.get('/version', (req, res) => {
     deployedAt: deployTime
   });
 });
+
+app.get('/privacy', wrapAsync(async (req, res) => {
+  await renderInfoPage(req, res, 'privacy');
+}));
+
+app.get('/guide', wrapAsync(async (req, res) => {
+  await renderInfoPage(req, res, 'guide');
+}));
+
+app.get('/data-deletion', wrapAsync(async (req, res) => {
+  await renderInfoPage(req, res, 'dataDeletion');
+}));
 
 // 登录页
 app.get('/login', (req, res) => {

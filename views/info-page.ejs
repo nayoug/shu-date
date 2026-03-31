@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <%- include('partials/head-icons') %>
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container info-page">
+    <div class="card">
+      <p class="info-meta">最后更新：<%= updatedAt %></p>
+      <h1 style="font-size: 2rem; margin-bottom: 12px;"><%= pageTitle %></h1>
+      <p class="info-lead"><%= lead %></p>
+
+      <% sections.forEach(function(section) { %>
+        <section class="info-section">
+          <h2><%= section.title %></h2>
+
+          <% if (section.paragraphs) { %>
+            <% section.paragraphs.forEach(function(paragraph) { %>
+              <p><%= paragraph %></p>
+            <% }); %>
+          <% } %>
+
+          <% if (section.bullets) { %>
+            <ul>
+              <% section.bullets.forEach(function(item) { %>
+                <li><%= item %></li>
+              <% }); %>
+            </ul>
+          <% } %>
+        </section>
+      <% }); %>
+    </div>
+  </div>
+
+  <%- include('partials/site-footer') %>
+</body>
+</html>
