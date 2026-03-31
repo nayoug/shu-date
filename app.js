@@ -941,7 +941,10 @@ app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
   fields.forEach(field => {
     // 多选
     if (multiSelectFields.includes(field)) {
-      const raw = Array.isArray(data[field]) ? data[field] : [];
+      // 兼容 string -> [string]（单选时 Express 返回 string 而非 array）
+      const raw = Array.isArray(data[field])
+        ? data[field]
+        : (typeof data[field] === 'string' && data[field] ? [data[field]] : []);
       // core_traits 最多 3 项
       const limit = field === 'core_traits' ? 3 : raw.length;
       values[field] = raw.slice(0, limit).join(',');
