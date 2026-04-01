@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shu-date 匹配</title>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script type="module" src="/assets/app.js"></script>
+</head>
+<body data-page="matches">
+  <div data-site-header></div>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">本周匹配</p>
+        <h1 class="page-intro__title">这周有没有结果，一眼就能看明白</h1>
+        <p class="page-intro__text">有结果就看详情，没有结果也会告诉你下一步。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/matches</span>
+        <span class="pill pill--match" data-match="week">第 14 周</span>
+      </div>
+    </section>
+
+    <div class="state-switcher">
+      <button class="toggle-button" type="button" data-match-state="matched">有正式结果</button>
+      <button class="toggle-button" type="button" data-match-state="empty">暂无匹配</button>
+      <button class="toggle-button" type="button" data-match-state="no-profile">未填问卷</button>
+      <button class="toggle-button" type="button" data-match-state="unverified">未验证邮箱</button>
+    </div>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">这页会告诉你什么</h2>
+          </div>
+          <ul class="side-list">
+            <li><strong>这周是否匹配成功</strong><p>有结果就直接展示，没有结果也会说清原因。</p></li>
+            <li><strong>为什么暂时没有结果</strong><p>未验证、未填资料、暂未匹配，会分别给出对应说明。</p></li>
+            <li><strong>现在可以做什么</strong><p>每个状态下都会给出可以直接点击的下一步。</p></li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface reveal" data-state-panels="match-pages">
+        <div class="match-sheet" data-panel-state="matched">
+          <div class="match-sheet__hero">
+            <div class="score-ring" data-match-score-ring>
+              <span data-match="percent">86%</span>
+            </div>
+            <div>
+              <p class="microcopy">本周正式结果</p>
+              <h2 class="surface__title">你和 <span data-match="partner">某同学</span> 的匹配度是 <span data-match="percent">86%</span></h2>
+              <p class="surface__text">这轮结果会结合资料、偏好和问卷内容来展示。</p>
+            </div>
+          </div>
+          <div class="match-grid">
+            <div class="detail-grid">
+              <div class="detail-row"><span>对方昵称</span><span data-match="partner">某同学</span></div>
+              <div class="detail-row"><span>年级</span><span data-match="partnerGrade">大三</span></div>
+              <div class="detail-row"><span>校区</span><span data-match="partnerCampus">宝山</span></div>
+              <div class="detail-row"><span>LoveType</span><span data-match="partnerType">ENFJ</span></div>
+            </div>
+            <div class="detail-grid">
+              <div class="detail-row"><span>共通兴趣</span><span data-match="partnerInterests">音乐、阅读</span></div>
+              <div class="detail-row"><span>你的类型</span><span data-profile="lovetype_code">INFP</span></div>
+              <div class="detail-row"><span>当前状态</span><span>已验证 · 已填资料</span></div>
+              <div class="detail-row"><span>下一步</span><span>先去通知页查看提醒</span></div>
+            </div>
+          </div>
+          <div class="action-bar">
+            <a class="button" href="/notifications/">查看匹配提醒</a>
+            <a class="button button--ghost" href="/profile/">回资料页改偏好</a>
+          </div>
+        </div>
+
+        <div class="empty-state" data-panel-state="empty" hidden>
+          <h2>本周暂时没有正式匹配结果</h2>
+          <p>这通常不代表流程出错，只是这一轮暂时没有合适结果。保持资料完整，下一轮会继续参与。</p>
+          <div class="action-bar">
+            <a class="button" href="/profile/">去看我的资料</a>
+            <a class="button button--ghost" href="/notifications/">看看通知</a>
+          </div>
+        </div>
+
+        <div class="empty-state" data-panel-state="no-profile" hidden>
+          <h2>还没填写资料，系统没法开始匹配</h2>
+          <p>先补完基础信息、校区偏好和问卷内容，再回来查看本周结果。</p>
+          <div class="action-bar">
+            <a class="button" href="/profile/">立即填写资料</a>
+          </div>
+        </div>
+
+        <div class="empty-state" data-panel-state="unverified" hidden>
+          <h2>邮箱还没验证</h2>
+          <p>完成校园邮箱验证后，这里才会显示本周匹配结果。</p>
+          <div class="action-bar">
+            <a class="button" href="/login/">去登录并完成验证</a>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <div data-site-footer></div>
+</body>
+</html>
+
+
+
+

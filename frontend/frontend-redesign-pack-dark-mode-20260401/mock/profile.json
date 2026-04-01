@@ -1,0 +1,15 @@
+{
+  "gender": "男",
+  "preferred_gender": "男",
+  "my_grade": "大二",
+  "age": 20,
+  "campus": "宝山",
+  "accepted_campus": ["宝山", "嘉定"],
+  "interests": ["游戏", "电影", "AI"],
+  "core_traits": ["温柔", "理性", "敏感"],
+  "lovetype_code": "INFP",
+  "hasProfile": true,
+  "verified": true,
+  "nickname": "轨霜",
+  "email": "user@shu.edu.cn"
+}

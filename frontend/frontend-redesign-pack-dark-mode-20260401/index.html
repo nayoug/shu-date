@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shu-date 校园恋爱匹配平台</title>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script type="module" src="/assets/app.js"></script>
+</head>
+<body data-page="home">
+  <div data-site-header></div>
+  <main>
+    <section class="hero">
+      <div class="hero__layout">
+        <div class="hero__copy">
+          <p class="hero__brandline">校园恋爱匹配</p>
+          <h1 class="hero__title">shu-date</h1>
+          <p class="hero__headline">在校园里，认识真正聊得来的人</p>
+          <p class="hero__text">先用校园邮箱确认身份，再完善资料、等待每周匹配，慢慢认识同校、聊得来的人。</p>
+          <div class="hero__actions">
+            <a class="button" href="/matches/">看本周匹配</a>
+            <a class="button button--ghost" href="/profile/">先完善资料</a>
+          </div>
+          <div class="hero__signals">
+            <div class="signal-item">
+              <span class="signal-item__label">身份确认</span>
+              <span class="signal-item__value">校园邮箱验证</span>
+            </div>
+            <div class="signal-item">
+              <span class="signal-item__label">匹配节奏</span>
+              <span class="signal-item__value" data-home="week">第 14 轮</span>
+            </div>
+            <div class="signal-item">
+              <span class="signal-item__label">消息提醒</span>
+              <span class="signal-item__value" data-home="unread">1 条未读</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero__visual reveal">
+          <img src="/assets/campus-connection.svg" alt="校园恋爱匹配平台首页插画">
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--flush">
+      <div class="section__inner">
+        <div class="section__head reveal">
+          <p class="section-kicker">使用方式</p>
+          <h2 class="section-title">不是让你硬聊，而是先把相处方式说清楚</h2>
+          <p class="section-text">先确认身份、写清资料，再去看每周结果。流程清楚了，认识人这件事才不会慌乱。</p>
+        </div>
+        <ol class="statement-list">
+          <li class="statement-item reveal">
+            <span class="statement-item__number">01</span>
+            <div>
+              <h3>先确认是同校同学</h3>
+              <p>先用校园邮箱确认身份，再进入资料和匹配流程，认识人也多一层安心。</p>
+            </div>
+          </li>
+          <li class="statement-item reveal">
+            <span class="statement-item__number">02</span>
+            <div>
+              <h3>先看资料和偏好，不是先刷脸</h3>
+              <p>把校区、年级、兴趣和问卷结果写清楚，匹配才不只是看一眼头像。</p>
+            </div>
+          </li>
+          <li class="statement-item reveal">
+            <span class="statement-item__number">03</span>
+            <div>
+              <h3>每周结果、通知和设置都清楚可达</h3>
+              <p>本周结果、站内提醒和账户设置都能直接找到，手机上也不用来回翻菜单。</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__inner flow-layout">
+        <div class="flow-visual reveal">
+          <img src="/assets/match-atlas.svg" alt="从填写资料到收到匹配提醒的流程图">
+        </div>
+        <div class="flow-steps">
+          <article class="flow-step reveal">
+            <h3>认真写资料</h3>
+            <p>基础信息、偏好校区和兴趣会放在同一页里，填完就能知道自己的资料是否完整。</p>
+          </article>
+          <article class="flow-step reveal">
+            <h3>等每周正式匹配</h3>
+            <p>有结果就直接展示；没有结果，也会告诉你该补资料、等下一轮，还是先完成验证。</p>
+          </article>
+          <article class="flow-step reveal">
+            <h3>从通知里接住平台节奏</h3>
+            <p>匹配提醒、系统公告和未读消息都会出现在通知页里，想回看时也不用翻找。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__inner">
+        <div class="section__head reveal">
+          <p class="section-kicker">主要页面</p>
+          <h2 class="section-title">核心页面都围绕“认真认识人”展开</h2>
+        </div>
+        <div class="showcase-grid">
+          <a class="showcase-link reveal" href="/profile/">
+            <div class="showcase-link__meta">
+              <span class="pill">资料</span>
+              <span class="showcase-link__route">/profile</span>
+            </div>
+            <h3>资料与问卷</h3>
+            <p>填写基础信息、偏好、兴趣和量表，让匹配有足够上下文，而不是只靠一句自我介绍。</p>
+          </a>
+          <a class="showcase-link reveal" href="/matches/">
+            <div class="showcase-link__meta">
+              <span class="pill pill--match">匹配</span>
+              <span class="showcase-link__route">/matches</span>
+            </div>
+            <h3>本周结果</h3>
+            <p>正式结果、暂无匹配、未验证、未填资料四种状态都在同一个页面里说清楚。</p>
+          </a>
+          <a class="showcase-link reveal" href="/notifications/">
+            <div class="showcase-link__meta">
+              <span class="pill pill--system">通知</span>
+              <span class="showcase-link__route">/notifications</span>
+            </div>
+            <h3>站内提醒</h3>
+            <p>把匹配提醒、系统公告和未读状态整理成一条清楚的消息流，适合手机查看。</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__inner">
+        <div class="cta-band reveal">
+          <p class="section-kicker">开始使用</p>
+          <h2 class="section-title">先把资料写完整，再回来看看本周结果</h2>
+          <p class="section-text">第一次进入可以先写资料；想回看消息和结果，也都能在后面的页面里直接找到。</p>
+          <div class="cta-band__actions">
+            <a class="button" href="/profile/">开始填写资料</a>
+            <a class="button button--ghost" href="/notifications/">查看通知中心</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div data-site-footer></div>
+</body>
+</html>
+
+
+

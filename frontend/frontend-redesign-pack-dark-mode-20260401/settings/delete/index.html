@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shu-date 注销账号</title>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script type="module" src="/assets/app.js"></script>
+</head>
+<body data-page="settings-delete">
+  <div data-site-header></div>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">注销账号</p>
+        <h1 class="page-intro__title">确认后再注销账号</h1>
+        <p class="page-intro__text">只有在确认邮箱、密码和风险提示后，才可以继续。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/settings/delete</span>
+        <span class="pill pill--announcement">高风险</span>
+      </div>
+    </section>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--danger reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">注销前提醒</h2>
+          </div>
+          <ul class="warning-list">
+            <li>注销后会退出当前账号，需要重新登录或重新注册后才能继续使用。</li>
+            <li>资料、匹配和通知记录一旦清空，之后可能无法恢复。</li>
+            <li>请确认这不是误操作，再继续下一步。</li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface surface--danger reveal">
+        <div class="surface__head">
+          <h2 class="surface__title">确认注销账号</h2>
+          <p class="surface__text">当前页面只演示确认流程，不会真的删除账号。</p>
+        </div>
+
+        <div class="status-banner status-banner--warning" data-delete-banner hidden>
+          <strong class="status-banner__title" data-banner-title></strong>
+          <p class="status-banner__body" data-banner-body></p>
+        </div>
+
+        <form data-delete-form class="fields">
+          <div class="field">
+            <label for="delete-email">确认当前邮箱</label>
+            <input id="delete-email" name="email" type="email" placeholder="user@shu.edu.cn">
+          </div>
+          <div class="field">
+            <label for="delete-password">输入密码</label>
+            <input id="delete-password" name="password" type="password" placeholder="用于二次确认">
+          </div>
+          <label class="option-chip"><input type="checkbox" name="acknowledged" value="yes">我知道注销后无法恢复，仍要继续</label>
+          <div class="action-bar">
+            <button class="button button--danger" type="submit">确认注销</button>
+            <a class="button button--ghost" href="/settings/">取消并返回</a>
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+  <div data-site-footer></div>
+</body>
+</html>
+
+
+
+

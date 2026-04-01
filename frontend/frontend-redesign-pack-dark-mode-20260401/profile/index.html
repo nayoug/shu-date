@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shu-date 资料</title>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script type="module" src="/assets/app.js"></script>
+</head>
+<body data-page="profile">
+  <div data-site-header></div>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">资料</p>
+        <h1 class="page-intro__title">把资料写清楚，系统才知道该把你推荐给谁</h1>
+        <p class="page-intro__text">你的基本信息、偏好和兴趣会一起影响匹配结果。资料越清楚，系统给出的结果也越有参考价值。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/profile</span>
+        <span class="pill pill--match" data-profile="verifiedText">已验证</span>
+        <span class="pill" data-profile="lovetype_code">INFP</span>
+      </div>
+    </section>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">当前资料摘要</h2>
+            <p class="surface__text">保存后会同步刷新左侧内容，方便你确认现在展示出去的信息。</p>
+          </div>
+          <ul class="meta-list">
+            <li><strong>昵称</strong><p data-profile="nickname">轨霜</p></li>
+            <li><strong>校区</strong><p data-profile="campus">宝山</p></li>
+            <li><strong>偏好校区</strong><p data-profile="acceptedCampus">宝山、嘉定</p></li>
+            <li><strong>兴趣</strong><p data-profile="interests">游戏、电影、AI</p></li>
+          </ul>
+        </div>
+        <div class="surface reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">这些信息会怎么被使用</h2>
+          </div>
+          <ul class="side-list">
+            <li><strong>基础信息</strong><p>先让系统知道你的基本范围，再去找更合适的人。</p></li>
+            <li><strong>偏好与兴趣</strong><p>校区、兴趣和相处偏好，会影响你们现实里能不能聊得来、见得到。</p></li>
+            <li><strong>量表结果</strong><p>问卷结果不是贴标签，而是帮你更快理解彼此。</p></li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface reveal">
+        <div class="surface__head">
+          <h2 class="surface__title">编辑问卷</h2>
+          <p class="surface__text">先用当前资料填充表单，保存后会同步更新左侧概览。</p>
+        </div>
+
+        <form data-profile-form class="fields">
+          <div class="two-column">
+            <div class="field">
+              <label for="profile-nickname">昵称</label>
+              <input id="profile-nickname" name="nickname" type="text" placeholder="你的昵称">
+            </div>
+            <div class="field">
+              <label for="profile-email">邮箱</label>
+              <input id="profile-email" name="email" type="email" disabled>
+            </div>
+            <div class="field">
+              <label for="profile-age">年龄</label>
+              <input id="profile-age" name="age" type="number" min="18" max="40">
+            </div>
+            <div class="field">
+              <label for="profile-grade">年级</label>
+              <select id="profile-grade" name="grade">
+                <option>大一</option>
+                <option>大二</option>
+                <option>大三</option>
+                <option>大四</option>
+                <option>研一</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="profile-gender">你的性别</label>
+              <select id="profile-gender" name="gender">
+                <option>男</option>
+                <option>女</option>
+                <option>其他</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="profile-preferred">偏好性别</label>
+              <select id="profile-preferred" name="preferredGender">
+                <option>男</option>
+                <option>女</option>
+                <option>不限</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="profile-campus">所在校区</label>
+            <select id="profile-campus" name="campus">
+              <option>宝山</option>
+              <option>嘉定</option>
+              <option>延长</option>
+            </select>
+          </div>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__label">可接受校区</legend>
+            <div class="option-grid">
+              <label class="option-chip"><input type="checkbox" name="acceptedCampus" value="宝山">宝山</label>
+              <label class="option-chip"><input type="checkbox" name="acceptedCampus" value="嘉定">嘉定</label>
+              <label class="option-chip"><input type="checkbox" name="acceptedCampus" value="延长">延长</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="profile-interests">兴趣标签</label>
+            <textarea id="profile-interests" name="interests" placeholder="用顿号或逗号分隔，如：游戏、电影、AI"></textarea>
+          </div>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__label">核心特质</legend>
+            <div class="option-grid">
+              <label class="option-chip"><input type="checkbox" name="coreTraits" value="温柔">温柔</label>
+              <label class="option-chip"><input type="checkbox" name="coreTraits" value="理性">理性</label>
+              <label class="option-chip"><input type="checkbox" name="coreTraits" value="敏感">敏感</label>
+              <label class="option-chip"><input type="checkbox" name="coreTraits" value="主动">主动</label>
+            </div>
+          </fieldset>
+
+          <div class="scale-list">
+            <div class="scale-item">
+              <div class="scale-row">
+                <strong>遇到不熟的人时，你更倾向于？</strong>
+                <div class="radio-row">
+                  <label class="radio-choice"><input type="radio" name="q1" checked>先观察</label>
+                  <label class="radio-choice"><input type="radio" name="q1">先开口</label>
+                </div>
+              </div>
+            </div>
+            <div class="scale-item">
+              <div class="scale-row">
+                <strong>你更在意聊天中的什么？</strong>
+                <div class="radio-row">
+                  <label class="radio-choice"><input type="radio" name="q2" checked>情绪共鸣</label>
+                  <label class="radio-choice"><input type="radio" name="q2">观点清晰</label>
+                </div>
+              </div>
+            </div>
+            <div class="scale-item">
+              <div class="scale-row">
+                <strong>周末理想约会更像？</strong>
+                <div class="radio-row">
+                  <label class="radio-choice"><input type="radio" name="q3">操场散步</label>
+                  <label class="radio-choice"><input type="radio" name="q3" checked>看电影聊天</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-band">
+            <h3>当前资料摘要</h3>
+            <p>当前结果：<strong data-profile="lovetype_code">INFP</strong>，关键词：<span data-profile="core_traits">温柔、理性、敏感</span></p>
+            <div class="result-band__meta">
+              <span class="pill">资料完整</span>
+              <span class="pill pill--match">可进入本周匹配</span>
+            </div>
+          </div>
+
+          <div class="status-banner status-banner--info" data-profile-banner hidden>
+            <strong class="status-banner__title" data-banner-title></strong>
+            <p class="status-banner__body" data-banner-body></p>
+          </div>
+
+          <div class="action-bar">
+            <button class="button" type="submit">保存资料</button>
+            <a class="button button--ghost" href="/matches/">去看本周匹配</a>
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+  <div data-site-footer></div>
+</body>
+</html>
+
+
+

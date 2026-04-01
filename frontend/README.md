@@ -1,26 +1,33 @@
-# Frontend Redesign Pack
+# 前端重设计交接包
 
-This directory stores a standalone frontend redesign prototype package and
-preview screenshots for review.
+这个目录用于存放 `shu-date` 独立前端重设计方案的交接材料，方便在**不直接改动现有 Express + EJS 前端**的前提下进行评审、讨论与后续迁移。
 
-## Contents
+## 目录说明
 
-- `frontend-redesign-pack-dark-mode-20260401.zip`
-  - A static multi-page redesign prototype.
-  - Includes dark mode assets, page HTML, CSS, JS, and prototype docs.
+- `frontend-redesign-pack-dark-mode-20260401/`
+  - 已解压的独立前端原型目录
+  - 包含多页面原型、样式、脚本、mock 数据、接口契约草案与设计说明
 - `示例/`
-  - Preview screenshots exported from the prototype.
+  - 从原型中导出的预览截图，便于在 GitHub 中直接查看设计效果
 
-## Scope
+## 本次交付范围
 
-This is a design handoff artifact, not an integrated application change.
-It is intended to support discussion before deciding how to migrate the
-current Express + EJS frontend.
+这次 PR 仅提供**前端重设计交接物**，不直接把新前端接入当前应用。
 
-## Suggested Review Focus
+也就是说，它目前：
+- 提供一套独立可审阅的前端原型
+- 提供设计约束、页面结构和 mock 数据
+- 为后续是否迁移到现有路由体系提供讨论基础
 
-- Navigation and mobile information architecture
-- Form layout and questionnaire readability
-- Settings, notifications, and matches page consistency
-- Dark mode visual direction
-- Feasibility of mapping the prototype back into the current routes
+它目前**不包含**：
+- 对现有 Express 路由的直接替换
+- 对现有 EJS 模板的直接改造
+- 对数据库或后端逻辑的修改
+
+## 建议评审重点
+
+- 导航结构与移动端信息架构是否更清晰
+- 用户菜单 / 设置 / 通知 / 匹配页的整体一致性
+- 问卷页的布局、分组和可读性是否更好
+- 深色模式视觉方向是否合理
+- 后续回接到现有项目的迁移难度是否可控

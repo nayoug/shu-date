@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shu-date 修改密码</title>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script type="module" src="/assets/app.js"></script>
+</head>
+<body data-page="settings-password">
+  <div data-site-header></div>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">修改密码</p>
+        <h1 class="page-intro__title">在这里修改密码</h1>
+        <p class="page-intro__text">提交后，结果会直接显示在表单上方。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/settings/password</span>
+      </div>
+    </section>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">提交前确认</h2>
+          </div>
+          <ul class="side-list">
+            <li><strong>新密码不少于 8 位</strong><p>要求会在这里先说明清楚。</p></li>
+            <li><strong>两次输入必须一致</strong><p>如果不一致，会直接在状态区提示。</p></li>
+            <li><strong>新旧密码不能相同</strong><p>避免改完才发现其实没有变化。</p></li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface reveal">
+        <div class="surface__head">
+          <h2 class="surface__title">修改密码</h2>
+          <p class="surface__text">修改成功后，下次登录请使用新密码。</p>
+        </div>
+
+        <div class="status-banner status-banner--info" data-password-banner hidden>
+          <strong class="status-banner__title" data-banner-title></strong>
+          <p class="status-banner__body" data-banner-body></p>
+        </div>
+
+        <form data-password-form class="fields">
+          <div class="field">
+            <label for="current-password">当前密码</label>
+            <input id="current-password" name="current修改密码" type="password" placeholder="输入当前密码">
+          </div>
+          <div class="field">
+            <label for="new-password">新密码</label>
+            <input id="new-password" name="new修改密码" type="password" placeholder="至少 8 位">
+          </div>
+          <div class="field">
+            <label for="confirm-password">确认新密码</label>
+            <input id="confirm-password" name="confirm修改密码" type="password" placeholder="再次输入新密码">
+          </div>
+          <div class="action-bar">
+            <button class="button" type="submit">保存新密码</button>
+            <a class="button button--ghost" href="/settings/">返回设置</a>
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+  <div data-site-footer></div>
+</body>
+</html>
+
+
+

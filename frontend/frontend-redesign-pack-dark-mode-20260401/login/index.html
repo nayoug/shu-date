@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shu-date 登录</title>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script type="module" src="/assets/app.js"></script>
+</head>
+<body data-page="login">
+  <div data-site-header></div>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">登录</p>
+        <h1 class="page-intro__title">先登录，再继续填写资料和查看匹配</h1>
+        <p class="page-intro__text">先用校园邮箱登录，后面的资料填写、匹配结果和通知都会顺着这一条线继续。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/login</span>
+        <span class="pill pill--system">校园邮箱</span>
+      </div>
+    </section>
+
+    <div class="state-switcher">
+      <button class="toggle-button" type="button" data-login-state="default">默认</button>
+      <button class="toggle-button" type="button" data-login-state="failure">登录失败</button>
+      <button class="toggle-button" type="button" data-login-state="unverified">未验证</button>
+      <button class="toggle-button" type="button" data-login-state="reset">重置成功</button>
+    </div>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">登录前你会看到什么</h2>
+            <p class="surface__text">邮箱、错误提示和后续入口放在同一处，少来回找。</p>
+          </div>
+          <ul class="side-list">
+            <li>
+              <strong>错误提示会直接出现</strong>
+              <p>输错邮箱、密码，或者还没验证时，都会立刻看到提示。</p>
+            </li>
+            <li>
+              <strong>先把验证要求说清楚</strong>
+              <p>为什么要用校园邮箱，会在这里直接说明。</p>
+            </li>
+            <li>
+              <strong>手机上也能顺手完成</strong>
+              <p>输入框、按钮和辅助入口都放在容易点到的位置。</p>
+            </li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface reveal">
+        <div class="surface__head">
+          <h2 class="surface__title">校园邮箱登录</h2>
+          <p class="surface__text">登录后就可以继续填写资料、查看匹配结果和通知。</p>
+        </div>
+
+        <div class="status-banner status-banner--info" data-login-banner aria-live="polite">
+          <strong class="status-banner__title" data-banner-title></strong>
+          <p class="status-banner__body" data-banner-body></p>
+        </div>
+
+        <form data-login-form class="fields">
+          <div class="field">
+            <label for="login-email">校园邮箱</label>
+            <input id="login-email" name="email" type="email" placeholder="user@shu.edu.cn">
+          </div>
+          <div class="field">
+            <label for="login-password">密码</label>
+            <input id="login-password" name="password" type="password" placeholder="至少 6 位">
+          </div>
+          <div class="action-bar">
+            <button class="button" type="submit">登录并继续</button>
+            <a class="button button--ghost" href="/profile/">先看看资料页</a>
+          </div>
+        </form>
+
+        <p class="form-note">其他入口：<a class="arrow-link" href="/">回首页看看</a> · <a class="arrow-link" href="/settings/password/">忘记密码</a></p>
+      </section>
+    </section>
+  </main>
+  <div data-site-footer></div>
+</body>
+</html>
+
+
+

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shu-date 设置</title>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script type="module" src="/assets/app.js"></script>
+</head>
+<body data-page="settings">
+  <div data-site-header></div>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">设置</p>
+        <h1 class="page-intro__title">常用操作放一起，风险操作单独放</h1>
+        <p class="page-intro__text">改密码、看通知和注销账号都能直接找到，不用在菜单里来回翻。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/settings</span>
+        <span class="pill" data-profile="verifiedText">已验证</span>
+      </div>
+    </section>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">账户摘要</h2>
+          </div>
+          <ul class="meta-list">
+            <li><strong>昵称</strong><p data-profile="nickname">轨霜</p></li>
+            <li><strong>邮箱</strong><p data-profile="email">user@shu.edu.cn</p></li>
+            <li><strong>资料状态</strong><p>已填写 · 可参与匹配</p></li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface reveal">
+        <div class="surface__head">
+          <h2 class="surface__title">账户操作</h2>
+          <p class="surface__text">常用操作和高风险操作分开显示，手机上也不容易点错。</p>
+        </div>
+        <div class="setting-list">
+          <article class="setting-item">
+            <div class="setting-item__row">
+              <div>
+                <h3>通知中心</h3>
+                <p>查看匹配提醒、系统公告和未读消息。</p>
+              </div>
+              <a class="arrow-link" href="/notifications/">进入</a>
+            </div>
+          </article>
+          <article class="setting-item setting-item--theme">
+            <div>
+              <h3>外观模式</h3>
+              <p>跟随系统和手动切换分开显示，选完之后会自动记住。</p>
+            </div>
+            <div class="theme-switch theme-switch--inline" role="group" aria-label="外观模式">
+              <button class="theme-switch__option" type="button" data-theme-option="system" aria-pressed="false">跟随系统</button>
+              <button class="theme-switch__option" type="button" data-theme-option="light" aria-pressed="false">浅色</button>
+              <button class="theme-switch__option" type="button" data-theme-option="dark" aria-pressed="false">深色</button>
+            </div>
+            <p class="theme-switch__summary" data-theme-summary>当前：跟随系统（浅色）</p>
+          </article>
+          <article class="setting-item">
+            <div class="setting-item__row">
+              <div>
+                <h3>修改密码</h3>
+                <p>修改登录密码，结果会直接显示在页面里。</p>
+              </div>
+              <a class="arrow-link" href="/settings/password/">修改</a>
+            </div>
+          </article>
+          <article class="setting-item">
+            <div class="setting-item__row">
+              <div>
+                <h3>注销账号</h3>
+                <p>注销前会先确认邮箱、密码和风险提示。</p>
+              </div>
+              <a class="arrow-link" href="/settings/delete/">查看</a>
+            </div>
+          </article>
+        </div>
+      </section>
+    </section>
+  </main>
+  <div data-site-footer></div>
+</body>
+</html>
+
+
+

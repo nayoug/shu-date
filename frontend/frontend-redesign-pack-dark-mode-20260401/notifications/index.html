@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shu-date 通知</title>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script type="module" src="/assets/app.js"></script>
+</head>
+<body data-page="notifications">
+  <div data-site-header></div>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">通知</p>
+        <h1 class="page-intro__title">通知、提醒和公告，都放在这里</h1>
+        <p class="page-intro__text">有新匹配、系统公告或未读消息时，都可以直接在这里查看。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/notifications</span>
+        <span class="pill pill--match"><span data-notification-unread>1</span> 条未读</span>
+      </div>
+    </section>
+
+    <div class="state-switcher">
+      <button class="toggle-button" type="button" data-notification-scene="default">正常状态</button>
+      <button class="toggle-button" type="button" data-notification-scene="empty">空状态</button>
+      <button class="toggle-button" type="button" data-notification-scene="error">失败状态</button>
+    </div>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">通知总览</h2>
+          </div>
+          <ul class="meta-list">
+            <li><strong>总通知数</strong><p><span data-notification-total>2</span> 条</p></li>
+            <li><strong>未读</strong><p><span data-notification-unread>1</span> 条</p></li>
+            <li><strong>匹配提醒</strong><p><span data-notification-match>1</span> 条</p></li>
+            <li><strong>系统通知</strong><p><span data-notification-system>1</span> 条</p></li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface reveal">
+        <div class="surface__head">
+          <h2 class="surface__title">消息列表</h2>
+          <p class="surface__text">按时间倒序展示，也可以按类型或未读状态筛选。</p>
+        </div>
+
+        <div class="notification-toolbar">
+          <div class="state-switcher state-switcher--inline">
+            <button class="toggle-button" type="button" data-notification-filter="all">全部</button>
+            <button class="toggle-button" type="button" data-notification-filter="match">匹配</button>
+            <button class="toggle-button" type="button" data-notification-filter="system">系统</button>
+            <button class="toggle-button" type="button" data-notification-filter="unread">未读</button>
+          </div>
+        </div>
+
+        <ul class="notification-list" data-notification-list hidden></ul>
+
+        <div class="empty-state" data-notification-empty hidden>
+          <h2>现在还没有新通知</h2>
+          <p>暂时没有新通知。有新匹配或系统公告时，会第一时间出现在这里。</p>
+          <div class="action-bar">
+            <a class="button button--ghost" href="/matches/">去看匹配页</a>
+          </div>
+        </div>
+
+        <div class="empty-state" data-notification-error hidden>
+          <h2>通知加载失败</h2>
+          <p>暂时没能加载出通知，请稍后再试。</p>
+          <div class="action-bar">
+            <button class="button button--ghost" type="button">重试</button>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <div data-site-footer></div>
+</body>
+</html>
+
+
+
