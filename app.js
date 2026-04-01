@@ -191,6 +191,7 @@ if (isProduction) {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // 支持 JSON body (cron 服务可能使用 application/json)
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   store: new PgSession({
@@ -1582,11 +1583,33 @@ app.post('/admin/match', isLoggedIn, requireAdmin, adminActionRateLimiter, requi
 
 // 补跑匹配
 app.post('/admin/match/rerun', isLoggedIn, requireAdmin, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
-  const { targetWeek, force } = req.body;
+  const { targetWeek, targetYear, force } = req.body;
   const currentYear = getYear();
   const currentWeek = getWeekNumber();
-  const weekToRun = targetWeek ? parseInt(targetWeek, 10) : currentWeek;
-  const yearToRun = targetYear ? parseInt(targetYear, 10) : currentYear;
+
+  // 校验并解析 targetWeek
+  let weekToRun;
+  if (targetWeek !== undefined && targetWeek !== null && targetWeek !== '') {
+    const parsed = parseInt(targetWeek, 10);
+    if (Number.isNaN(parsed) || parsed < 1 || parsed > 53) {
+      return res.redirect('/admin?msg=' + encodeURIComponent('周数必须是 1-53 之间的整数') + '&type=error');
+    }
+    weekToRun = parsed;
+  } else {
+    weekToRun = currentWeek;
+  }
+
+  // 校验并解析 targetYear
+  let yearToRun;
+  if (targetYear !== undefined && targetYear !== null && targetYear !== '') {
+    const parsed = parseInt(targetYear, 10);
+    if (Number.isNaN(parsed) || parsed < 2020 || parsed > 2100) {
+      return res.redirect('/admin?msg=' + encodeURIComponent('年份必须是 2020-2100 之间的整数') + '&type=error');
+    }
+    yearToRun = parsed;
+  } else {
+    yearToRun = currentYear;
+  }
 
   // 安全限制: 不允许补跑未来的周/年
   if (yearToRun > currentYear || (yearToRun === currentYear && weekToRun > currentWeek)) {

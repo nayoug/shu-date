@@ -29,10 +29,10 @@ function getAlertEmails() {
     return envEmails.split(',').map(e => e.trim()).filter(Boolean);
   }
 
-  // 回退：使用 ADMIN_EMAIL 环境变量
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (adminEmail) {
-    return [adminEmail.trim()];
+  // 回退: 使用 ADMIN_EMAILS 环境变量 (与 requireAdmin 一致)
+  const adminEmails = process.env.ADMIN_EMAILS;
+  if (adminEmails) {
+    return adminEmails.split(',').map(e => e.trim()).filter(Boolean);
   }
 
   return [];

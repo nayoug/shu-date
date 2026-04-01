@@ -44,9 +44,14 @@
         <form action="/admin/match/rerun" method="POST" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
           <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
           <div>
+            <label style="font-size: 14px; color: #666;">目标年份：</label>
+            <input type="number" name="targetYear" placeholder="留空=当前年" min="2020" max="2100"
+                   style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 100px;">
+          </div>
+          <div>
             <label style="font-size: 14px; color: #666;">目标周数：</label>
             <input type="number" name="targetWeek" placeholder="留空=当前周" min="1" max="53"
-                   style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 120px;">
+                   style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 100px;">
           </div>
           <div>
             <label style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
