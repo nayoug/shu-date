@@ -603,28 +603,28 @@ tr:hover td {
   }
 
   /* 移动端下拉菜单里的链接要显示 */
-  .dropdown-menu a {
+  :root .dropdown-menu a {
     display: block;
   }
 
   /* 移动端下拉菜单样式 */
-  .dropdown {
-    display: inline-block !important;
+  :root .dropdown {
+    display: inline-block;
   }
 
-  .dropdown-toggle {
-    padding: 8px 12px !important;
+  :root .dropdown-toggle {
+    padding: 8px 12px;
   }
 
-  .dropdown-menu {
-    position: fixed !important;
-    top: 60px !important;
-    right: 8px !important;
-    left: auto !important;
-    width: auto !important;
-    min-width: 180px !important;
-    max-width: calc(100vw - 16px) !important;
-    box-sizing: border-box !important;
+  :root .dropdown-menu {
+    position: fixed;
+    top: 60px;
+    right: 8px;
+    left: auto;
+    width: auto;
+    min-width: 180px;
+    max-width: calc(100vw - 16px);
+    box-sizing: border-box;
   }
 
   .features {
