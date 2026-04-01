@@ -659,7 +659,23 @@ app.get('/data-deletion', wrapAsync(async (req, res) => {
 
 // 登录页
 app.get('/login', (req, res) => {
-  if (req.session.userId) return res.redirect('/');
+  if (req.session.userId) {
+    // 检查用户是否还存在，避免已注销账号但 session 仍有效的死循环
+    return db.queryOne('SELECT id FROM users WHERE id = $1', [req.session.userId])
+      .then(user => {
+        if (!user) {
+          // 用户已删除，清除 session
+          req.session.destroy();
+          return res.redirect('/login');
+        }
+        return res.redirect('/');
+      })
+      .catch(() => {
+        // 数据库错误时清除 session
+        req.session.destroy();
+        return res.redirect('/login');
+      });
+  }
   const method = req.query.method || 'login';
   const email = req.query.email || '';
   // 如果是重定向过来的，显示提示信息
