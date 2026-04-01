@@ -1213,13 +1213,13 @@ app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings,
 }));
 
 // 注销账号页面
-app.get('/settings/delete', isLoggedIn, ensureCsrfToken, wrapAsync(async (req, res) => {
+app.get('/settings/delete', isLoggedIn, wrapAsync(async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
   res.render('delete-account', {
     user: req.user,
     nickname: req.session.nickname,
     hasProfile: !!profile,
-    csrfToken: req.csrfToken
+    csrfToken: ensureCsrfToken(req)
   });
 }));
 
