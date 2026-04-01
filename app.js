@@ -665,15 +665,25 @@ app.get('/login', (req, res) => {
       .then(user => {
         if (!user) {
           // 用户已删除，清除 session
-          req.session.destroy();
-          return res.redirect('/login');
+          return req.session.destroy(err => {
+            if (err) {
+              console.error('Failed to destroy session for deleted user during /login', err);
+              return res.status(500).send('Internal Server Error');
+            }
+            return res.redirect('/login');
+          });
         }
         return res.redirect('/');
       })
       .catch(() => {
         // 数据库错误时清除 session
-        req.session.destroy();
-        return res.redirect('/login');
+        return req.session.destroy(err => {
+          if (err) {
+            console.error('Failed to destroy session after DB error during /login', err);
+            return res.status(500).send('Internal Server Error');
+          }
+          return res.redirect('/login');
+        });
       });
   }
   const method = req.query.method || 'login';
