@@ -1949,13 +1949,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 实时验证 - 当用户填写时更新按钮状态
   document.addEventListener('change', function(e) {
-    console.log('change event on:', e.target.name, e.target.value);
+    if (<%= (typeof isDev !== 'undefined' && isDev) ? 'true' : 'false' %>) {
+      console.log('change event on:', e.target.name, e.target.value);
+    }
     if (e.target.matches('[required]')) {
       updatePagination();
     }
   });
   document.addEventListener('input', function(e) {
-    console.log('input event on:', e.target.name);
+    if (<%= (typeof isDev !== 'undefined' && isDev) ? 'true' : 'false' %>) {
+      console.log('input event on:', e.target.name);
+    }
     if (e.target.matches('[required]')) {
       updatePagination();
     }
