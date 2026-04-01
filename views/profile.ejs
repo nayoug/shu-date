@@ -354,6 +354,60 @@
       margin-top: 12px;
       font-size: 15px;
     }
+
+    /* 分页样式 */
+    .pagination-container {
+      margin-bottom: 24px;
+    }
+    .pagination-steps {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .pagination-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: #f0f0f0;
+      color: #666;
+      font-size: 13px;
+      transition: all 0.3s;
+    }
+    .pagination-step.active {
+      background: #e74c3c;
+      color: #fff;
+    }
+    .pagination-step.completed {
+      background: #fadbd8;
+      color: #e74c3c;
+    }
+    .pagination-step-number {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .pagination-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .form-section-pagination {
+      display: none;
+    }
+    .form-section-pagination.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -494,8 +548,30 @@
   <% if (!showPassword && (!lovetypeResult || (typeof editMode !== 'undefined' && editMode))) { %>
   <form action="/survey/submit" method="POST">
 
+    <!-- 分页进度指示器 -->
+    <div class="pagination-container">
+      <div class="pagination-steps">
+        <div class="pagination-step active" data-step="1">
+          <span class="pagination-step-number">1</span>
+          <span>基础信息</span>
+        </div>
+        <div class="pagination-step" data-step="2">
+          <span class="pagination-step-number">2</span>
+          <span>恋爱观念</span>
+        </div>
+        <div class="pagination-step" data-step="3">
+          <span class="pagination-step-number">3</span>
+          <span>个人特征</span>
+        </div>
+        <div class="pagination-step" data-step="4">
+          <span class="pagination-step-number">4</span>
+          <span>Love Type16</span>
+        </div>
+      </div>
+    </div>
+
     <!-- 一、基础信息 -->
-    <div class="form-section">
+    <div class="form-section form-section-pagination active" data-step="1">
       <h3 style="color: #e74c3c; margin: 20px 0 15px;">一、基础信息</h3>
 
       <div class="form-group">
@@ -589,7 +665,7 @@
       <div class="form-group">
         <label>(b). 我可接受对象所在的校区（可多选）：</label>
         <div class="checkbox-group-grid">
-          <label><input type="checkbox" name="accepted_campus" value="宝山" <%= profile && profile.accepted_campus && profile.accepted_campus.includes('宝山') ? 'checked' : '' %>> A. 宝山</label>
+          <label><input type="checkbox" name="accepted_campus" value="宝山" <%= profile && profile.accepted_campus && profile.accepted_campus.includes('宝山') ? 'checked' : '' %> required> A. 宝山</label>
           <label><input type="checkbox" name="accepted_campus" value="嘉定" <%= profile && profile.accepted_campus && profile.accepted_campus.includes('嘉定') ? 'checked' : '' %>> B. 嘉定</label>
           <label><input type="checkbox" name="accepted_campus" value="延长" <%= profile && profile.accepted_campus && profile.accepted_campus.includes('延长') ? 'checked' : '' %>> C. 延长</label>
         </div>
@@ -682,19 +758,19 @@
       <div class="form-group">
         <label>8. 我更看重伴侣的核心特质（可多选）：</label>
         <div class="interest-tags">
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="性格三观契合" ... onclick="updateCoreTraitsCounter()"> 性格三观契合</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="颜值气质" ... onclick="updateCoreTraitsCounter()"> 颜值气质</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="学历学识" ... onclick="updateCoreTraitsCounter()"> 学历学识</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="经济能力" ... onclick="updateCoreTraitsCounter()"> 经济能力</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="家庭背景" ... onclick="updateCoreTraitsCounter()"> 家庭背景</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="兴趣爱好相投" ... onclick="updateCoreTraitsCounter()"> 兴趣爱好相投</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="性格三观契合" <%= profile && profile.core_traits && profile.core_traits.includes('性格三观契合') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()" required> 性格三观契合</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="颜值气质" <%= profile && profile.core_traits && profile.core_traits.includes('颜值气质') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 颜值气质</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="学历学识" <%= profile && profile.core_traits && profile.core_traits.includes('学历学识') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 学历学识</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="经济能力" <%= profile && profile.core_traits && profile.core_traits.includes('经济能力') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 经济能力</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="家庭背景" <%= profile && profile.core_traits && profile.core_traits.includes('家庭背景') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 家庭背景</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="兴趣爱好相投" <%= profile && profile.core_traits && profile.core_traits.includes('兴趣爱好相投') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 兴趣爱好相投</label>
         </div>
-        <p class="interest-counter" id="coreTraitsCounter">最多选 3 项，已选 0 项</p>  <!-- 移到这里 -->
+        <p class="interest-counter" id="coreTraitsCounter">最多选 3 项，已选 0 项</p>
       </div>
     </div>
 
     <!-- 二、恋爱观念 -->
-    <div class="form-section">
+    <div class="form-section form-section-pagination" data-step="2">
       <h3 style="color: #e74c3c; margin: 20px 0 15px;">二、恋爱观念</h3>
 
       <div class="form-group">
@@ -702,24 +778,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">需要独处空间，给自己充电</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.relationship_rhythm === -2 ? 'selected' : '' %>">
-              <input type="radio" name="relationship_rhythm" value="-2" <%= profile && profile.relationship_rhythm === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.relationship_rhythm == -2 ? 'selected' : '' %>">
+              <input type="radio" name="relationship_rhythm" value="-2" <%= profile && profile.relationship_rhythm == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.relationship_rhythm === -1 ? 'selected' : '' %>">
-              <input type="radio" name="relationship_rhythm" value="-1" <%= profile && profile.relationship_rhythm === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.relationship_rhythm == -1 ? 'selected' : '' %>">
+              <input type="radio" name="relationship_rhythm" value="-1" <%= profile && profile.relationship_rhythm == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.relationship_rhythm === 0 ? 'selected' : '' %>">
-              <input type="radio" name="relationship_rhythm" value="0" <%= profile && profile.relationship_rhythm === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.relationship_rhythm == 0 ? 'selected' : '' %>">
+              <input type="radio" name="relationship_rhythm" value="0" <%= profile && profile.relationship_rhythm == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.relationship_rhythm === 1 ? 'selected' : '' %>">
-              <input type="radio" name="relationship_rhythm" value="1" <%= profile && profile.relationship_rhythm === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.relationship_rhythm == 1 ? 'selected' : '' %>">
+              <input type="radio" name="relationship_rhythm" value="1" <%= profile && profile.relationship_rhythm == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.relationship_rhythm === 2 ? 'selected' : '' %>">
-              <input type="radio" name="relationship_rhythm" value="2" <%= profile && profile.relationship_rhythm === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.relationship_rhythm == 2 ? 'selected' : '' %>">
+              <input type="radio" name="relationship_rhythm" value="2" <%= profile && profile.relationship_rhythm == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -732,24 +808,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">务实派，不太在意节日与形式</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.romantic_ritual === -2 ? 'selected' : '' %>">
-              <input type="radio" name="romantic_ritual" value="-2" <%= profile && profile.romantic_ritual === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.romantic_ritual == -2 ? 'selected' : '' %>">
+              <input type="radio" name="romantic_ritual" value="-2" <%= profile && profile.romantic_ritual == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.romantic_ritual === -1 ? 'selected' : '' %>">
-              <input type="radio" name="romantic_ritual" value="-1" <%= profile && profile.romantic_ritual === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.romantic_ritual == -1 ? 'selected' : '' %>">
+              <input type="radio" name="romantic_ritual" value="-1" <%= profile && profile.romantic_ritual == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.romantic_ritual === 0 ? 'selected' : '' %>">
-              <input type="radio" name="romantic_ritual" value="0" <%= profile && profile.romantic_ritual === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.romantic_ritual == 0 ? 'selected' : '' %>">
+              <input type="radio" name="romantic_ritual" value="0" <%= profile && profile.romantic_ritual == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.romantic_ritual === 1 ? 'selected' : '' %>">
-              <input type="radio" name="romantic_ritual" value="1" <%= profile && profile.romantic_ritual === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.romantic_ritual == 1 ? 'selected' : '' %>">
+              <input type="radio" name="romantic_ritual" value="1" <%= profile && profile.romantic_ritual == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.romantic_ritual === 2 ? 'selected' : '' %>">
-              <input type="radio" name="romantic_ritual" value="2" <%= profile && profile.romantic_ritual === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.romantic_ritual == 2 ? 'selected' : '' %>">
+              <input type="radio" name="romantic_ritual" value="2" <%= profile && profile.romantic_ritual == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -762,24 +838,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">独立自在型，保留各自空间</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.relationship_style === -2 ? 'selected' : '' %>">
-              <input type="radio" name="relationship_style" value="-2" <%= profile && profile.relationship_style === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.relationship_style == -2 ? 'selected' : '' %>">
+              <input type="radio" name="relationship_style" value="-2" <%= profile && profile.relationship_style == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.relationship_style === -1 ? 'selected' : '' %>">
-              <input type="radio" name="relationship_style" value="-1" <%= profile && profile.relationship_style === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.relationship_style == -1 ? 'selected' : '' %>">
+              <input type="radio" name="relationship_style" value="-1" <%= profile && profile.relationship_style == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.relationship_style === 0 ? 'selected' : '' %>">
-              <input type="radio" name="relationship_style" value="0" <%= profile && profile.relationship_style === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.relationship_style == 0 ? 'selected' : '' %>">
+              <input type="radio" name="relationship_style" value="0" <%= profile && profile.relationship_style == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.relationship_style === 1 ? 'selected' : '' %>">
-              <input type="radio" name="relationship_style" value="1" <%= profile && profile.relationship_style === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.relationship_style == 1 ? 'selected' : '' %>">
+              <input type="radio" name="relationship_style" value="1" <%= profile && profile.relationship_style == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.relationship_style === 2 ? 'selected' : '' %>">
-              <input type="radio" name="relationship_style" value="2" <%= profile && profile.relationship_style === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.relationship_style == 2 ? 'selected' : '' %>">
+              <input type="radio" name="relationship_style" value="2" <%= profile && profile.relationship_style == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -792,24 +868,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">熬夜选手，典型夜猫子</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.sleep_pattern === -2 ? 'selected' : '' %>">
-              <input type="radio" name="sleep_pattern" value="-2" <%= profile && profile.sleep_pattern === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.sleep_pattern == -2 ? 'selected' : '' %>">
+              <input type="radio" name="sleep_pattern" value="-2" <%= profile && profile.sleep_pattern == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.sleep_pattern === -1 ? 'selected' : '' %>">
-              <input type="radio" name="sleep_pattern" value="-1" <%= profile && profile.sleep_pattern === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.sleep_pattern == -1 ? 'selected' : '' %>">
+              <input type="radio" name="sleep_pattern" value="-1" <%= profile && profile.sleep_pattern == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.sleep_pattern === 0 ? 'selected' : '' %>">
-              <input type="radio" name="sleep_pattern" value="0" <%= profile && profile.sleep_pattern === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.sleep_pattern == 0 ? 'selected' : '' %>">
+              <input type="radio" name="sleep_pattern" value="0" <%= profile && profile.sleep_pattern == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.sleep_pattern === 1 ? 'selected' : '' %>">
-              <input type="radio" name="sleep_pattern" value="1" <%= profile && profile.sleep_pattern === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.sleep_pattern == 1 ? 'selected' : '' %>">
+              <input type="radio" name="sleep_pattern" value="1" <%= profile && profile.sleep_pattern == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.sleep_pattern === 2 ? 'selected' : '' %>">
-              <input type="radio" name="sleep_pattern" value="2" <%= profile && profile.sleep_pattern === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.sleep_pattern == 2 ? 'selected' : '' %>">
+              <input type="radio" name="sleep_pattern" value="2" <%= profile && profile.sleep_pattern == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -822,24 +898,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">几乎全在学校各大食堂解决</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.diet_preference === -2 ? 'selected' : '' %>">
-              <input type="radio" name="diet_preference" value="-2" <%= profile && profile.diet_preference === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.diet_preference == -2 ? 'selected' : '' %>">
+              <input type="radio" name="diet_preference" value="-2" <%= profile && profile.diet_preference == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.diet_preference === -1 ? 'selected' : '' %>">
-              <input type="radio" name="diet_preference" value="-1" <%= profile && profile.diet_preference === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.diet_preference == -1 ? 'selected' : '' %>">
+              <input type="radio" name="diet_preference" value="-1" <%= profile && profile.diet_preference == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.diet_preference === 0 ? 'selected' : '' %>">
-              <input type="radio" name="diet_preference" value="0" <%= profile && profile.diet_preference === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.diet_preference == 0 ? 'selected' : '' %>">
+              <input type="radio" name="diet_preference" value="0" <%= profile && profile.diet_preference == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.diet_preference === 1 ? 'selected' : '' %>">
-              <input type="radio" name="diet_preference" value="1" <%= profile && profile.diet_preference === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.diet_preference == 1 ? 'selected' : '' %>">
+              <input type="radio" name="diet_preference" value="1" <%= profile && profile.diet_preference == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.diet_preference === 2 ? 'selected' : '' %>">
-              <input type="radio" name="diet_preference" value="2" <%= profile && profile.diet_preference === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.diet_preference == 2 ? 'selected' : '' %>">
+              <input type="radio" name="diet_preference" value="2" <%= profile && profile.diet_preference == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -852,24 +928,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">一点辣都碰不了</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.spice_tolerance === -2 ? 'selected' : '' %>">
-              <input type="radio" name="spice_tolerance" value="-2" <%= profile && profile.spice_tolerance === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.spice_tolerance == -2 ? 'selected' : '' %>">
+              <input type="radio" name="spice_tolerance" value="-2" <%= profile && profile.spice_tolerance == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.spice_tolerance === -1 ? 'selected' : '' %>">
-              <input type="radio" name="spice_tolerance" value="-1" <%= profile && profile.spice_tolerance === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.spice_tolerance == -1 ? 'selected' : '' %>">
+              <input type="radio" name="spice_tolerance" value="-1" <%= profile && profile.spice_tolerance == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.spice_tolerance === 0 ? 'selected' : '' %>">
-              <input type="radio" name="spice_tolerance" value="0" <%= profile && profile.spice_tolerance === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.spice_tolerance == 0 ? 'selected' : '' %>">
+              <input type="radio" name="spice_tolerance" value="0" <%= profile && profile.spice_tolerance == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.spice_tolerance === 1 ? 'selected' : '' %>">
-              <input type="radio" name="spice_tolerance" value="1" <%= profile && profile.spice_tolerance === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.spice_tolerance == 1 ? 'selected' : '' %>">
+              <input type="radio" name="spice_tolerance" value="1" <%= profile && profile.spice_tolerance == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.spice_tolerance === 2 ? 'selected' : '' %>">
-              <input type="radio" name="spice_tolerance" value="2" <%= profile && profile.spice_tolerance === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.spice_tolerance == 2 ? 'selected' : '' %>">
+              <input type="radio" name="spice_tolerance" value="2" <%= profile && profile.spice_tolerance == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -882,24 +958,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">校园漫步 / 图书馆安静相伴</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.date_preference === -2 ? 'selected' : '' %>">
-              <input type="radio" name="date_preference" value="-2" <%= profile && profile.date_preference === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.date_preference == -2 ? 'selected' : '' %>">
+              <input type="radio" name="date_preference" value="-2" <%= profile && profile.date_preference == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.date_preference === -1 ? 'selected' : '' %>">
-              <input type="radio" name="date_preference" value="-1" <%= profile && profile.date_preference === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.date_preference == -1 ? 'selected' : '' %>">
+              <input type="radio" name="date_preference" value="-1" <%= profile && profile.date_preference == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.date_preference === 0 ? 'selected' : '' %>">
-              <input type="radio" name="date_preference" value="0" <%= profile && profile.date_preference === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.date_preference == 0 ? 'selected' : '' %>">
+              <input type="radio" name="date_preference" value="0" <%= profile && profile.date_preference == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.date_preference === 1 ? 'selected' : '' %>">
-              <input type="radio" name="date_preference" value="1" <%= profile && profile.date_preference === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.date_preference == 1 ? 'selected' : '' %>">
+              <input type="radio" name="date_preference" value="1" <%= profile && profile.date_preference == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.date_preference === 2 ? 'selected' : '' %>">
-              <input type="radio" name="date_preference" value="2" <%= profile && profile.date_preference === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.date_preference == 2 ? 'selected' : '' %>">
+              <input type="radio" name="date_preference" value="2" <%= profile && profile.date_preference == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -912,24 +988,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">精打细算，能省则省</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.spending_style === -2 ? 'selected' : '' %>">
-              <input type="radio" name="spending_style" value="-2" <%= profile && profile.spending_style === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.spending_style == -2 ? 'selected' : '' %>">
+              <input type="radio" name="spending_style" value="-2" <%= profile && profile.spending_style == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.spending_style === -1 ? 'selected' : '' %>">
-              <input type="radio" name="spending_style" value="-1" <%= profile && profile.spending_style === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.spending_style == -1 ? 'selected' : '' %>">
+              <input type="radio" name="spending_style" value="-1" <%= profile && profile.spending_style == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.spending_style === 0 ? 'selected' : '' %>">
-              <input type="radio" name="spending_style" value="0" <%= profile && profile.spending_style === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.spending_style == 0 ? 'selected' : '' %>">
+              <input type="radio" name="spending_style" value="0" <%= profile && profile.spending_style == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.spending_style === 1 ? 'selected' : '' %>">
-              <input type="radio" name="spending_style" value="1" <%= profile && profile.spending_style === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.spending_style == 1 ? 'selected' : '' %>">
+              <input type="radio" name="spending_style" value="1" <%= profile && profile.spending_style == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.spending_style === 2 ? 'selected' : '' %>">
-              <input type="radio" name="spending_style" value="2" <%= profile && profile.spending_style === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.spending_style == 2 ? 'selected' : '' %>">
+              <input type="radio" name="spending_style" value="2" <%= profile && profile.spending_style == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -942,24 +1018,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">滴酒不沾</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.drinking_habit === -2 ? 'selected' : '' %>">
-              <input type="radio" name="drinking_habit" value="-2" <%= profile && profile.drinking_habit === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.drinking_habit == -2 ? 'selected' : '' %>">
+              <input type="radio" name="drinking_habit" value="-2" <%= profile && profile.drinking_habit == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.drinking_habit === -1 ? 'selected' : '' %>">
-              <input type="radio" name="drinking_habit" value="-1" <%= profile && profile.drinking_habit === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.drinking_habit == -1 ? 'selected' : '' %>">
+              <input type="radio" name="drinking_habit" value="-1" <%= profile && profile.drinking_habit == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.drinking_habit === 0 ? 'selected' : '' %>">
-              <input type="radio" name="drinking_habit" value="0" <%= profile && profile.drinking_habit === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.drinking_habit == 0 ? 'selected' : '' %>">
+              <input type="radio" name="drinking_habit" value="0" <%= profile && profile.drinking_habit == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.drinking_habit === 1 ? 'selected' : '' %>">
-              <input type="radio" name="drinking_habit" value="1" <%= profile && profile.drinking_habit === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.drinking_habit == 1 ? 'selected' : '' %>">
+              <input type="radio" name="drinking_habit" value="1" <%= profile && profile.drinking_habit == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.drinking_habit === 2 ? 'selected' : '' %>">
-              <input type="radio" name="drinking_habit" value="2" <%= profile && profile.drinking_habit === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.drinking_habit == 2 ? 'selected' : '' %>">
+              <input type="radio" name="drinking_habit" value="2" <%= profile && profile.drinking_habit == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -972,24 +1048,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">完全不接受</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.partner_drinking === -2 ? 'selected' : '' %>">
-              <input type="radio" name="partner_drinking" value="-2" <%= profile && profile.partner_drinking === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.partner_drinking == -2 ? 'selected' : '' %>">
+              <input type="radio" name="partner_drinking" value="-2" <%= profile && profile.partner_drinking == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.partner_drinking === -1 ? 'selected' : '' %>">
-              <input type="radio" name="partner_drinking" value="-1" <%= profile && profile.partner_drinking === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.partner_drinking == -1 ? 'selected' : '' %>">
+              <input type="radio" name="partner_drinking" value="-1" <%= profile && profile.partner_drinking == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.partner_drinking === 0 ? 'selected' : '' %>">
-              <input type="radio" name="partner_drinking" value="0" <%= profile && profile.partner_drinking === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.partner_drinking == 0 ? 'selected' : '' %>">
+              <input type="radio" name="partner_drinking" value="0" <%= profile && profile.partner_drinking == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.partner_drinking === 1 ? 'selected' : '' %>">
-              <input type="radio" name="partner_drinking" value="1" <%= profile && profile.partner_drinking === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.partner_drinking == 1 ? 'selected' : '' %>">
+              <input type="radio" name="partner_drinking" value="1" <%= profile && profile.partner_drinking == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.partner_drinking === 2 ? 'selected' : '' %>">
-              <input type="radio" name="partner_drinking" value="2" <%= profile && profile.partner_drinking === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.partner_drinking == 2 ? 'selected' : '' %>">
+              <input type="radio" name="partner_drinking" value="2" <%= profile && profile.partner_drinking == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -1002,24 +1078,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">从不抽</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.smoking_habit === -2 ? 'selected' : '' %>">
-              <input type="radio" name="smoking_habit" value="-2" <%= profile && profile.smoking_habit === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.smoking_habit == -2 ? 'selected' : '' %>">
+              <input type="radio" name="smoking_habit" value="-2" <%= profile && profile.smoking_habit == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.smoking_habit === -1 ? 'selected' : '' %>">
-              <input type="radio" name="smoking_habit" value="-1" <%= profile && profile.smoking_habit === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.smoking_habit == -1 ? 'selected' : '' %>">
+              <input type="radio" name="smoking_habit" value="-1" <%= profile && profile.smoking_habit == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.smoking_habit === 0 ? 'selected' : '' %>">
-              <input type="radio" name="smoking_habit" value="0" <%= profile && profile.smoking_habit === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.smoking_habit == 0 ? 'selected' : '' %>">
+              <input type="radio" name="smoking_habit" value="0" <%= profile && profile.smoking_habit == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.smoking_habit === 1 ? 'selected' : '' %>">
-              <input type="radio" name="smoking_habit" value="1" <%= profile && profile.smoking_habit === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.smoking_habit == 1 ? 'selected' : '' %>">
+              <input type="radio" name="smoking_habit" value="1" <%= profile && profile.smoking_habit == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.smoking_habit === 2 ? 'selected' : '' %>">
-              <input type="radio" name="smoking_habit" value="2" <%= profile && profile.smoking_habit === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.smoking_habit == 2 ? 'selected' : '' %>">
+              <input type="radio" name="smoking_habit" value="2" <%= profile && profile.smoking_habit == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -1032,24 +1108,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">完全不接受</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.partner_smoking === -2 ? 'selected' : '' %>">
-              <input type="radio" name="partner_smoking" value="-2" <%= profile && profile.partner_smoking === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.partner_smoking == -2 ? 'selected' : '' %>">
+              <input type="radio" name="partner_smoking" value="-2" <%= profile && profile.partner_smoking == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.partner_smoking === -1 ? 'selected' : '' %>">
-              <input type="radio" name="partner_smoking" value="-1" <%= profile && profile.partner_smoking === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.partner_smoking == -1 ? 'selected' : '' %>">
+              <input type="radio" name="partner_smoking" value="-1" <%= profile && profile.partner_smoking == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.partner_smoking === 0 ? 'selected' : '' %>">
-              <input type="radio" name="partner_smoking" value="0" <%= profile && profile.partner_smoking === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.partner_smoking == 0 ? 'selected' : '' %>">
+              <input type="radio" name="partner_smoking" value="0" <%= profile && profile.partner_smoking == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.partner_smoking === 1 ? 'selected' : '' %>">
-              <input type="radio" name="partner_smoking" value="1" <%= profile && profile.partner_smoking === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.partner_smoking == 1 ? 'selected' : '' %>">
+              <input type="radio" name="partner_smoking" value="1" <%= profile && profile.partner_smoking == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.partner_smoking === 2 ? 'selected' : '' %>">
-              <input type="radio" name="partner_smoking" value="2" <%= profile && profile.partner_smoking === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.partner_smoking == 2 ? 'selected' : '' %>">
+              <input type="radio" name="partner_smoking" value="2" <%= profile && profile.partner_smoking == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -1062,24 +1138,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">非常喜欢，想养宠物</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.pet_attitude === -2 ? 'selected' : '' %>">
-              <input type="radio" name="pet_attitude" value="-2" <%= profile && profile.pet_attitude === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.pet_attitude == -2 ? 'selected' : '' %>">
+              <input type="radio" name="pet_attitude" value="-2" <%= profile && profile.pet_attitude == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.pet_attitude === -1 ? 'selected' : '' %>">
-              <input type="radio" name="pet_attitude" value="-1" <%= profile && profile.pet_attitude === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.pet_attitude == -1 ? 'selected' : '' %>">
+              <input type="radio" name="pet_attitude" value="-1" <%= profile && profile.pet_attitude == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.pet_attitude === 0 ? 'selected' : '' %>">
-              <input type="radio" name="pet_attitude" value="0" <%= profile && profile.pet_attitude === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.pet_attitude == 0 ? 'selected' : '' %>">
+              <input type="radio" name="pet_attitude" value="0" <%= profile && profile.pet_attitude == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.pet_attitude === 1 ? 'selected' : '' %>">
-              <input type="radio" name="pet_attitude" value="1" <%= profile && profile.pet_attitude === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.pet_attitude == 1 ? 'selected' : '' %>">
+              <input type="radio" name="pet_attitude" value="1" <%= profile && profile.pet_attitude == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.pet_attitude === 2 ? 'selected' : '' %>">
-              <input type="radio" name="pet_attitude" value="2" <%= profile && profile.pet_attitude === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.pet_attitude == 2 ? 'selected' : '' %>">
+              <input type="radio" name="pet_attitude" value="2" <%= profile && profile.pet_attitude == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -1092,24 +1168,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">第一次约会</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.sexual_timing === -2 ? 'selected' : '' %>">
-              <input type="radio" name="sexual_timing" value="-2" <%= profile && profile.sexual_timing === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.sexual_timing == -2 ? 'selected' : '' %>">
+              <input type="radio" name="sexual_timing" value="-2" <%= profile && profile.sexual_timing == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.sexual_timing === -1 ? 'selected' : '' %>">
-              <input type="radio" name="sexual_timing" value="-1" <%= profile && profile.sexual_timing === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.sexual_timing == -1 ? 'selected' : '' %>">
+              <input type="radio" name="sexual_timing" value="-1" <%= profile && profile.sexual_timing == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.sexual_timing === 0 ? 'selected' : '' %>">
-              <input type="radio" name="sexual_timing" value="0" <%= profile && profile.sexual_timing === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.sexual_timing == 0 ? 'selected' : '' %>">
+              <input type="radio" name="sexual_timing" value="0" <%= profile && profile.sexual_timing == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.sexual_timing === 1 ? 'selected' : '' %>">
-              <input type="radio" name="sexual_timing" value="1" <%= profile && profile.sexual_timing === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.sexual_timing == 1 ? 'selected' : '' %>">
+              <input type="radio" name="sexual_timing" value="1" <%= profile && profile.sexual_timing == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.sexual_timing === 2 ? 'selected' : '' %>">
-              <input type="radio" name="sexual_timing" value="2" <%= profile && profile.sexual_timing === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.sexual_timing == 2 ? 'selected' : '' %>">
+              <input type="radio" name="sexual_timing" value="2" <%= profile && profile.sexual_timing == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -1122,24 +1198,24 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">先冷静，回避激烈交锋</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.conflict_style === -2 ? 'selected' : '' %>">
-              <input type="radio" name="conflict_style" value="-2" <%= profile && profile.conflict_style === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.conflict_style == -2 ? 'selected' : '' %>">
+              <input type="radio" name="conflict_style" value="-2" <%= profile && profile.conflict_style == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.conflict_style === -1 ? 'selected' : '' %>">
-              <input type="radio" name="conflict_style" value="-1" <%= profile && profile.conflict_style === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.conflict_style == -1 ? 'selected' : '' %>">
+              <input type="radio" name="conflict_style" value="-1" <%= profile && profile.conflict_style == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.conflict_style === 0 ? 'selected' : '' %>">
-              <input type="radio" name="conflict_style" value="0" <%= profile && profile.conflict_style === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.conflict_style == 0 ? 'selected' : '' %>">
+              <input type="radio" name="conflict_style" value="0" <%= profile && profile.conflict_style == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.conflict_style === 1 ? 'selected' : '' %>">
-              <input type="radio" name="conflict_style" value="1" <%= profile && profile.conflict_style === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.conflict_style == 1 ? 'selected' : '' %>">
+              <input type="radio" name="conflict_style" value="1" <%= profile && profile.conflict_style == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.conflict_style === 2 ? 'selected' : '' %>">
-              <input type="radio" name="conflict_style" value="2" <%= profile && profile.conflict_style === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.conflict_style == 2 ? 'selected' : '' %>">
+              <input type="radio" name="conflict_style" value="2" <%= profile && profile.conflict_style == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
@@ -1152,33 +1228,35 @@
         <div class="scale-horizontal">
           <span class="scale-label-text scale-label-left_text">每天</span>
           <div class="scale-options-row">
-            <label class="scale-option <%= profile && profile.meeting_frequency === -2 ? 'selected' : '' %>">
-              <input type="radio" name="meeting_frequency" value="-2" <%= profile && profile.meeting_frequency === -2 ? 'checked' : '' %> required>
+            <label class="scale-option <%= profile && profile.meeting_frequency == -2 ? 'selected' : '' %>">
+              <input type="radio" name="meeting_frequency" value="-2" <%= profile && profile.meeting_frequency == -2 ? 'checked' : '' %> required>
               <span class="scale-circle">-2</span>
             </label>
-            <label class="scale-option <%= profile && profile.meeting_frequency === -1 ? 'selected' : '' %>">
-              <input type="radio" name="meeting_frequency" value="-1" <%= profile && profile.meeting_frequency === -1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.meeting_frequency == -1 ? 'selected' : '' %>">
+              <input type="radio" name="meeting_frequency" value="-1" <%= profile && profile.meeting_frequency == -1 ? 'checked' : '' %>>
               <span class="scale-circle">-1</span>
             </label>
-            <label class="scale-option <%= profile && profile.meeting_frequency === 0 ? 'selected' : '' %>">
-              <input type="radio" name="meeting_frequency" value="0" <%= profile && profile.meeting_frequency === 0 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.meeting_frequency == 0 ? 'selected' : '' %>">
+              <input type="radio" name="meeting_frequency" value="0" <%= profile && profile.meeting_frequency == 0 ? 'checked' : '' %>>
               <span class="scale-circle">0</span>
             </label>
-            <label class="scale-option <%= profile && profile.meeting_frequency === 1 ? 'selected' : '' %>">
-              <input type="radio" name="meeting_frequency" value="1" <%= profile && profile.meeting_frequency === 1 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.meeting_frequency == 1 ? 'selected' : '' %>">
+              <input type="radio" name="meeting_frequency" value="1" <%= profile && profile.meeting_frequency == 1 ? 'checked' : '' %>>
               <span class="scale-circle">+1</span>
             </label>
-            <label class="scale-option <%= profile && profile.meeting_frequency === 2 ? 'selected' : '' %>">
-              <input type="radio" name="meeting_frequency" value="2" <%= profile && profile.meeting_frequency === 2 ? 'checked' : '' %>>
+            <label class="scale-option <%= profile && profile.meeting_frequency == 2 ? 'selected' : '' %>">
+              <input type="radio" name="meeting_frequency" value="2" <%= profile && profile.meeting_frequency == 2 ? 'checked' : '' %>>
               <span class="scale-circle">+2</span>
             </label>
           </div>
           <span class="scale-label-text scale-label-right_text">两周及以上1次</span>
         </div>
       </div>
+      </div>
+
 
     <!-- 三、个人特征与匹配偏好 -->
-    <div class="form-section">
+    <div class="form-section form-section-pagination" data-step="3">
       <h3 style="color: #e74c3c; margin: 20px 0 15px;">三、个人特征与匹配偏好</h3>
 
       <div class="form-group">
@@ -1334,24 +1412,24 @@
       <div class="scale-horizontal">
         <span class="scale-label-text scale-label-left_text">更喜欢互补</span>
         <div class="scale-options-row">
-          <label class="scale-option <%= profile && profile.partner_interest === -2 ? 'selected' : '' %>">
-            <input type="radio" name="partner_interest" value="-2" <%= profile && profile.partner_interest === -2 ? 'checked' : '' %> required>
+          <label class="scale-option <%= profile && profile.partner_interest == -2 ? 'selected' : '' %>">
+            <input type="radio" name="partner_interest" value="-2" <%= profile && profile.partner_interest == -2 ? 'checked' : '' %> required>
             <span class="scale-circle">-2</span>
           </label>
-          <label class="scale-option <%= profile && profile.partner_interest === -1 ? 'selected' : '' %>">
-            <input type="radio" name="partner_interest" value="-1" <%= profile && profile.partner_interest === -1 ? 'checked' : '' %>>
+          <label class="scale-option <%= profile && profile.partner_interest == -1 ? 'selected' : '' %>">
+            <input type="radio" name="partner_interest" value="-1" <%= profile && profile.partner_interest == -1 ? 'checked' : '' %>>
             <span class="scale-circle">-1</span>
           </label>
-          <label class="scale-option <%= profile && profile.partner_interest === 0 ? 'selected' : '' %>">
-            <input type="radio" name="partner_interest" value="0" <%= profile && profile.partner_interest === 0 ? 'checked' : '' %>>
+          <label class="scale-option <%= profile && profile.partner_interest == 0 ? 'selected' : '' %>">
+            <input type="radio" name="partner_interest" value="0" <%= profile && profile.partner_interest == 0 ? 'checked' : '' %>>
             <span class="scale-circle">0</span>
           </label>
-          <label class="scale-option <%= profile && profile.partner_interest === 1 ? 'selected' : '' %>">
-            <input type="radio" name="partner_interest" value="1" <%= profile && profile.partner_interest === 1 ? 'checked' : '' %>>
+          <label class="scale-option <%= profile && profile.partner_interest == 1 ? 'selected' : '' %>">
+            <input type="radio" name="partner_interest" value="1" <%= profile && profile.partner_interest == 1 ? 'checked' : '' %>>
             <span class="scale-circle">+1</span>
           </label>
-          <label class="scale-option <%= profile && profile.partner_interest === 2 ? 'selected' : '' %>">
-            <input type="radio" name="partner_interest" value="2" <%= profile && profile.partner_interest === 2 ? 'checked' : '' %>>
+          <label class="scale-option <%= profile && profile.partner_interest == 2 ? 'selected' : '' %>">
+            <input type="radio" name="partner_interest" value="2" <%= profile && profile.partner_interest == 2 ? 'checked' : '' %>>
             <span class="scale-circle">+2</span>
           </label>
         </div>
@@ -1359,9 +1437,9 @@
       </div>
     </div>
   </div>
-  
+
 <!-- 四、Love Type16 恋爱类型测试 -->
-<div class="form-section">
+<div class="form-section form-section-pagination" data-step="4">
   <h3 style="color: #e74c3c; margin: 20px 0 15px;"> 四、Love Type16 恋爱类型测试 </h3>
   <% lovetypeQuestions.forEach(function(question) { %>
     <div class="form-group">
@@ -1371,25 +1449,24 @@
       <div class="scale-horizontal">
         <span class="scale-label-text scale-label-left_text"><%= question.left.text %></span>
         <div class="scale-options-row">
-
-          <label class="scale-option <%= lovetypeAnswers[question.id] === '-2' ? 'selected' : '' %>">
-            <input type="radio" name="lovetype_<%= question.id %>" value="-2" <%= lovetypeAnswers[question.id] === '-2' ? 'checked' : '' %> required >
+          <label class="scale-option <%= lovetypeAnswers[question.id] == -2 ? 'selected' : '' %>">
+            <input type="radio" name="lovetype_<%= question.id %>" value="-2" <%= lovetypeAnswers[question.id] == -2 ? 'checked' : '' %> required>
             <span class="scale-circle">-2</span>
           </label>
-          <label class="scale-option <%= lovetypeAnswers[question.id] === '-1' ? 'selected' : '' %>">
-            <input  type="radio" name="lovetype_<%= question.id %>" value="-1" <%= lovetypeAnswers[question.id] === '-1' ? 'checked' : '' %> >
+          <label class="scale-option <%= lovetypeAnswers[question.id] == -1 ? 'selected' : '' %>">
+            <input type="radio" name="lovetype_<%= question.id %>" value="-1" <%= lovetypeAnswers[question.id] == -1 ? 'checked' : '' %>>
             <span class="scale-circle">-1</span>
           </label>
-          <label class="scale-option <%= lovetypeAnswers[question.id] === '0' ? 'selected' : '' %>">
-            <input  type="radio" name="lovetype_<%= question.id %>" value="0" <%= lovetypeAnswers[question.id] === '0' ? 'checked' : '' %> >
+          <label class="scale-option <%= lovetypeAnswers[question.id] == 0 ? 'selected' : '' %>">
+            <input type="radio" name="lovetype_<%= question.id %>" value="0" <%= lovetypeAnswers[question.id] == 0 ? 'checked' : '' %>>
             <span class="scale-circle">0</span>
           </label>
-          <label class="scale-option <%= lovetypeAnswers[question.id] === '+1' ? 'selected' : '' %>">
-            <input  type="radio" name="lovetype_<%= question.id %>" value="+1" <%= lovetypeAnswers[question.id] === '+1' ? 'checked' : '' %> >
+          <label class="scale-option <%= lovetypeAnswers[question.id] == 1 ? 'selected' : '' %>">
+            <input type="radio" name="lovetype_<%= question.id %>" value="1" <%= lovetypeAnswers[question.id] == 1 ? 'checked' : '' %>>
             <span class="scale-circle">+1</span>
           </label>
-          <label class="scale-option <%= lovetypeAnswers[question.id] === '+2' ? 'selected' : '' %>">
-            <input  type="radio" name="lovetype_<%= question.id %>" value="+2" <%= lovetypeAnswers[question.id] === '+2' ? 'checked' : '' %> >
+          <label class="scale-option <%= lovetypeAnswers[question.id] == 2 ? 'selected' : '' %>">
+            <input type="radio" name="lovetype_<%= question.id %>" value="2" <%= lovetypeAnswers[question.id] == 2 ? 'checked' : '' %>>
             <span class="scale-circle">+2</span>
           </label>
         </div>
@@ -1400,8 +1477,14 @@
     </div>
   <% }); %>
 </div>
+</div>
 
-    <button type="submit" class="btn" style="margin-top: 20px;">提交问卷</button>
+    <!-- 分页按钮 -->
+    <div class="pagination-buttons">
+      <button type="button" id="prevBtn" class="btn btn-secondary" disabled>上一步</button>
+      <button type="button" id="nextBtn" class="btn">下一步</button>
+      <button type="submit" id="submitBtn" class="btn" style="display:none;">提交问卷</button>
+    </div>
   </form>
   <% } %>
 </div>
@@ -1652,10 +1735,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (radio.checked) {
       label.classList.add('selected');
     }
-    label.addEventListener('click', function() {
+    label.addEventListener('click', function(e) {
+      e.preventDefault();
+      const radio = this.querySelector('input[type="radio"]');
+      radio.checked = true;
+
       const group = this.closest('.option-group');
       group.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
       this.classList.add('selected');
+
+      // 触发验证更新
+      updatePagination();
     });
   });
 
@@ -1667,14 +1757,18 @@ document.addEventListener('DOMContentLoaded', function() {
           option.classList.add('selected');
         }
         option.addEventListener('click', function(e) {
+          e.preventDefault();
           const radio = this.querySelector('input[type="radio"]');
           if (!radio) return;
+
+          radio.checked = true;
 
           const row = this.closest('.scale-options-row');
           row.querySelectorAll('.scale-option').forEach(opt => opt.classList.remove('selected'));
           this.classList.add('selected');
 
-          radio.checked = true;
+          // 触发验证更新
+          updatePagination();
         });
       });
     });
@@ -1683,10 +1777,10 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.checkbox-group-grid label, .checkbox-group label, .interest-tags label, .interest-tag').forEach(label => {
     // 跳过 scale-option（里面是radio不是checkbox）
     if (label.classList.contains('scale-option')) return;
-    
+
     const checkbox = label.querySelector('input[type="checkbox"]');
     if (!checkbox) return;  // 没有checkbox的label直接跳过
-    
+
     if (checkbox.checked) {
       label.classList.add('checked');
       label.classList.add('selected');
@@ -1701,8 +1795,174 @@ document.addEventListener('DOMContentLoaded', function() {
         this.classList.remove('checked');
         this.classList.remove('selected');
       }
+      // 触发验证更新
+      updatePagination();
     });
   });
+
+  // 分页逻辑
+  const totalSteps = 4;
+  let currentStep = 1;
+
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  const steps = document.querySelectorAll('.pagination-step');
+  const sections = document.querySelectorAll('.form-section-pagination');
+
+  function updatePagination() {
+    // 更新步骤指示器
+    steps.forEach((step, index) => {
+      const stepNum = index + 1;
+      step.classList.remove('active', 'completed');
+      if (stepNum === currentStep) {
+        step.classList.add('active');
+      } else if (stepNum < currentStep) {
+        step.classList.add('completed');
+      }
+    });
+
+    // 显示/隐藏对应的表单部分
+    sections.forEach(section => {
+      const sectionStep = parseInt(section.getAttribute('data-step'));
+      section.classList.toggle('active', sectionStep === currentStep);
+    });
+
+    // 更新按钮状态 - 始终显示按钮，通过disabled控制
+    prevBtn.disabled = currentStep === 1;
+
+    nextBtn.style.display = currentStep < totalSteps ? 'inline-block' : 'none';
+    submitBtn.style.display = currentStep === totalSteps ? 'inline-block' : 'none';
+
+    // 下一步按钮始终可点击，点击时通过 validateCurrentStep() 提示用户
+    nextBtn.disabled = false;
+  }
+
+  // 静默验证（不弹窗不滚动）
+  function validateCurrentStepSilent() {
+    const currentSection = document.querySelector(`.form-section-pagination[data-step="${currentStep}"]`);
+    if (!currentSection) return true;
+
+    // radio 按 name 去重，避免「只有第一项是 required」导致误判
+    const requiredRadioNames = new Set();
+    currentSection.querySelectorAll('input[type="radio"][required]').forEach(r => {
+      requiredRadioNames.add(r.name);
+    });
+    for (const name of requiredRadioNames) {
+      const group = currentSection.querySelectorAll(`input[name="${name}"]`);
+      const checked = Array.from(group).some(r => r.checked);
+      if (!checked) return false;
+    }
+
+    // checkbox 组验证（某些组需要至少选一项）
+    const requiredCheckboxNames = new Set();
+    currentSection.querySelectorAll('input[type="checkbox"][required]').forEach(c => {
+      requiredCheckboxNames.add(c.name);
+    });
+    for (const name of requiredCheckboxNames) {
+      const group = currentSection.querySelectorAll(`input[name="${name}"]`);
+      const checked = Array.from(group).some(c => c.checked);
+      if (!checked) return false;
+    }
+
+    // 非 radio/checkbox 的 required 字段
+    for (const field of currentSection.querySelectorAll('[required]')) {
+      if (field.type === 'radio') continue;
+      if (field.type === 'checkbox') continue;
+      if (!field.value) return false;
+    }
+
+    return true;
+  }
+
+  // 验证当前步骤的必填项（带提示）
+  function validateCurrentStep() {
+    const currentSection = document.querySelector(`.form-section-pagination[data-step="${currentStep}"]`);
+    if (!currentSection) return true;
+
+    let isValid = true;
+    let firstInvalid = null;
+
+    // radio 按 name 去重，避免「只有第一项是 required」导致误判
+    const requiredRadioNames = new Set();
+    currentSection.querySelectorAll('input[type="radio"][required]').forEach(r => {
+      requiredRadioNames.add(r.name);
+    });
+    for (const name of requiredRadioNames) {
+      const group = currentSection.querySelectorAll(`input[name="${name}"]`);
+      const checked = Array.from(group).some(r => r.checked);
+      if (!checked) {
+        isValid = false;
+        if (!firstInvalid) firstInvalid = group[0];
+      }
+    }
+
+    // checkbox 组验证（某些组需要至少选一项）
+    const requiredCheckboxNames = new Set();
+    currentSection.querySelectorAll('input[type="checkbox"][required]').forEach(c => {
+      requiredCheckboxNames.add(c.name);
+    });
+    for (const name of requiredCheckboxNames) {
+      const group = currentSection.querySelectorAll(`input[name="${name}"]`);
+      const checked = Array.from(group).some(c => c.checked);
+      if (!checked) {
+        isValid = false;
+        if (!firstInvalid) firstInvalid = group[0];
+      }
+    }
+
+    // 非 radio/checkbox 的 required 字段
+    for (const field of currentSection.querySelectorAll('[required]')) {
+      if (field.type === 'radio') continue;
+      if (field.type === 'checkbox') continue;
+      if (!field.value) {
+        isValid = false;
+        if (!firstInvalid) firstInvalid = field;
+      }
+    }
+
+    if (!isValid && firstInvalid) {
+      firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstInvalid.focus();
+    }
+
+    return isValid;
+  }
+
+  // 下一步按钮
+  nextBtn.addEventListener('click', function() {
+    if (validateCurrentStep()) {
+      if (currentStep < totalSteps) {
+        currentStep++;
+        updatePagination();
+      }
+    }
+  });
+
+  // 上一步按钮
+  prevBtn.addEventListener('click', function() {
+    if (currentStep > 1) {
+      currentStep--;
+      updatePagination();
+    }
+  });
+
+  // 实时验证 - 当用户填写时更新按钮状态
+  document.addEventListener('change', function(e) {
+    console.log('change event on:', e.target.name, e.target.value);
+    if (e.target.matches('[required]')) {
+      updatePagination();
+    }
+  });
+  document.addEventListener('input', function(e) {
+    console.log('input event on:', e.target.name);
+    if (e.target.matches('[required]')) {
+      updatePagination();
+    }
+  });
+
+  // 初始化分页状态
+  updatePagination();
 });
 
 <% if (typeof isDev !== 'undefined' && isDev) { %>
