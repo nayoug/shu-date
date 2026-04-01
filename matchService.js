@@ -316,8 +316,8 @@ async function getTopMatches(userId, topN = 5) {
   return matches.slice(0, topN);
 }
 
-async function saveWeeklyMatches() {
-  const weekNumber = getWeekNumber();
+async function saveWeeklyMatches(targetWeek = null) {
+  const weekNumber = targetWeek !== null ? targetWeek : getWeekNumber();
 
   const existing = await dbModule.queryOne('SELECT id FROM matches WHERE week_number = $1', [weekNumber]);
   if (existing) {

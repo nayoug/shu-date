@@ -347,6 +347,23 @@ const adminActionRateLimiter = createRedirectRateLimiter({
   }
 });
 
+// Cron 调度接口限流器
+const cronRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1小时
+  limit: 10, // 最多10次
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  keyGenerator: () => 'cron:weekly-match',
+  handler(req, res) {
+    console.warn('[Cron] 调度请求被限流');
+    res.status(429).json({
+      success: false,
+      error: 'Too many requests',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 async function findUserByEmailInsensitive(email) {
   const normalizedEmail = normalizeEmail(email);
   if (!normalizedEmail) {
@@ -1563,11 +1580,148 @@ app.post('/admin/match', isLoggedIn, requireAdmin, adminActionRateLimiter, requi
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
 }));
 
+// 补跑匹配
+app.post('/admin/match/rerun', isLoggedIn, requireAdmin, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
+  const { targetWeek, force } = req.body;
+  const currentWeek = getWeekNumber();
+  const weekToRun = targetWeek ? parseInt(targetWeek, 10) : currentWeek;
+
+  // 安全限制: 不允许补跑未来的周
+  if (weekToRun > currentWeek) {
+    return res.redirect('/admin?msg=' + encodeURIComponent('不能补跑未来的周') + '&type=error');
+  }
+
+  // 检查目标周是否已有匹配记录
+  const existingMatches = await db.queryOne(
+    'SELECT COUNT(*) as count FROM matches WHERE week_number = $1',
+    [weekToRun]
+  );
+
+  const matchCount = parseInt(existingMatches?.count || '0', 10);
+
+  if (matchCount > 0 && force !== 'true') {
+    return res.redirect(
+      '/admin?msg=' + encodeURIComponent(`第${weekToRun}周已有 ${matchCount} 对匹配记录，如需重新执行请勾选"强制重跑"`) +
+      '&type=warning'
+    );
+  }
+
+  // 强制重跑: 删除现有记录
+  if (matchCount > 0 && force === 'true') {
+    await db.execute('DELETE FROM matches WHERE week_number = $1', [weekToRun]);
+    console.log(`[Admin] 已删除第${weekToRun}周的 ${matchCount} 条匹配记录`);
+  }
+
+  // 执行补跑
+  console.log(`[Admin] 开始补跑第${weekToRun}周的匹配`);
+  const result = await runWeeklyMatchWithWeek(weekToRun);
+
+  res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
+}));
+
+// ============ Cron 调度接口 ============
+
+const CRON_SECRET = process.env.CRON_SECRET;
+
+app.post('/api/cron/weekly-match', cronRateLimiter, wrapAsync(async (req, res) => {
+  const timestamp = new Date().toISOString();
+
+  // 1. 验证密钥
+  const authHeader = req.headers['x-cron-secret'] || req.body?.cronSecret;
+  if (!CRON_SECRET || authHeader !== CRON_SECRET) {
+    console.warn(`[Cron] 无效的调度请求: 密钥不匹配 (${timestamp})`);
+    return res.status(403).json({
+      success: false,
+      error: 'Unauthorized',
+      timestamp
+    });
+  }
+
+  console.log(`[Cron] 开始执行周匹配: ${timestamp}`);
+
+  try {
+    const result = await runWeeklyMatch();
+
+    // 发送告警通知
+    const { alertMatchSuccess, alertMatchSkipped } = require('./alertService');
+
+    if (result.success) {
+      console.log(`[Cron] 匹配成功: ${result.message}`);
+      await alertMatchSuccess(result);
+    } else {
+      console.log(`[Cron] 匹配跳过: ${result.message}`);
+      await alertMatchSkipped(result.message);
+    }
+
+    res.json({
+      success: result.success,
+      message: result.message,
+      matchCount: result.results?.length || 0,
+      timestamp
+    });
+  } catch (error) {
+    console.error('[Cron] 匹配执行失败:', error);
+
+    // 发送失败告警
+    const { alertMatchFailed } = require('./alertService');
+    await alertMatchFailed(error, {
+      timestamp,
+      weekNumber: getWeekNumber()
+    });
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp
+    });
+  }
+}));
+
 // ============ 匹配逻辑 ============
 
 async function runWeeklyMatch() {
   const matchService = require('./matchService');
   const result = await matchService.saveWeeklyMatches();
+
+  if (!result.success) {
+    return result;
+  }
+
+  const { sendMatchEmail } = require('./mailer');
+  const emailTasks = [];
+  for (const pair of result.results || []) {
+    emailTasks.push(sendMatchEmail(
+      pair.user1.email,
+      pair.user1.nickname || '同学',
+      pair.user2.nickname || 'TA',
+      pair.user2.my_grade,
+      null
+    ));
+    emailTasks.push(sendMatchEmail(
+      pair.user2.email,
+      pair.user2.nickname || '同学',
+      pair.user1.nickname || 'TA',
+      pair.user1.my_grade,
+      null
+    ));
+  }
+
+  const emailResults = await Promise.all(emailTasks);
+  const failedEmailCount = emailResults.filter(item => !item?.success).length;
+  if (failedEmailCount > 0) {
+    console.error(`❌ 本次匹配共有 ${failedEmailCount} 封邮件发送失败`);
+  }
+
+  return result;
+}
+
+/**
+ * 执行指定周数的匹配（用于补跑)
+ * @param {number} targetWeek - 目标周数
+ */
+async function runWeeklyMatchWithWeek(targetWeek) {
+  const matchService = require('./matchService');
+  const result = await matchService.saveWeeklyMatches(targetWeek);
 
   if (!result.success) {
     return result;
