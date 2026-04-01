@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 const packageJson = require('./package.json');
-const { getWeekNumber } = require('./weekNumber');
+const { getWeekNumber, getYear } = require('./weekNumber');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
 const dbModule = require('./database');
@@ -1499,8 +1499,8 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
         ELSE m.user_id_1
       END
     LEFT JOIN profiles p ON p.user_id = partner.id
-    WHERE m.week_number = $2
-      AND ($1 = m.user_id_1 OR $1 = m.user_id_2)
+    WHERE m.match_year = $3 AND m.week_number = $2
+      AND ($3 = m.user_id_1 OR $3 = m.user_id_2)
     ORDER BY m.matched_at DESC, m.id DESC
     LIMIT 1
   `, [req.user.id, weekNumber]);
@@ -1583,18 +1583,19 @@ app.post('/admin/match', isLoggedIn, requireAdmin, adminActionRateLimiter, requi
 // 补跑匹配
 app.post('/admin/match/rerun', isLoggedIn, requireAdmin, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
   const { targetWeek, force } = req.body;
+  const currentYear = getYear();
   const currentWeek = getWeekNumber();
   const weekToRun = targetWeek ? parseInt(targetWeek, 10) : currentWeek;
+  const yearToRun = targetYear ? parseInt(targetYear, 10) : currentYear;
 
-  // 安全限制: 不允许补跑未来的周
-  if (weekToRun > currentWeek) {
+  // 安全限制: 不允许补跑未来的周/年
+  if (yearToRun > currentYear || (yearToRun === currentYear && weekToRun > currentWeek)) {
     return res.redirect('/admin?msg=' + encodeURIComponent('不能补跑未来的周') + '&type=error');
   }
-
   // 检查目标周是否已有匹配记录
   const existingMatches = await db.queryOne(
-    'SELECT COUNT(*) as count FROM matches WHERE week_number = $1',
-    [weekToRun]
+    'SELECT COUNT(*) as count FROM matches WHERE match_year = $1 AND week_number = $2',
+    [yearToRun, weekToRun]
   );
 
   const matchCount = parseInt(existingMatches?.count || '0', 10);
@@ -1608,13 +1609,12 @@ app.post('/admin/match/rerun', isLoggedIn, requireAdmin, adminActionRateLimiter,
 
   // 强制重跑: 删除现有记录
   if (matchCount > 0 && force === 'true') {
-    await db.execute('DELETE FROM matches WHERE week_number = $1', [weekToRun]);
-    console.log(`[Admin] 已删除第${weekToRun}周的 ${matchCount} 条匹配记录`);
+    await db.execute('DELETE FROM matches WHERE match_year = $1 AND week_number = $2', [yearToRun, weekToRun]);
+    console.log(`[Admin] 已删除第${yearToRun}年第${weekToRun}周的 ${matchCount} 条匹配记录`);
   }
-
   // 执行补跑
-  console.log(`[Admin] 开始补跑第${weekToRun}周的匹配`);
-  const result = await runWeeklyMatchWithWeek(weekToRun);
+  console.log(`[Admin] 开始补跑第${yearToRun}年第${weekToRun}周的匹配`);
+  const result = await runWeeklyMatchWithWeek(yearToRun, weekToRun);
 
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
 }));
@@ -1719,9 +1719,9 @@ async function runWeeklyMatch() {
  * 执行指定周数的匹配（用于补跑)
  * @param {number} targetWeek - 目标周数
  */
-async function runWeeklyMatchWithWeek(targetWeek) {
+async function runWeeklyMatchWithWeek(targetYear, targetWeek) {
   const matchService = require('./matchService');
-  const result = await matchService.saveWeeklyMatches(targetWeek);
+  const result = await matchService.saveWeeklyMatches(targetYear, targetWeek);
 
   if (!result.success) {
     return result;

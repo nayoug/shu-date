@@ -19,7 +19,7 @@
 
 const dbModule = require('./database');
 const lovetypeService = require('./lovetypeService');
-const { getWeekNumber } = require('./weekNumber');
+const { getWeekNumber, getYear } = require('./weekNumber');
 
 // ============ 工具函数 ============
 
@@ -316,10 +316,11 @@ async function getTopMatches(userId, topN = 5) {
   return matches.slice(0, topN);
 }
 
-async function saveWeeklyMatches(targetWeek = null) {
+async function saveWeeklyMatches(targetWeek = null, targetYear = null) {
   const weekNumber = targetWeek !== null ? targetWeek : getWeekNumber();
+  const year = targetYear !== null ? targetYear : getYear();
 
-  const existing = await dbModule.queryOne('SELECT id FROM matches WHERE week_number = $1', [weekNumber]);
+  const existing = await dbModule.queryOne('SELECT id FROM matches WHERE match_year = $1 AND week_number = $2', [year, weekNumber]);
   if (existing) {
     return { success: false, message: '本周已执行匹配' };
   }
@@ -346,9 +347,9 @@ async function saveWeeklyMatches(targetWeek = null) {
     if (matches.length > 0) {
       const bestMatch = matches[0];
       await dbModule.execute(`
-        INSERT INTO matches (user_id_1, user_id_2, score, week_number)
-        VALUES ($1, $2, $3, $4)
-      `, [user.id, bestMatch.user_id, bestMatch.score, weekNumber]);
+        INSERT INTO matches (user_id_1, user_id_2, score, week_number, match_year)
+        VALUES ($1, $2, $3, $4, $5)
+      `, [user.id, bestMatch.user_id, bestMatch.score, weekNumber, year]);
       matched.add(user.id);
       matched.add(bestMatch.user_id);
 

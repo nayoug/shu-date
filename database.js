@@ -145,10 +145,16 @@ await pool.query(`
     score REAL,
     matched_at TIMESTAMP DEFAULT NOW(),
     week_number INTEGER,
+    match_year INTEGER,
     FOREIGN KEY (user_id_1) REFERENCES users(id),
     FOREIGN KEY (user_id_2) REFERENCES users(id)
   )
 `);
+
+// 为现有数据添加 match_year 列（迁移）
+await pool.query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS match_year INTEGER`);
+// 更新现有记录的 match_year 为当前年份（如果为空）
+await pool.query(`UPDATE matches SET match_year = EXTRACT(YEAR FROM matched_at) WHERE match_year IS NULL`);
 
 await pool.query(`
   CREATE TABLE IF NOT EXISTS ${SESSION_TABLE_NAME} (
