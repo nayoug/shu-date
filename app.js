@@ -1137,6 +1137,15 @@ app.get('/settings', isLoggedIn, wrapAsync(async (req, res) => {
   });
 }));
 
+// 通知中心
+app.get('/notifications', isLoggedIn, wrapAsync(async (req, res) => {
+  res.render('notifications', {
+    user: req.user,
+    nickname: req.session.nickname,
+    hasProfile: req.user.hasProfile
+  });
+}));
+
 // 修改密码页面
 app.get('/settings/password', isLoggedIn, wrapAsync(async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
