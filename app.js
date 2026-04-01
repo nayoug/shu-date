@@ -1577,13 +1577,30 @@ app.get('/admin/match', isLoggedIn, requireAdmin, wrapAsync(async (req, res) => 
 }));
 
 app.post('/admin/match', isLoggedIn, requireAdmin, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
+  const { confirmPassword: passwordConfirm } = req.body;
+  // 二次密码确认
+  const user = await db.queryOne('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+  const bcrypt = require('bcryptjs');
+  const isValid = await bcrypt.compare(passwordConfirm || '', user.password_hash);
+  if (!isValid) {
+    return res.redirect('/admin?msg=' + encodeURIComponent('密码错误，操作已拒绝') + '&type=error');
+  }
   const result = await runWeeklyMatch();
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
 }));
 
 // 补跑匹配
 app.post('/admin/match/rerun', isLoggedIn, requireAdmin, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
-  const { targetWeek, targetYear, force } = req.body;
+  const { targetWeek, targetYear, force, confirmPassword: passwordConfirm } = req.body;
+
+  // 二次密码确认
+  const user = await db.queryOne('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+  const bcrypt = require('bcryptjs');
+  const isValid = await bcrypt.compare(passwordConfirm || '', user.password_hash);
+  if (!isValid) {
+    return res.redirect('/admin?msg=' + encodeURIComponent('密码错误，操作已拒绝') + '&type=error');
+  }
+
   const currentYear = getYear();
   const currentWeek = getWeekNumber();
 
