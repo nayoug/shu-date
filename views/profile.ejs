@@ -745,7 +745,7 @@
 
       <div class="form-group">
         <label>7(a). 我的家乡位于：</label>
-        <select name="hometown" class="province-select" required onchange="this.closest('.form-group') && this.closest('.form-group').classList.remove('form-group--error')">
+        <select name="hometown" class="province-select" required>
           <option value="">请选择省份</option>
           <option value="上海市" <%= profile && profile.hometown === '上海市' ? 'selected' : '' %>>上海市</option>
           <option value="江苏省" <%= profile && profile.hometown === '江苏省' ? 'selected' : '' %>>江苏省</option>
@@ -1782,6 +1782,14 @@ document.addEventListener('DOMContentLoaded', function() {
   updatePartnerTraitsCounter();
   //updateQuotaDisplay();
   updateCoreTraitsCounter();
+
+  // 为所有 required 的 select 绑定 change 事件，清除红框
+  document.querySelectorAll('select[required]').forEach(select => {
+    select.addEventListener('change', function() {
+      const fg = this.closest('.form-group');
+      if (fg) fg.classList.remove('form-group--error');
+    });
+  });
 
   // 选项框点击效果
   document.querySelectorAll('.option-group label').forEach(label => {
