@@ -408,6 +408,13 @@
     .form-section-pagination.active {
       display: block;
     }
+    .form-group--error {
+      border: 2px solid #e74c3c;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-left: -14px;
+      margin-right: -14px;
+    }
   </style>
 </head>
 <body>
@@ -738,7 +745,7 @@
 
       <div class="form-group">
         <label>7(a). 我的家乡位于：</label>
-        <select name="hometown" class="province-select" required>
+        <select name="hometown" class="province-select" required onchange="this.closest('.form-group') && this.closest('.form-group').classList.remove('form-group--error')">
           <option value="">请选择省份</option>
           <option value="上海市" <%= profile && profile.hometown === '上海市' ? 'selected' : '' %>>上海市</option>
           <option value="江苏省" <%= profile && profile.hometown === '江苏省' ? 'selected' : '' %>>江苏省</option>
@@ -1482,7 +1489,7 @@
         <span class="scale-label-text scale-label-left_text"><%= question.left.text %></span>
         <div class="scale-options-row">
           <label class="scale-option <%= lovetypeAnswers[question.id] == -2 ? 'selected' : '' %>">
-            <input type="radio" name="lovetype_<%= question.id %>" value="-2" <%= lovetypeAnswers[question.id] == -2 ? 'checked' : '' %> required>
+            <input type="radio" name="lovetype_<%= question.id %>" value="-2" <%= lovetypeAnswers[question.id] == -2 ? 'checked' : '' %>>
             <span class="scale-circle">-2</span>
           </label>
           <label class="scale-option <%= lovetypeAnswers[question.id] == -1 ? 'selected' : '' %>">
@@ -1791,6 +1798,10 @@ document.addEventListener('DOMContentLoaded', function() {
       group.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
       this.classList.add('selected');
 
+      // 移除该题红框
+      const fg = this.closest('.form-group');
+      if (fg) fg.classList.remove('form-group--error');
+
       // 触发验证更新
       updatePagination();
     });
@@ -1813,6 +1824,10 @@ document.addEventListener('DOMContentLoaded', function() {
           const row = this.closest('.scale-options-row');
           row.querySelectorAll('.scale-option').forEach(opt => opt.classList.remove('selected'));
           this.classList.add('selected');
+
+          // 移除该题红框
+          const fg = this.closest('.form-group');
+          if (fg) fg.classList.remove('form-group--error');
 
           // 触发验证更新
           updatePagination();
@@ -1838,6 +1853,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (checkbox.checked) {
         this.classList.add('checked');
         this.classList.add('selected');
+        // 移除该题红框
+        const fg = this.closest('.form-group');
+        if (fg) fg.classList.remove('form-group--error');
       } else {
         this.classList.remove('checked');
         this.classList.remove('selected');
@@ -1877,6 +1895,9 @@ document.addEventListener('DOMContentLoaded', function() {
       section.classList.toggle('active', sectionStep === currentStep);
     });
 
+    // 跳转到每一页的顶端
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     // 更新按钮状态 - 始终显示按钮，通过disabled控制
     prevBtn.disabled = currentStep === 1;
 
@@ -1894,53 +1915,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let isValid = true;
     let firstInvalid = null;
-    let firstInvalidMessage = '';
 
-    // radio 按 name 去重，避免「只有第一项是 required」导致误判
-    const requiredRadioNames = new Set();
-    currentSection.querySelectorAll('input[type="radio"][required]').forEach(r => {
-      requiredRadioNames.add(r.name);
+    // 收集所有需检测的 input（radio[required] + 指定 checkbox 组的第一个 input）
+    const checkboxGroupNames = ['accepted_campus', 'core_traits', 'my_traits', 'partner_traits', 'interests'];
+    const seenNames = new Set();
+    const orderedGroups = [];
+
+    // 选择所有带 required 的 radio 和 select，以及指定名称的 checkbox 组
+    const checkboxSelector = checkboxGroupNames.map(n => `input[name="${n}"]`).join(', ');
+    const selector = 'input[type="radio"][required], select[required]' + (checkboxSelector ? ', ' + checkboxSelector : '');
+    currentSection.querySelectorAll(selector).forEach(input => {
+      const name = input.name;
+      if (seenNames.has(name)) return;
+      seenNames.add(name);
+      const isSelect = input.tagName === 'SELECT';
+      const group = isSelect
+        ? [input]
+        : currentSection.querySelectorAll(`input[name="${name}"]`);
+      orderedGroups.push({ group, isSelect });
     });
-    for (const name of requiredRadioNames) {
-      const group = currentSection.querySelectorAll(`input[name="${name}"]`);
-      const checked = Array.from(group).some(r => r.checked);
+
+    // 第4步特殊处理 lovetype：所有 lovetype_ 开头的 radio 组都是必填
+    if (currentStep === 4) {
+      const lovetypeNames = [];
+      currentSection.querySelectorAll('input[name^="lovetype_"]').forEach(input => {
+        const name = input.name;
+        if (!lovetypeNames.includes(name)) {
+          lovetypeNames.push(name);
+        }
+      });
+      lovetypeNames.forEach(name => {
+        if (seenNames.has(name)) return;
+        const group = currentSection.querySelectorAll(`input[name="${name}"]`);
+        orderedGroups.push({ group, isSelect: false });
+      });
+    }
+    // 检查每一组是否有选中的选项
+    for (const { group, isSelect } of orderedGroups) {
+      const checked = isSelect
+        ? Array.from(group).every(i => i.value)
+        : Array.from(group).some(i => i.checked);
       if (!checked) {
         isValid = false;
         if (!firstInvalid) firstInvalid = group[0];
-      }
-    }
-
-    // checkbox 组验证（某些组需要至少选一项）
-    const requiredCheckboxNames = new Set();
-    currentSection.querySelectorAll('input[type="checkbox"][required]').forEach(c => {
-      requiredCheckboxNames.add(c.name);
-    });
-    for (const name of requiredCheckboxNames) {
-      const group = currentSection.querySelectorAll(`input[name="${name}"]`);
-      const checked = Array.from(group).some(c => c.checked);
-      if (!checked) {
-        isValid = false;
-        if (!firstInvalid) firstInvalid = group[0];
-      }
-    }
-
-    // 隐藏必填字段对应到可见的多选组，避免把焦点落在 hidden input 上
-    const hiddenRequiredGroups = [
-      { fieldId: 'acceptedCampusGroupRequired', inputSelector: 'input[name="accepted_campus"]' },
-      { fieldId: 'coreTraitsGroupRequired', inputSelector: 'input[name="core_traits"]' }
-    ];
-    for (const groupConfig of hiddenRequiredGroups) {
-      const hiddenField = currentSection.querySelector(`#${groupConfig.fieldId}[required]`);
-      if (!hiddenField) continue;
-
-      const groupInputs = currentSection.querySelectorAll(groupConfig.inputSelector);
-      groupInputs.forEach(input => input.setCustomValidity(''));
-      if (hiddenField.value) continue;
-
-      isValid = false;
-      if (!firstInvalid) {
-        firstInvalid = groupInputs[0] || null;
-        firstInvalidMessage = hiddenField.validationMessage || '请完成当前分组选择';
       }
     }
 
@@ -1955,17 +1972,18 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    // 清除当前页所有旧红框
+    currentSection.querySelectorAll('.form-group--error').forEach(el => {
+      el.classList.remove('form-group--error');
+    });
+
     if (!isValid && firstInvalid) {
-      firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      firstInvalid.focus();
-      if (firstInvalidMessage && typeof firstInvalid.setCustomValidity === 'function') {
-        firstInvalid.setCustomValidity(firstInvalidMessage);
-      }
-      if (typeof firstInvalid.reportValidity === 'function') {
-        firstInvalid.reportValidity();
-      }
-      if (firstInvalidMessage && typeof firstInvalid.setCustomValidity === 'function') {
-        firstInvalid.setCustomValidity('');
+      const formGroup = firstInvalid.closest('.form-group');
+      if (formGroup) {
+        formGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        formGroup.classList.add('form-group--error');
+      } else {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
 
@@ -2002,10 +2020,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!validateCurrentStep()) {
       event.preventDefault();
       return;
-    }
-
-    if (typeof surveyForm.reportValidity === 'function' && !surveyForm.reportValidity()) {
-      event.preventDefault();
     }
   });
 
