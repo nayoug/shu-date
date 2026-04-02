@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 const packageJson = require('./package.json');
-const { getWeekNumber } = require('./weekNumber');
+const { getWeekNumber, getYear } = require('./weekNumber');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
 const dbModule = require('./database');
@@ -55,6 +55,8 @@ function wrapAsync(fn) {
 const AUTH_RATE_LIMIT_MESSAGE = '请求过于频繁，请稍后再试。';
 const MAX_EMAIL_LENGTH_FOR_KEY = 320;
 const MAX_CODE_LENGTH_FOR_KEY = 256;
+const WEEK_NUMBER_MIN = 0;
+const WEEK_NUMBER_MAX = 53;
 
 function buildLoginRedirectPath(method, email) {
   const params = new URLSearchParams({
@@ -191,6 +193,7 @@ if (isProduction) {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // 支持 JSON body (cron 服务可能使用 application/json)
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   store: new PgSession({
@@ -347,6 +350,25 @@ const adminActionRateLimiter = createRedirectRateLimiter({
   }
 });
 
+// Cron 调度接口限流器
+const cronRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1小时
+  limit: 10, // 最多10次
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  keyGenerator(req) {
+    return `cron:${ipKeyGenerator(req.ip || req.socket?.remoteAddress || '')}`;
+  },
+  handler(req, res) {
+    console.warn('[Cron] 调度请求被限流');
+    res.status(429).json({
+      success: false,
+      error: 'Too many requests',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 async function findUserByEmailInsensitive(email) {
   const normalizedEmail = normalizeEmail(email);
   if (!normalizedEmail) {
@@ -410,6 +432,14 @@ function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面�
 
 function isApiRequest(req) {
   return /^\/api(?:\/|$)/.test(req.path || '');
+}
+
+async function confirmCurrentUserPassword(req, password) {
+  const user = await db.queryOne('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+  if (!user?.password_hash) {
+    return false;
+  }
+  return verifyPassword(password || '', user.password_hash, db, req.user.id);
 }
 
 function regenerateSession(req) {
@@ -1482,11 +1512,11 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
         ELSE m.user_id_1
       END
     LEFT JOIN profiles p ON p.user_id = partner.id
-    WHERE m.week_number = $2
+    WHERE m.match_year = $3 AND m.week_number = $2
       AND ($1 = m.user_id_1 OR $1 = m.user_id_2)
     ORDER BY m.matched_at DESC, m.id DESC
     LIMIT 1
-  `, [req.user.id, weekNumber]);
+  `, [req.user.id, weekNumber, getYear()]);
 
   const weeklyMatch = weeklyMatches.length > 0 ? {
     weekNumber: weeklyMatches[0].week_number,
@@ -1559,8 +1589,145 @@ app.get('/admin/match', isLoggedIn, requireAdmin, wrapAsync(async (req, res) => 
 }));
 
 app.post('/admin/match', isLoggedIn, requireAdmin, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
+  const { confirmPassword: passwordConfirm } = req.body;
+  // 二次密码确认
+  const isValid = await confirmCurrentUserPassword(req, passwordConfirm);
+  if (!isValid) {
+    return res.redirect('/admin?msg=' + encodeURIComponent('密码错误，操作已拒绝') + '&type=error');
+  }
   const result = await runWeeklyMatch();
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
+}));
+
+// 补跑匹配
+app.post('/admin/match/rerun', isLoggedIn, requireAdmin, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
+  const { targetWeek, targetYear, force, confirmPassword: passwordConfirm } = req.body;
+
+  // 二次密码确认
+  const isValid = await confirmCurrentUserPassword(req, passwordConfirm);
+  if (!isValid) {
+    return res.redirect('/admin?msg=' + encodeURIComponent('密码错误，操作已拒绝') + '&type=error');
+  }
+
+  const currentYear = getYear();
+  const currentWeek = getWeekNumber();
+
+  // 校验并解析 targetWeek
+  let weekToRun;
+  if (targetWeek !== undefined && targetWeek !== null && targetWeek !== '') {
+    const parsed = parseInt(targetWeek, 10);
+    if (Number.isNaN(parsed) || parsed < WEEK_NUMBER_MIN || parsed > WEEK_NUMBER_MAX) {
+      return res.redirect('/admin?msg=' + encodeURIComponent(`周数必须是 ${WEEK_NUMBER_MIN}-${WEEK_NUMBER_MAX} 之间的整数`) + '&type=error');
+    }
+    weekToRun = parsed;
+  } else {
+    weekToRun = currentWeek;
+  }
+
+  // 校验并解析 targetYear
+  let yearToRun;
+  if (targetYear !== undefined && targetYear !== null && targetYear !== '') {
+    const parsed = parseInt(targetYear, 10);
+    if (Number.isNaN(parsed) || parsed < 2020 || parsed > 2100) {
+      return res.redirect('/admin?msg=' + encodeURIComponent('年份必须是 2020-2100 之间的整数') + '&type=error');
+    }
+    yearToRun = parsed;
+  } else {
+    yearToRun = currentYear;
+  }
+
+  // 安全限制: 不允许补跑未来的周/年
+  if (yearToRun > currentYear || (yearToRun === currentYear && weekToRun > currentWeek)) {
+    return res.redirect('/admin?msg=' + encodeURIComponent('不能补跑未来的周') + '&type=error');
+  }
+  // 检查目标周是否已有匹配记录
+  const existingMatches = await db.queryOne(
+    'SELECT COUNT(*) as count FROM matches WHERE match_year = $1 AND week_number = $2',
+    [yearToRun, weekToRun]
+  );
+
+  const matchCount = parseInt(existingMatches?.count || '0', 10);
+
+  if (matchCount > 0 && force !== 'true') {
+    return res.redirect(
+      '/admin?msg=' + encodeURIComponent(`第${weekToRun}周已有 ${matchCount} 对匹配记录，如需重新执行请勾选"强制重跑"`) +
+      '&type=warning'
+    );
+  }
+
+  // 强制重跑: 删除现有记录
+  if (matchCount > 0 && force === 'true') {
+    await db.execute('DELETE FROM matches WHERE match_year = $1 AND week_number = $2', [yearToRun, weekToRun]);
+    console.log(`[Admin] 已删除第${yearToRun}年第${weekToRun}周的 ${matchCount} 条匹配记录`);
+  }
+  // 执行补跑
+  console.log(`[Admin] 开始补跑第${yearToRun}年第${weekToRun}周的匹配`);
+  const result = await runWeeklyMatchWithWeek(yearToRun, weekToRun);
+
+  res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
+}));
+
+// ============ Cron 调度接口 ============
+
+const CRON_SECRET = process.env.CRON_SECRET;
+
+function requireValidCronSecret(req, res, next) {
+  const timestamp = new Date().toISOString();
+
+  const authHeader = req.headers['x-cron-secret'] || req.body?.cronSecret;
+  if (!CRON_SECRET || authHeader !== CRON_SECRET) {
+    console.warn(`[Cron] 无效的调度请求: 密钥不匹配 (${timestamp})`);
+    return res.status(403).json({
+      success: false,
+      error: 'Unauthorized',
+      timestamp
+    });
+  }
+
+  next();
+}
+
+app.post('/api/cron/weekly-match', requireValidCronSecret, cronRateLimiter, wrapAsync(async (req, res) => {
+  const timestamp = new Date().toISOString();
+
+  console.log(`[Cron] 开始执行周匹配: ${timestamp}`);
+
+  try {
+    const result = await runWeeklyMatch();
+
+    // 发送告警通知
+    const { alertMatchSuccess, alertMatchSkipped } = require('./alertService');
+
+    if (result.success) {
+      console.log(`[Cron] 匹配成功: ${result.message}`);
+      await alertMatchSuccess(result);
+    } else {
+      console.log(`[Cron] 匹配跳过: ${result.message}`);
+      await alertMatchSkipped(result.message);
+    }
+
+    res.json({
+      success: result.success,
+      message: result.message,
+      matchCount: result.results?.length || 0,
+      timestamp
+    });
+  } catch (error) {
+    console.error('[Cron] 匹配执行失败:', error);
+
+    // 发送失败告警
+    const { alertMatchFailed } = require('./alertService');
+    await alertMatchFailed(error, {
+      timestamp,
+      weekNumber: getWeekNumber()
+    });
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp
+    });
+  }
 }));
 
 // ============ 匹配逻辑 ============
@@ -1568,6 +1735,47 @@ app.post('/admin/match', isLoggedIn, requireAdmin, adminActionRateLimiter, requi
 async function runWeeklyMatch() {
   const matchService = require('./matchService');
   const result = await matchService.saveWeeklyMatches();
+
+  if (!result.success) {
+    return result;
+  }
+
+  const { sendMatchEmail } = require('./mailer');
+  const emailTasks = [];
+  for (const pair of result.results || []) {
+    emailTasks.push(sendMatchEmail(
+      pair.user1.email,
+      pair.user1.nickname || '同学',
+      pair.user2.nickname || 'TA',
+      pair.user2.my_grade,
+      null
+    ));
+    emailTasks.push(sendMatchEmail(
+      pair.user2.email,
+      pair.user2.nickname || '同学',
+      pair.user1.nickname || 'TA',
+      pair.user1.my_grade,
+      null
+    ));
+  }
+
+  const emailResults = await Promise.all(emailTasks);
+  const failedEmailCount = emailResults.filter(item => !item?.success).length;
+  if (failedEmailCount > 0) {
+    console.error(`❌ 本次匹配共有 ${failedEmailCount} 封邮件发送失败`);
+  }
+
+  return result;
+}
+
+/**
+ * 执行指定年份和周数的匹配（用于补跑）
+ * @param {number} targetYear - 目标年份
+ * @param {number} targetWeek - 目标周数
+ */
+async function runWeeklyMatchWithWeek(targetYear, targetWeek) {
+  const matchService = require('./matchService');
+  const result = await matchService.saveWeeklyMatches(targetYear, targetWeek);
 
   if (!result.success) {
     return result;
