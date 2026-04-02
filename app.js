@@ -55,6 +55,8 @@ function wrapAsync(fn) {
 const AUTH_RATE_LIMIT_MESSAGE = '请求过于频繁，请稍后再试。';
 const MAX_EMAIL_LENGTH_FOR_KEY = 320;
 const MAX_CODE_LENGTH_FOR_KEY = 256;
+const WEEK_NUMBER_MIN = 0;
+const WEEK_NUMBER_MAX = 53;
 
 function buildLoginRedirectPath(method, email) {
   const params = new URLSearchParams({
@@ -354,7 +356,9 @@ const cronRateLimiter = rateLimit({
   limit: 10, // 最多10次
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  keyGenerator: () => 'cron:weekly-match',
+  keyGenerator(req) {
+    return `cron:${ipKeyGenerator(req.ip || req.socket?.remoteAddress || '')}`;
+  },
   handler(req, res) {
     console.warn('[Cron] 调度请求被限流');
     res.status(429).json({
@@ -428,6 +432,14 @@ function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面�
 
 function isApiRequest(req) {
   return /^\/api(?:\/|$)/.test(req.path || '');
+}
+
+async function confirmCurrentUserPassword(req, password) {
+  const user = await db.queryOne('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+  if (!user?.password_hash) {
+    return false;
+  }
+  return verifyPassword(password || '', user.password_hash, db, req.user.id);
 }
 
 function regenerateSession(req) {
@@ -1579,9 +1591,7 @@ app.get('/admin/match', isLoggedIn, requireAdmin, wrapAsync(async (req, res) => 
 app.post('/admin/match', isLoggedIn, requireAdmin, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
   const { confirmPassword: passwordConfirm } = req.body;
   // 二次密码确认
-  const user = await db.queryOne('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
-  const bcrypt = require('bcryptjs');
-  const isValid = await bcrypt.compare(passwordConfirm || '', user.password_hash);
+  const isValid = await confirmCurrentUserPassword(req, passwordConfirm);
   if (!isValid) {
     return res.redirect('/admin?msg=' + encodeURIComponent('密码错误，操作已拒绝') + '&type=error');
   }
@@ -1594,9 +1604,7 @@ app.post('/admin/match/rerun', isLoggedIn, requireAdmin, adminActionRateLimiter,
   const { targetWeek, targetYear, force, confirmPassword: passwordConfirm } = req.body;
 
   // 二次密码确认
-  const user = await db.queryOne('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
-  const bcrypt = require('bcryptjs');
-  const isValid = await bcrypt.compare(passwordConfirm || '', user.password_hash);
+  const isValid = await confirmCurrentUserPassword(req, passwordConfirm);
   if (!isValid) {
     return res.redirect('/admin?msg=' + encodeURIComponent('密码错误，操作已拒绝') + '&type=error');
   }
@@ -1608,8 +1616,8 @@ app.post('/admin/match/rerun', isLoggedIn, requireAdmin, adminActionRateLimiter,
   let weekToRun;
   if (targetWeek !== undefined && targetWeek !== null && targetWeek !== '') {
     const parsed = parseInt(targetWeek, 10);
-    if (Number.isNaN(parsed) || parsed < 1 || parsed > 53) {
-      return res.redirect('/admin?msg=' + encodeURIComponent('周数必须是 1-53 之间的整数') + '&type=error');
+    if (Number.isNaN(parsed) || parsed < WEEK_NUMBER_MIN || parsed > WEEK_NUMBER_MAX) {
+      return res.redirect('/admin?msg=' + encodeURIComponent(`周数必须是 ${WEEK_NUMBER_MIN}-${WEEK_NUMBER_MAX} 之间的整数`) + '&type=error');
     }
     weekToRun = parsed;
   } else {
@@ -1663,10 +1671,9 @@ app.post('/admin/match/rerun', isLoggedIn, requireAdmin, adminActionRateLimiter,
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
-app.post('/api/cron/weekly-match', cronRateLimiter, wrapAsync(async (req, res) => {
+function requireValidCronSecret(req, res, next) {
   const timestamp = new Date().toISOString();
 
-  // 1. 验证密钥
   const authHeader = req.headers['x-cron-secret'] || req.body?.cronSecret;
   if (!CRON_SECRET || authHeader !== CRON_SECRET) {
     console.warn(`[Cron] 无效的调度请求: 密钥不匹配 (${timestamp})`);
@@ -1676,6 +1683,12 @@ app.post('/api/cron/weekly-match', cronRateLimiter, wrapAsync(async (req, res) =
       timestamp
     });
   }
+
+  next();
+}
+
+app.post('/api/cron/weekly-match', requireValidCronSecret, cronRateLimiter, wrapAsync(async (req, res) => {
+  const timestamp = new Date().toISOString();
 
   console.log(`[Cron] 开始执行周匹配: ${timestamp}`);
 

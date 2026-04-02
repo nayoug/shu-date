@@ -153,8 +153,12 @@ await pool.query(`
 
 // 为现有数据添加 match_year 列（迁移）
 await pool.query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS match_year INTEGER`);
-// 更新现有记录的 match_year 为当前年份（如果为空）
-await pool.query(`UPDATE matches SET match_year = EXTRACT(YEAR FROM matched_at) WHERE match_year IS NULL`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_matches_year_week ON matches (match_year, week_number)`);
+// 仅在存在旧记录时回填 match_year，避免每次启动都全表 UPDATE
+const missingMatchYear = await pool.query(`SELECT 1 FROM matches WHERE match_year IS NULL LIMIT 1`);
+if (missingMatchYear.rowCount > 0) {
+  await pool.query(`UPDATE matches SET match_year = EXTRACT(YEAR FROM matched_at) WHERE match_year IS NULL`);
+}
 
 await pool.query(`
   CREATE TABLE IF NOT EXISTS ${SESSION_TABLE_NAME} (
