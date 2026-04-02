@@ -3,3 +3,4 @@ shu.db
 .env
 .DS_Store
 *.log
+.claude/settings.local.json

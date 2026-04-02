@@ -1501,10 +1501,10 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
       END
     LEFT JOIN profiles p ON p.user_id = partner.id
     WHERE m.match_year = $3 AND m.week_number = $2
-      AND ($3 = m.user_id_1 OR $3 = m.user_id_2)
+      AND ($1 = m.user_id_1 OR $1 = m.user_id_2)
     ORDER BY m.matched_at DESC, m.id DESC
     LIMIT 1
-  `, [req.user.id, weekNumber]);
+  `, [req.user.id, weekNumber, getYear()]);
 
   const weeklyMatch = weeklyMatches.length > 0 ? {
     weekNumber: weeklyMatches[0].week_number,
@@ -1756,7 +1756,8 @@ async function runWeeklyMatch() {
 }
 
 /**
- * 执行指定周数的匹配（用于补跑)
+ * 执行指定年份和周数的匹配（用于补跑）
+ * @param {number} targetYear - 目标年份
  * @param {number} targetWeek - 目标周数
  */
 async function runWeeklyMatchWithWeek(targetYear, targetWeek) {
