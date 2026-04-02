@@ -30,6 +30,18 @@
         </div>
       </div>
 
+      <% if (typeof matchComment !== 'undefined' && matchComment) { %>
+      <div style="margin-bottom: 24px; padding: 16px; background: var(--accent); border-radius: 8px;">
+        <h3 style="margin-bottom: 16px;">匹配评语</h3>
+        <p style="margin: 0; color: var(--muted-foreground); line-height: 1.6;"><%= matchComment %></p>
+      </div>
+      <% } else { %>
+      <div id="comment-loading" style="margin-bottom: 24px; padding: 16px; background: var(--accent); border-radius: 8px;">
+        <h3 style="margin-bottom: 12px;">匹配评语</h3>
+        <p style="margin: 0; color: var(--muted-foreground);">深度思考中...</p>
+      </div>
+      <% } %>
+
       <div style="margin-bottom: 24px;">
         <h3 style="margin-bottom: 16px;">对方信息</h3>
         <div style="padding: 16px; background: var(--accent); border-radius: 8px;">
@@ -37,6 +49,7 @@
           <% if (partner.my_grade) { %><p style="margin: 0 0 8px 0;"><strong>年级：</strong><%= partner.my_grade %></p><% } %>
           <% if (partner.gender) { %><p style="margin: 0 0 8px 0;"><strong>性别：</strong><%= partner.gender %></p><% } %>
           <% if (partner.campus) { %><p style="margin: 0 0 8px 0;"><strong>校区：</strong><%= partner.campus %></p><% } %>
+          <% if (partner.lovetype_code) { %><p style="margin: 0 0 8px 0;"><strong>恋爱类型：</strong><%= partner.lovetype_code %> - <%= partner.loveTypeProfile?.nickname || partner.loveTypeProfile?.title || '' %></p><% } %>
         </div>
       </div>
 
@@ -45,6 +58,27 @@
       </div>
     </div>
   </div>
+
+  <% if (!matchComment) { %>
+  <script>
+    (function() {
+      fetch('/api/couple-match/comment/<%= requestId %>')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          var container = document.getElementById('comment-loading');
+          if (data.success && data.comment) {
+            container.innerHTML = '<h3 style="margin-bottom: 12px;">匹配评语</h3><p style="margin: 0; color: var(--muted-foreground); line-height: 1.6;">' + data.comment + '</p>';
+          } else {
+            container.innerHTML = '<h3 style="margin-bottom: 12px;">匹配评语</h3><p style="margin: 0; color: var(--muted-foreground);">暂时无法生成评语</p>';
+          }
+        })
+        .catch(function() {
+          var container = document.getElementById('comment-loading');
+          container.innerHTML = '<h3 style="margin-bottom: 12px;">匹配评语</h3><p style="margin: 0; color: var(--muted-foreground);">加载失败</p>';
+        });
+    })();
+  </script>
+  <% } %>
 
 </body>
 </html>

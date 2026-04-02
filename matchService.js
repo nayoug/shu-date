@@ -386,12 +386,23 @@ async function getCoupleMatch(userAId, userBId) {
   const scoreAB = calculateMatchScore(profileA, profileB);
   const scoreBA = calculateMatchScore(profileB, profileA);
   const score = harmonicMean(scoreAB, scoreBA);
-  const details = calculateMatchDetails(profileA, profileB);
+
+  // 计算双方各自的 breakdown
+  const detailsA = calculateMatchDetails(profileA, profileB);
+  const detailsB = calculateMatchDetails(profileB, profileA);
+
+  // 调和平均 breakdown
+  const breakdown = {};
+  for (const key in detailsA.breakdown) {
+    const vA = detailsA.breakdown[key];
+    const vB = detailsB.breakdown[key];
+    breakdown[key] = vA > 0 && vB > 0 ? (2 * vA * vB) / (vA + vB) : 0;
+  }
 
   return {
     score: Math.round(score * 100) / 100,
-    breakdown: details.breakdown,
-    total: details.total
+    breakdown: breakdown,
+    total: Math.round(score * 100) / 100
   };
 }
 

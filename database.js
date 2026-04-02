@@ -176,6 +176,8 @@ await pool.query(`
     requester_id INTEGER NOT NULL,
     receiver_id INTEGER NOT NULL,
     status TEXT DEFAULT 'pending', -- pending, accepted, rejected
+    match_score NUMERIC(5,2), -- 匹配得分，固定保存
+    match_comment TEXT, -- 匹配评语，固定保存
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (requester_id) REFERENCES users(id),
@@ -183,6 +185,10 @@ await pool.query(`
     UNIQUE(requester_id, receiver_id)
   )
 `);
+
+// 迁移：为已存在的 couple_requests 表添加新字段
+await pool.query(`ALTER TABLE couple_requests ADD COLUMN IF NOT EXISTS match_score NUMERIC(5,2)`);
+await pool.query(`ALTER TABLE couple_requests ADD COLUMN IF NOT EXISTS match_comment TEXT`);
 
 // 通知表
 await pool.query(`

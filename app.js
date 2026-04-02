@@ -1593,7 +1593,7 @@ app.get('/couple-match', isLoggedIn, wrapAsync(async (req, res) => {
   `, [req.user.id]);
 
   res.render('couple-match', {
-    title: '情侣匹配',
+    title: '情侣匹配度测试',
     user: req.user,
     nickname: req.session.nickname,
     hasProfile: true,
@@ -1605,7 +1605,7 @@ app.get('/couple-match', isLoggedIn, wrapAsync(async (req, res) => {
   });
 }));
 
-// 发送情侣匹配申请
+// 发送情侣匹配度测试申请
 app.post('/couple-match/request', isLoggedIn, wrapAsync(async (req, res) => {
   const { email } = req.body;
 
@@ -1673,7 +1673,7 @@ app.post('/couple-match/request', isLoggedIn, wrapAsync(async (req, res) => {
     VALUES ($1, 'match_request', $2, $3, $4)
   `, [
     targetUser.id,
-    `用户 ${req.user.nickname || req.user.email} 请求与你进行情侣匹配`,
+    `用户 ${req.user.nickname || req.user.email} 请求与你进行情侣匹配度测试`,
     req.user.id,
     newRequest.id
   ]);
@@ -1681,7 +1681,7 @@ app.post('/couple-match/request', isLoggedIn, wrapAsync(async (req, res) => {
   res.redirect('/couple-match?msg=匹配申请已发送&type=success');
 }));
 
-// 同意情侣匹配申请
+// 同意情侣匹配度测试申请
 app.post('/couple-match/accept/:id', isLoggedIn, wrapAsync(async (req, res) => {
   const requestId = parseInt(req.params.id, 10);
 
@@ -1698,11 +1698,7 @@ app.post('/couple-match/accept/:id', isLoggedIn, wrapAsync(async (req, res) => {
     return res.redirect('/notifications?msg=匹配请求不存在或已处理&type=error');
   }
 
-  // 计算匹配得分
-  const matchService = require('./matchService');
-  await matchService.getCoupleMatch(coupleRequest.requester_id, coupleRequest.receiver_id);
-
-  // 更新状态为 accepted
+  // 先只更新状态为 accepted，不在此处生成评语（评语会在查看结果时异步生成）
   await db.execute(`
     UPDATE couple_requests SET status = 'accepted', updated_at = CURRENT_TIMESTAMP WHERE id = $1
   `, [requestId]);
@@ -1713,7 +1709,7 @@ app.post('/couple-match/accept/:id', isLoggedIn, wrapAsync(async (req, res) => {
     VALUES ($1, 'match_accepted', $2, $3, $4)
   `, [
     coupleRequest.requester_id,
-    `用户 ${req.user.nickname || req.user.email} 已同意你的情侣匹配申请`,
+    `用户 ${req.user.nickname || req.user.email} 已同意你的情侣匹配度测试申请`,
     req.user.id,
     requestId
   ]);
@@ -1721,7 +1717,7 @@ app.post('/couple-match/accept/:id', isLoggedIn, wrapAsync(async (req, res) => {
   res.redirect(`/couple-match/result/${requestId}?msg=匹配成功&type=success`);
 }));
 
-// 拒绝情侣匹配申请
+// 拒绝情侣匹配度测试申请
 app.post('/couple-match/reject/:id', isLoggedIn, wrapAsync(async (req, res) => {
   const requestId = parseInt(req.params.id, 10);
 
@@ -1746,15 +1742,83 @@ app.post('/couple-match/reject/:id', isLoggedIn, wrapAsync(async (req, res) => {
     VALUES ($1, 'match_rejected', $2, $3, $4)
   `, [
     coupleRequest.requester_id,
-    `用户 ${req.user.nickname || req.user.email} 已拒绝你的情侣匹配申请`,
+    `用户 ${req.user.nickname || req.user.email} 已拒绝你的情侣匹配度测试申请`,
     req.user.id,
     requestId
   ]);
 
-  res.redirect('/notifications?msg=已拒绝匹配申请&type=success');
+  res.redirect('/notifications?msg=已拒绝匹配度测试申请&type=success');
 }));
 
-// 查看情侣匹配结果
+// DeepSeek API 调用函数
+async function generateMatchComment(userAProfile, userBProfile, matchScore) {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (!apiKey) {
+    console.error('DeepSeek API Key 未配置');
+    return null;
+  }
+  const url = 'https://api.deepseek.com/v1/chat/completions';
+
+  // 构建双方信息摘要
+  const buildProfileSummary = (profile) => {
+    const info = [];
+    if (profile.gender) info.push(`性别: ${profile.gender}`);
+    if (profile.my_grade) info.push(`年级: ${profile.my_grade}`);
+    if (profile.campus) info.push(`校区: ${profile.campus}`);
+    if (profile.age) info.push(`年龄: ${profile.age}`);
+    if (profile.hometown) info.push(`家乡: ${profile.hometown}`);
+    if (profile.interests) info.push(`兴趣爱好: ${profile.interests}`);
+    if (profile.lovetype_code) info.push(`恋爱类型: ${profile.lovetype_code}`);
+    if (profile.purpose) info.push(`交友目的: ${profile.purpose}`);
+    if (profile.core_traits) info.push(`核心特质: ${profile.core_traits}`);
+    if (profile.my_traits) info.push(`个人特征: ${profile.my_traits}`);
+    return info.join('， ');
+  };
+
+  const prompt = `请为以下两位用户生成一段100-150字的匹配评语，要求客观、温和、理性：
+
+用户A: ${buildProfileSummary(userAProfile)}
+用户B: ${buildProfileSummary(userBProfile)}
+匹配得分: ${Math.round(matchScore)}分
+
+要求：
+- 客观描述双方的匹配特点
+- 语气温和友善
+- 适度提及加分项（如共同爱好、价值观等）
+- 不要夸大或过于乐观
+- 100-150字，直接输出评语内容，不需要开场白`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 300,
+        temperature: 0.7
+      })
+    });
+
+    if (!response.ok) {
+      console.error('DeepSeek API 错误:', response.status, await response.text());
+      return null;
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content?.trim() || null;
+  } catch (error) {
+    console.error('调用 DeepSeek API 失败:', error);
+    return null;
+  }
+}
+
+// 查看情侣匹配度测试结果
 app.get('/couple-match/result/:id', isLoggedIn, wrapAsync(async (req, res) => {
   const requestId = parseInt(req.params.id, 10);
 
@@ -1770,12 +1834,23 @@ app.get('/couple-match/result/:id', isLoggedIn, wrapAsync(async (req, res) => {
   `, [requestId, req.user.id]);
 
   if (!coupleRequest) {
-    return res.redirect('/couple-match?msg=匹配结果不存在&type=error');
+    return res.redirect('/couple-match?msg=匹配度测试结果不存在&type=error');
   }
 
-  // 计算匹配得分
-  const matchService = require('./matchService');
-  const matchResult = await matchService.getCoupleMatch(coupleRequest.requester_id, coupleRequest.receiver_id);
+  // 直接从数据库读取已保存的得分（如果有的话）
+  const savedScore = coupleRequest.match_score;
+
+  // 不再在此处生成评语，完全依赖前端异步加载
+  // 如果没有保存的得分，先计算并保存
+  if (!savedScore) {
+    const matchService = require('./matchService');
+    const matchResult = await matchService.getCoupleMatch(coupleRequest.requester_id, coupleRequest.receiver_id);
+    if (matchResult) {
+      await db.execute(`
+        UPDATE couple_requests SET match_score = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2
+      `, [matchResult.total, requestId]);
+    }
+  }
 
   // 确定谁是对方
   const isRequester = coupleRequest.requester_id === req.user.id;
@@ -1786,8 +1861,12 @@ app.get('/couple-match/result/:id', isLoggedIn, wrapAsync(async (req, res) => {
   // 获取对方的 profile 信息
   const partnerProfile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [partnerId]);
 
+  // 获取对方的 loveType
+  const lovettService = require('./lovetypeService');
+  const partnerLoveType = partnerProfile?.lovetype_code ? lovettService.getLoveTypeProfile(partnerProfile.lovetype_code) : null;
+
   res.render('couple-result', {
-    title: '匹配结果',
+    title: '匹配度测试结果',
     user: req.user,
     nickname: req.session.nickname,
     hasProfile: true,
@@ -1795,9 +1874,11 @@ app.get('/couple-match/result/:id', isLoggedIn, wrapAsync(async (req, res) => {
       id: partnerId,
       nickname: partnerNickname,
       email: partnerEmail,
-      ...partnerProfile
+      ...partnerProfile,
+      loveTypeProfile: partnerLoveType
     },
-    matchResult,
+    matchResult: savedScore ? { total: savedScore } : null,
+    matchComment: undefined,
     requestId
   });
 }));
@@ -1814,6 +1895,54 @@ app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
   const matchService = require('./matchService');
   const matches = await matchService.getTopMatches(req.user.id, 5);
   res.json({ success: true, source: 'recommendation', data: matches });
+}));
+
+// API: 异步获取匹配评语
+app.get('/api/couple-match/comment/:id', isLoggedIn, wrapAsync(async (req, res) => {
+  const requestId = parseInt(req.params.id, 10);
+
+  const coupleRequest = await db.queryOne(`
+    SELECT cr.*,
+      requester.id as requester_id, receiver.id as receiver_id
+    FROM couple_requests cr
+    JOIN users requester ON requester.id = cr.requester_id
+    JOIN users receiver ON receiver.id = cr.receiver_id
+    WHERE cr.id = $1 AND cr.status = 'accepted'
+      AND (cr.requester_id = $2 OR cr.receiver_id = $2)
+  `, [requestId, req.user.id]);
+
+  if (!coupleRequest) {
+    return res.status(404).json({ success: false, error: '匹配结果不存在' });
+  }
+
+  // 如果已有保存的评语则直接返回
+  if (coupleRequest.match_comment) {
+    return res.json({ success: true, comment: coupleRequest.match_comment, score: coupleRequest.match_score });
+  }
+
+  // 否则重新生成
+  const profileA = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [coupleRequest.requester_id]);
+  const profileB = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [coupleRequest.receiver_id]);
+
+  if (!profileA || !profileB) {
+    return res.json({ success: false, error: '无法获取用户资料' });
+  }
+
+  const matchService = require('./matchService');
+  const matchResult = await matchService.getCoupleMatch(coupleRequest.requester_id, coupleRequest.receiver_id);
+
+  if (!matchResult) {
+    return res.json({ success: false, error: '无法计算匹配得分' });
+  }
+
+  const comment = await generateMatchComment(profileA, profileB, matchResult.total);
+
+  // 保存到数据库
+  await db.execute(`
+    UPDATE couple_requests SET match_score = $1, match_comment = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3
+  `, [matchResult.total, comment, requestId]);
+
+  res.json({ success: true, comment, score: matchResult.total });
 }));
 
 // 管理页

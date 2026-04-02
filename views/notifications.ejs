@@ -43,6 +43,10 @@
                       <button type="submit" class="btn btn-secondary" style="padding: 6px 12px; font-size: 14px;">拒绝</button>
                     </form>
                   </div>
+                <% } else if (notification.type === 'match_accepted' && notification.related_request_id) { %>
+                  <div style="margin-left: 16px;">
+                    <a href="/couple-match/result/<%= notification.related_request_id %>" class="btn btn-secondary" style="padding: 6px 12px; font-size: 14px;">查看结果</a>
+                  </div>
                 <% } %>
               </div>
             </div>
