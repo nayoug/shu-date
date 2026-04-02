@@ -1848,15 +1848,14 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // 分页逻辑
-  const totalSteps = 4;
-  let currentStep = 1;
-
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
   const submitBtn = document.getElementById('submitBtn');
   const steps = document.querySelectorAll('.pagination-step');
   const sections = document.querySelectorAll('.form-section-pagination');
-  const hasPaginationControls = prevBtn && nextBtn && submitBtn && steps.length && sections.length;
+  const totalSteps = Math.min(steps.length, sections.length);
+  let currentStep = 1;
+  const hasPaginationControls = Boolean(prevBtn && nextBtn && submitBtn && totalSteps > 0);
 
   function updatePagination() {
     if (!hasPaginationControls) return;
@@ -1895,6 +1894,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let isValid = true;
     let firstInvalid = null;
+    let firstInvalidMessage = '';
 
     // radio 按 name 去重，避免「只有第一项是 required」导致误判
     const requiredRadioNames = new Set();
@@ -1931,11 +1931,16 @@ document.addEventListener('DOMContentLoaded', function() {
     ];
     for (const groupConfig of hiddenRequiredGroups) {
       const hiddenField = currentSection.querySelector(`#${groupConfig.fieldId}[required]`);
-      if (!hiddenField || hiddenField.value) continue;
+      if (!hiddenField) continue;
+
+      const groupInputs = currentSection.querySelectorAll(groupConfig.inputSelector);
+      groupInputs.forEach(input => input.setCustomValidity(''));
+      if (hiddenField.value) continue;
 
       isValid = false;
       if (!firstInvalid) {
-        firstInvalid = currentSection.querySelector(groupConfig.inputSelector);
+        firstInvalid = groupInputs[0] || null;
+        firstInvalidMessage = hiddenField.validationMessage || '请完成当前分组选择';
       }
     }
 
@@ -1953,10 +1958,21 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!isValid && firstInvalid) {
       firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
       firstInvalid.focus();
+      if (firstInvalidMessage && typeof firstInvalid.setCustomValidity === 'function') {
+        firstInvalid.setCustomValidity(firstInvalidMessage);
+      }
+      if (typeof firstInvalid.reportValidity === 'function') {
+        firstInvalid.reportValidity();
+      }
+      if (firstInvalidMessage && typeof firstInvalid.setCustomValidity === 'function') {
+        firstInvalid.setCustomValidity('');
+      }
     }
 
     return isValid;
   }
+
+  if (!hasPaginationControls) return;
 
   // 下一步按钮
   nextBtn.addEventListener('click', function() {
@@ -1973,6 +1989,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (currentStep > 1) {
       currentStep--;
       updatePagination();
+    }
+  });
+
+  surveyForm.addEventListener('submit', function(event) {
+    if (currentStep < totalSteps) {
+      event.preventDefault();
+      validateCurrentStep();
+      return;
+    }
+
+    if (!validateCurrentStep()) {
+      event.preventDefault();
+      return;
+    }
+
+    if (typeof surveyForm.reportValidity === 'function' && !surveyForm.reportValidity()) {
+      event.preventDefault();
     }
   });
 
