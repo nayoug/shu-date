@@ -789,13 +789,14 @@
       <div class="form-group">
         <label>8. 我更看重伴侣的核心特质（可多选）：</label>
         <div class="interest-tags">
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="性格三观契合" <%= profile && profile.core_traits && profile.core_traits.includes('性格三观契合') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()" required> 性格三观契合</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="性格三观契合" <%= profile && profile.core_traits && profile.core_traits.includes('性格三观契合') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 性格三观契合</label>
           <label class="interest-tag"><input type="checkbox" name="core_traits" value="颜值气质" <%= profile && profile.core_traits && profile.core_traits.includes('颜值气质') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 颜值气质</label>
           <label class="interest-tag"><input type="checkbox" name="core_traits" value="学历学识" <%= profile && profile.core_traits && profile.core_traits.includes('学历学识') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 学历学识</label>
           <label class="interest-tag"><input type="checkbox" name="core_traits" value="经济能力" <%= profile && profile.core_traits && profile.core_traits.includes('经济能力') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 经济能力</label>
           <label class="interest-tag"><input type="checkbox" name="core_traits" value="家庭背景" <%= profile && profile.core_traits && profile.core_traits.includes('家庭背景') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 家庭背景</label>
           <label class="interest-tag"><input type="checkbox" name="core_traits" value="兴趣爱好相投" <%= profile && profile.core_traits && profile.core_traits.includes('兴趣爱好相投') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 兴趣爱好相投</label>
         </div>
+        <input type="hidden" id="coreTraitsGroupRequired" name="core_traits_group_required" required>
         <p class="interest-counter" id="coreTraitsCounter">最多选 3 项，已选 0 项</p>
       </div>
     </div>
@@ -1746,7 +1747,20 @@ function updateTagCounter(name, counterId, max = 5) {
 function updateMyTraitsCounter()      { updateTagCounter('my_traits',      'myTraitsCounter'); }
 function updatePartnerTraitsCounter() { updateTagCounter('partner_traits',  'partnerTraitsCounter'); }
 function updateInterestCounter()      { updateTagCounter('interests',       'interestCounter'); }
-function updateCoreTraitsCounter() { updateTagCounter('core_traits', 'coreTraitsCounter', 3); }
+function updateCoreTraitsCounter() {
+  updateTagCounter('core_traits', 'coreTraitsCounter', 3);
+  const groupRequiredField = document.getElementById('coreTraitsGroupRequired');
+  if (!groupRequiredField) return;
+
+  const checkedCount = document.querySelectorAll('input[name="core_traits"]:checked').length;
+  if (checkedCount > 0) {
+    groupRequiredField.value = '1';
+    groupRequiredField.setCustomValidity('');
+  } else {
+    groupRequiredField.value = '';
+    groupRequiredField.setCustomValidity('请至少选择一个核心特质');
+  }
+}
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
