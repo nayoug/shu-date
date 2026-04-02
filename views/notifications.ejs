@@ -6,6 +6,9 @@
   <title>通知中心 - 心有所SHU</title>
   <link rel="stylesheet" href="/css/style.css">
   <%- include('partials/head-icons') %>
+  <% if (typeof isDev !== 'undefined' && isDev) { %>
+  <link rel="stylesheet" href="/css/dev-tools.css">
+  <% } %>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -14,9 +17,42 @@
     <div class="card">
       <h2 style="margin-bottom: 24px;">通知中心</h2>
 
-      <div style="text-align: center; padding: 40px 20px; color: var(--muted-foreground);">
-        <p>暂无通知</p>
-      </div>
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 20px;">
+          <%- message %>
+        </div>
+      <% } %>
+
+      <% if (notifications && notifications.length > 0) { %>
+        <div class="notification-list">
+          <% notifications.forEach(function(notification) { %>
+            <div class="notification-item" style="padding: 16px; border-bottom: 1px solid var(--border); <% if (!notification.is_read) { %>background: var(--accent);<% } %>">
+              <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                  <p style="margin: 0 0 8px 0;"><%- notification.content %></p>
+                  <p style="margin: 0; font-size: 12px; color: var(--muted-foreground);">
+                    <%= new Date(notification.created_at).toLocaleString('zh-CN') %>
+                  </p>
+                </div>
+                <% if (notification.type === 'match_request' && notification.status === 'pending') { %>
+                  <div style="display: flex; gap: 8px; margin-left: 16px;">
+                    <form method="POST" action="/couple-match/accept/<%= notification.related_request_id %>" style="display: inline;">
+                      <button type="submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 14px;">同意</button>
+                    </form>
+                    <form method="POST" action="/couple-match/reject/<%= notification.related_request_id %>" style="display: inline;">
+                      <button type="submit" class="btn btn-secondary" style="padding: 6px 12px; font-size: 14px;">拒绝</button>
+                    </form>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div style="text-align: center; padding: 40px 20px; color: var(--muted-foreground);">
+          <p>暂无通知</p>
+        </div>
+      <% } %>
     </div>
   </div>
 </body>

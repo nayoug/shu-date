@@ -374,11 +374,33 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
   return { success: true, message: `匹配完成，共 ${results.length} 对`, results };
 }
 
+// 获取情侣匹配得分
+async function getCoupleMatch(userAId, userBId) {
+  const profileA = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userAId]);
+  const profileB = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userBId]);
+
+  if (!profileA || !profileB) {
+    return null;
+  }
+
+  const scoreAB = calculateMatchScore(profileA, profileB);
+  const scoreBA = calculateMatchScore(profileB, profileA);
+  const score = harmonicMean(scoreAB, scoreBA);
+  const details = calculateMatchDetails(profileA, profileB);
+
+  return {
+    score: Math.round(score * 100) / 100,
+    breakdown: details.breakdown,
+    total: details.total
+  };
+}
+
 module.exports = {
   findMatches,
   getTopMatches,
   saveWeeklyMatches,
   calculateMatchScore,
   calculateMatchDetails,
-  filterCandidates
+  filterCandidates,
+  getCoupleMatch
 };

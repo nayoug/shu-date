@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>匹配结果 - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <%- include('partials/head-icons') %>
+  <% if (typeof isDev !== 'undefined' && isDev) { %>
+  <link rel="stylesheet" href="/css/dev-tools.css">
+  <% } %>
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container" style="max-width: 600px; padding-top: 40px;">
+    <div class="card">
+      <h2 style="margin-bottom: 24px;">匹配结果</h2>
+
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 20px;">
+          <%- message %>
+        </div>
+      <% } %>
+
+      <div style="text-align: center; margin-bottom: 32px;">
+        <p style="color: var(--muted-foreground); margin-bottom: 8px;">与 <strong><%= partner.nickname || partner.email %></strong> 的匹配度</p>
+        <div style="font-size: 64px; font-weight: bold; color: var(--primary);">
+          <%= matchResult ? Math.round(matchResult.total) : '--' %>分
+        </div>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="margin-bottom: 16px;">对方信息</h3>
+        <div style="padding: 16px; background: var(--accent); border-radius: 8px;">
+          <p style="margin: 0 0 8px 0;"><strong>昵称：</strong><%= partner.nickname || '未设置' %></p>
+          <% if (partner.my_grade) { %><p style="margin: 0 0 8px 0;"><strong>年级：</strong><%= partner.my_grade %></p><% } %>
+          <% if (partner.gender) { %><p style="margin: 0 0 8px 0;"><strong>性别：</strong><%= partner.gender %></p><% } %>
+          <% if (partner.campus) { %><p style="margin: 0 0 8px 0;"><strong>校区：</strong><%= partner.campus %></p><% } %>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="/couple-match" class="btn btn-secondary">返回</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
