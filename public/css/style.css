@@ -598,8 +598,33 @@ tr:hover td {
     gap: 4px;
   }
 
-  .nav-links a:not(.btn) {
+  .nav-links > a:not(.btn) {
     display: none;
+  }
+
+  /* 移动端下拉菜单里的链接要显示 */
+  :root .dropdown-menu a {
+    display: block;
+  }
+
+  /* 移动端下拉菜单样式 */
+  :root .dropdown {
+    display: inline-block;
+  }
+
+  :root .dropdown-toggle {
+    padding: 8px 12px;
+  }
+
+  :root .dropdown-menu {
+    position: fixed;
+    top: 60px;
+    right: 8px;
+    left: auto;
+    width: auto;
+    min-width: 180px;
+    max-width: calc(100vw - 16px);
+    box-sizing: border-box;
   }
 
   .features {
@@ -663,8 +688,10 @@ tr:hover td {
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
   min-width: 160px;
+  max-width: calc(100vw - 32px);
   z-index: 1000;
   margin-top: 4px;
+  box-sizing: border-box;
 }
 
 /* 伪元素填充间隙，保持 hover 连续性 */
@@ -692,5 +719,9 @@ tr:hover td {
 }
 
 .dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu.show {
   display: block;
 }
