@@ -1869,43 +1869,6 @@ document.addEventListener('DOMContentLoaded', function() {
     nextBtn.disabled = false;
   }
 
-  // 静默验证（不弹窗不滚动）
-  function validateCurrentStepSilent() {
-    const currentSection = document.querySelector(`.form-section-pagination[data-step="${currentStep}"]`);
-    if (!currentSection) return true;
-
-    // radio 按 name 去重，避免「只有第一项是 required」导致误判
-    const requiredRadioNames = new Set();
-    currentSection.querySelectorAll('input[type="radio"][required]').forEach(r => {
-      requiredRadioNames.add(r.name);
-    });
-    for (const name of requiredRadioNames) {
-      const group = currentSection.querySelectorAll(`input[name="${name}"]`);
-      const checked = Array.from(group).some(r => r.checked);
-      if (!checked) return false;
-    }
-
-    // checkbox 组验证（某些组需要至少选一项）
-    const requiredCheckboxNames = new Set();
-    currentSection.querySelectorAll('input[type="checkbox"][required]').forEach(c => {
-      requiredCheckboxNames.add(c.name);
-    });
-    for (const name of requiredCheckboxNames) {
-      const group = currentSection.querySelectorAll(`input[name="${name}"]`);
-      const checked = Array.from(group).some(c => c.checked);
-      if (!checked) return false;
-    }
-
-    // 非 radio/checkbox 的 required 字段
-    for (const field of currentSection.querySelectorAll('[required]')) {
-      if (field.type === 'radio') continue;
-      if (field.type === 'checkbox') continue;
-      if (!field.value) return false;
-    }
-
-    return true;
-  }
-
   // 验证当前步骤的必填项（带提示）
   function validateCurrentStep() {
     const currentSection = document.querySelector(`.form-section-pagination[data-step="${currentStep}"]`);
