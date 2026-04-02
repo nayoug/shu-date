@@ -1,0 +1,328 @@
+body.v2-page {
+  min-height: 100vh;
+}
+
+body.v2-page main {
+  min-height: calc(100vh - 220px);
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.auth-tabs .toggle-button {
+  text-decoration: none;
+}
+
+.auth-tabs .toggle-button.is-active {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.status-banner[hidden] {
+  display: none !important;
+}
+
+.surface__meta {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.surface__meta strong {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin-bottom: 0.35rem;
+}
+
+.surface__meta p {
+  margin: 0;
+}
+
+.surface__actions,
+.v2-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.v2-inline-actions {
+  margin-top: 1rem;
+}
+
+.legacy-tip {
+  margin-top: 1.25rem;
+  color: var(--ink-soft);
+  font-size: 0.94rem;
+}
+
+.legacy-tip a {
+  color: inherit;
+}
+
+.info-stack {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.info-stack section {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.info-stack h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.info-stack p,
+.info-stack li {
+  color: var(--ink-soft);
+}
+
+.info-stack ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.mini-note {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.v2-user-summary {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.v2-user-summary strong {
+  font-size: 1rem;
+}
+
+.v2-user-summary span {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.v2-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.v2-surface-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.v2-surface-list article {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.v2-surface-list p,
+.v2-surface-list li {
+  color: var(--ink-soft);
+}
+
+.v2-surface-list ul {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.v2-empty-state {
+  text-align: center;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.v2-empty-state p {
+  color: var(--ink-soft);
+}
+
+.v2-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.v2-classic-link {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.v2-classic-link:hover {
+  color: var(--ink);
+}
+
+.hero--v2-home .hero__layout--feature {
+  align-items: center;
+}
+
+.hero__visual--stack {
+  display: grid;
+  gap: 1rem;
+  align-content: center;
+}
+
+.feature-card {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(9, 23, 49, 0.56), rgba(9, 23, 49, 0.3));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px rgba(7, 18, 42, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.feature-card h2,
+.feature-card p,
+.feature-card li {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.feature-card h2 {
+  font-size: 1.25rem;
+  line-height: 1.2;
+  color: white;
+}
+
+.feature-card__eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.feature-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.feature-card__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.feature-card__note {
+  font-size: 0.92rem;
+}
+
+.showcase-grid--dual {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.page-frame--wide {
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+}
+
+.page-side--stacked {
+  align-content: start;
+}
+
+.theme-switch__summary {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 960px) {
+  .page-frame--wide {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .surface__actions,
+  .v2-inline-actions,
+  .v2-footer-actions {
+    flex-direction: column;
+  }
+
+  .surface__actions .button,
+  .v2-inline-actions .button,
+  .v2-footer-actions .button {
+    width: 100%;
+  }
+}
+
+html:not([data-theme="dark"]) .site-header--overlay .brandmark,
+html:not([data-theme="dark"]) .site-header--overlay .nav-link,
+html:not([data-theme="dark"]) .site-header--overlay .menu-toggle,
+html:not([data-theme="dark"]) .site-header--overlay .user-pill {
+  color: var(--ink);
+}
+
+html:not([data-theme="dark"]) .site-header--overlay .brandmark__tag,
+html:not([data-theme="dark"]) .site-header--overlay .user-pill__meta {
+  color: var(--ink-soft);
+}
+
+html:not([data-theme="dark"]) .site-header--overlay .nav-link:hover {
+  background: rgba(16, 40, 86, 0.06);
+  color: var(--ink);
+}
+
+html:not([data-theme="dark"]) .site-header--overlay .nav-link[aria-current="page"] {
+  background: rgba(58, 134, 255, 0.12);
+  color: var(--accent-strong);
+}
+
+html:not([data-theme="dark"]) .site-header--overlay .menu-toggle {
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: inset 0 0 0 1px rgba(21, 48, 79, 0.08);
+}
+
+html:not([data-theme="dark"]) .site-header--overlay .theme-switch {
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(21, 48, 79, 0.1);
+}
+
+html:not([data-theme="dark"]) .site-header--overlay .theme-switch__option {
+  color: var(--ink-soft);
+}
+
+html:not([data-theme="dark"]) .site-header--overlay .theme-switch__option:hover,
+html:not([data-theme="dark"]) .site-header--overlay .theme-switch__option.is-active {
+  color: var(--accent-strong);
+}
+
+html:not([data-theme="dark"]) .site-header--overlay .theme-switch__option.is-active {
+  background: rgba(58, 134, 255, 0.14);
+}
+
+html:not([data-theme="dark"]) .hero--v2-home .feature-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 248, 255, 0.88));
+  border: 1px solid rgba(16, 40, 86, 0.08);
+  box-shadow: 0 18px 36px rgba(29, 56, 106, 0.12);
+  backdrop-filter: blur(14px);
+}
+
+html:not([data-theme="dark"]) .hero--v2-home .feature-card h2,
+html:not([data-theme="dark"]) .hero--v2-home .feature-card p,
+html:not([data-theme="dark"]) .hero--v2-home .feature-card li {
+  color: var(--ink);
+}
+
+html:not([data-theme="dark"]) .hero--v2-home .feature-card__eyebrow,
+html:not([data-theme="dark"]) .hero--v2-home .feature-card__note {
+  color: var(--ink-soft);
+}
+
+html:not([data-theme="dark"]) .hero--v2-home .feature-card .pill {
+  background: rgba(16, 40, 86, 0.08);
+  color: var(--ink);
+}

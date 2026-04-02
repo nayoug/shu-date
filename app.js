@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 const packageJson = require('./package.json');
-const { getWeekNumber } = require('./weekNumber');
+const { getWeekNumber, getYear } = require('./weekNumber');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
 const dbModule = require('./database');
@@ -55,6 +55,22 @@ function wrapAsync(fn) {
 const AUTH_RATE_LIMIT_MESSAGE = '请求过于频繁，请稍后再试。';
 const MAX_EMAIL_LENGTH_FOR_KEY = 320;
 const MAX_CODE_LENGTH_FOR_KEY = 256;
+const WEEK_NUMBER_MIN = 0;
+const WEEK_NUMBER_MAX = 53;
+const UI_EXPERIENCE_COOKIE = 'ui_experience';
+const UI_EXPERIENCE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+const V2_VIEW_MAP = {
+  index: 'v2/index',
+  login: 'v2/login',
+  forgot: 'v2/forgot',
+  reset: 'v2/reset',
+  settings: 'v2/settings',
+  notifications: 'v2/notifications',
+  password: 'v2/password',
+  'delete-account': 'v2/delete-account',
+  'info-page': 'v2/info-page'
+};
+const CLASSIC_FALLBACK_PREFIXES = ['/profile', '/matches', '/admin'];
 
 function buildLoginRedirectPath(method, email) {
   const params = new URLSearchParams({
@@ -69,6 +85,73 @@ function buildLoginRedirectPath(method, email) {
 function redirectWithMessage(res, path, message, type = 'error') {
   const separator = path.includes('?') ? '&' : '?';
   return res.redirect(303, `${path}${separator}msg=${encodeURIComponent(message)}&type=${encodeURIComponent(type)}`);
+}
+
+function parseRequestCookies(req) {
+  const cookieHeader = req.headers.cookie;
+  if (!cookieHeader) {
+    return {};
+  }
+
+  return cookieHeader.split(';').reduce((cookies, part) => {
+    const [rawKey, ...rest] = part.trim().split('=');
+    if (!rawKey) {
+      return cookies;
+    }
+
+    const rawValue = rest.join('=');
+    try {
+      cookies[rawKey] = decodeURIComponent(rawValue || '');
+    } catch {
+      cookies[rawKey] = rawValue || '';
+    }
+
+    return cookies;
+  }, {});
+}
+
+function getUiExperience(req) {
+  const cookies = parseRequestCookies(req);
+  return cookies[UI_EXPERIENCE_COOKIE] === 'v2' ? 'v2' : 'classic';
+}
+
+function sanitizeReturnTo(returnTo) {
+  if (typeof returnTo !== 'string' || !returnTo.startsWith('/') || returnTo.startsWith('//')) {
+    return '/';
+  }
+
+  return returnTo;
+}
+
+function buildExperienceSwitchUrl(mode, returnTo) {
+  const params = new URLSearchParams();
+  const safeReturnTo = sanitizeReturnTo(returnTo);
+
+  if (safeReturnTo !== '/') {
+    params.set('returnTo', safeReturnTo);
+  }
+
+  const query = params.toString();
+  return `/experience/${mode}${query ? `?${query}` : ''}`;
+}
+
+function shouldRenderClassicFallbackNotice(req) {
+  const requestPath = req.path || '';
+  return req.isV2Enabled
+    && req.method === 'GET'
+    && CLASSIC_FALLBACK_PREFIXES.some(prefix => requestPath === prefix || requestPath.startsWith(`${prefix}/`));
+}
+
+function resolveExperienceView(req, classicView) {
+  if (req.isV2Enabled && V2_VIEW_MAP[classicView]) {
+    return V2_VIEW_MAP[classicView];
+  }
+
+  return classicView;
+}
+
+function renderExperienceView(req, res, classicView, locals = {}) {
+  return res.render(resolveExperienceView(req, classicView), locals);
 }
 
 function hashRateLimitFragment(value) {
@@ -191,6 +274,7 @@ if (isProduction) {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // 支持 JSON body (cron 服务可能使用 application/json)
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   store: new PgSession({
@@ -216,6 +300,19 @@ app.use(session({
 }));
 
 app.use((req, res, next) => {
+  const uiExperience = getUiExperience(req);
+  const currentUrl = sanitizeReturnTo(req.originalUrl || '/');
+
+  req.uiExperience = uiExperience;
+  req.isV2Enabled = uiExperience === 'v2';
+  res.locals.uiExperience = uiExperience;
+  res.locals.isV2Enabled = req.isV2Enabled;
+  res.locals.switchToV2Url = buildExperienceSwitchUrl('v2', currentUrl);
+  res.locals.switchToClassicUrl = buildExperienceSwitchUrl('classic', currentUrl);
+  res.locals.showV2FallbackNotice = shouldRenderClassicFallbackNotice(req);
+  res.locals.v2FallbackMessage = res.locals.showV2FallbackNotice
+    ? '该页面暂未适配新版，当前显示经典版'
+    : '';
   res.locals.isDev = !isProduction;
   res.locals.isProduction = isProduction;
   next();
@@ -347,6 +444,25 @@ const adminActionRateLimiter = createRedirectRateLimiter({
   }
 });
 
+// Cron 调度接口限流器
+const cronRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1小时
+  limit: 10, // 最多10次
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  keyGenerator(req) {
+    return `cron:${ipKeyGenerator(req.ip || req.socket?.remoteAddress || '')}`;
+  },
+  handler(req, res) {
+    console.warn('[Cron] 调度请求被限流');
+    res.status(429).json({
+      success: false,
+      error: 'Too many requests',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 async function findUserByEmailInsensitive(email) {
   const normalizedEmail = normalizeEmail(email);
   if (!normalizedEmail) {
@@ -410,6 +526,14 @@ function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面�
 
 function isApiRequest(req) {
   return /^\/api(?:\/|$)/.test(req.path || '');
+}
+
+async function confirmCurrentUserPassword(req, password) {
+  const user = await db.queryOne('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+  if (!user?.password_hash) {
+    return false;
+  }
+  return verifyPassword(password || '', user.password_hash, db, req.user.id);
 }
 
 function regenerateSession(req) {
@@ -526,8 +650,17 @@ const INFO_PAGES = {
         ]
       },
       {
+        title: '注销与数据删除',
+        bullets: [
+          '您可以随时在“设置”页面注销账号。',
+          '注销后，系统会立即删除您的账号信息、问卷数据、匹配记录及相关个人资料，使其不再参与任何匹配流程或展示。',
+          '系统运行过程中产生的最小必要日志（如邮件发送记录、错误日志）可能会在短期内保留，仅用于系统安全与故障排查，不会用于匹配或对外展示。',
+          '注销完成后，该账号将无法恢复，如需再次使用需要重新注册。'
+        ]
+      },
+      {
         title: '联系与更新',
-        paragraphs: [
+        bullets: [
           '如果你对数据使用方式、权限范围或删除流程有疑问，可以通过 guoy@shu.edu.cn 反馈。',
           '本页会随产品迭代更新；继续使用服务，表示你接受当前公开说明。'
         ]
@@ -566,39 +699,9 @@ const INFO_PAGES = {
       },
       {
         title: '遇到问题怎么办',
-        paragraphs: [
+        bullets: [
           '账号、验证、密码重置、问卷提交、匹配结果等问题，可以通过 guoy@shu.edu.cn 反馈。',
           '如果只是想修改资料，优先使用站内的问卷编辑和密码修改入口。'
-        ]
-      }
-    ]
-  },
-  dataDeletion: {
-    title: '删除数据说明',
-    pageTitle: '账号与数据删除说明',
-    lead: '平台目前还没有自助“删除账号”按钮。如果你希望删除账号或删除相关数据，请按下面的方式联系管理员处理。',
-    sections: [
-      {
-        title: '如何申请删除',
-        bullets: [
-          '请使用你注册时绑定的 @shu.edu.cn 邮箱发送邮件到 guoy@shu.edu.cn。',
-          '邮件标题建议写成“心有所SHU 删除账号/删除数据申请”。',
-          '邮件正文建议注明注册邮箱、昵称，以及你想删除的是“整个账号”还是“部分资料”。'
-        ]
-      },
-      {
-        title: '删除后会发生什么',
-        bullets: [
-          '账号删除后，你将无法继续使用当前账号登录平台。',
-          '与你账号直接关联的问卷、匹配结果和 Session 数据会在可行范围内一并清理。',
-          '已经发送到邮件系统中的历史通知邮件不一定能被撤回。'
-        ]
-      },
-      {
-        title: '如果只是想更正资料',
-        paragraphs: [
-          '如果你只是想修改昵称、问卷答案或密码，通常不需要删除账号；直接使用站内编辑能力即可。',
-          '若你不确定应该“修改资料”还是“删除账号”，也可以先发邮件说明情况，我们会按现有能力给出建议。'
         ]
       }
     ]
@@ -609,13 +712,14 @@ async function renderInfoPage(req, res, pageKey) {
   const page = INFO_PAGES[pageKey];
   const nav = await buildPublicNavigationModel(req);
 
-  res.render('info-page', {
+  renderExperienceView(req, res, 'info-page', {
     ...nav,
     title: page.title,
     pageTitle: page.pageTitle,
     lead: page.lead,
     sections: page.sections,
-    updatedAt: INFO_PAGE_UPDATED_AT
+    updatedAt: INFO_PAGE_UPDATED_AT,
+    pageKey
   });
 }
 
@@ -625,12 +729,13 @@ async function renderInfoPage(req, res, pageKey) {
 app.get('/', wrapAsync(async (req, res) => {
   const user = await loadCurrentUserFromSession(req);
 
-  res.render('index', {
+  renderExperienceView(req, res, 'index', {
     title: '首页',
     user,
     nickname: req.session.nickname || user?.nickname,
     hasProfile: !!user?.hasProfile,
     showPassword: true,
+    pageKey: 'home',
     message: req.query.msg,
     messageType: req.query.type
   });
@@ -653,9 +758,28 @@ app.get('/guide', wrapAsync(async (req, res) => {
   await renderInfoPage(req, res, 'guide');
 }));
 
-app.get('/data-deletion', wrapAsync(async (req, res) => {
-  await renderInfoPage(req, res, 'dataDeletion');
-}));
+app.get('/experience/:mode', (req, res) => {
+  const mode = req.params.mode === 'v2' ? 'v2' : 'classic';
+  const returnTo = sanitizeReturnTo(req.query.returnTo || '/');
+  const cookieOptions = {
+    httpOnly: false,
+    sameSite: 'lax',
+    secure: isProduction,
+    maxAge: UI_EXPERIENCE_MAX_AGE_MS
+  };
+
+  if (mode === 'v2') {
+    res.cookie(UI_EXPERIENCE_COOKIE, 'v2', cookieOptions);
+  } else {
+    res.clearCookie(UI_EXPERIENCE_COOKIE, {
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: isProduction
+    });
+  }
+
+  return res.redirect(returnTo);
+});
 
 // 登录页
 app.get('/login', (req, res) => {
@@ -691,16 +815,24 @@ app.get('/login', (req, res) => {
   // 如果是重定向过来的，显示提示信息
   const msg = req.query.msg;
   const type = req.query.type;
-  res.render('login', { title: '登录', loginMethod: method, email, message: msg, messageType: type });
+  renderExperienceView(req, res, 'login', {
+    title: '登录',
+    loginMethod: method,
+    email,
+    message: msg,
+    messageType: type,
+    pageKey: 'login'
+  });
 });
 
 // 忘记密码页
 app.get('/forgot', (req, res) => {
-  res.render('forgot', {
+  renderExperienceView(req, res, 'forgot', {
     title: '忘记密码',
     message: req.query.msg,
     messageType: req.query.type,
-    email: req.query.email || ''
+    email: req.query.email || '',
+    pageKey: 'forgot'
   });
 });
 
@@ -712,11 +844,12 @@ app.post('/forgot', forgotRateLimiter, wrapAsync(async (req, res) => {
   // 验证邮箱格式
   const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
   if (!emailPattern.test(lowerEmail)) {
-    return res.render('forgot', {
+    return renderExperienceView(req, res, 'forgot', {
       title: '忘记密码',
       message: '请输入 @shu.edu.cn 结尾的学校邮箱',
       messageType: 'error',
-      email: lowerEmail
+      email: lowerEmail,
+      pageKey: 'forgot'
     });
   }
 
@@ -724,11 +857,12 @@ app.post('/forgot', forgotRateLimiter, wrapAsync(async (req, res) => {
   const user = await findUserByEmailInsensitive(lowerEmail);
 
   if (!user) {
-    return res.render('forgot', {
+    return renderExperienceView(req, res, 'forgot', {
       title: '忘记密码',
       message: '该邮箱未注册，请先注册',
       messageType: 'error',
-      email: lowerEmail
+      email: lowerEmail,
+      pageKey: 'forgot'
     });
   }
 
@@ -746,18 +880,20 @@ app.post('/forgot', forgotRateLimiter, wrapAsync(async (req, res) => {
   const result = await sendPasswordResetEmail(lowerEmail, resetCode);
 
   if (result.success || (result.simulated && !isProduction)) {
-    res.render('forgot', {
+    renderExperienceView(req, res, 'forgot', {
       title: '忘记密码',
       message: '重置链接已发送到你的邮箱，请查收',
       messageType: 'success',
-      email: lowerEmail
+      email: lowerEmail,
+      pageKey: 'forgot'
     });
   } else {
-    res.render('forgot', {
+    renderExperienceView(req, res, 'forgot', {
       title: '忘记密码',
       message: '邮件发送失败，请稍后重试',
       messageType: 'error',
-      email: lowerEmail
+      email: lowerEmail,
+      pageKey: 'forgot'
     });
   }
 }));
@@ -772,19 +908,21 @@ app.get('/reset/:code', wrapAsync(async (req, res) => {
   );
 
   if (!user) {
-    return res.render('login', {
+    return renderExperienceView(req, res, 'login', {
       title: '登录',
       message: '重置链接已过期，请重新发起',
       messageType: 'error',
-      loginMethod: 'login'
+      loginMethod: 'login',
+      pageKey: 'login'
     });
   }
 
-  res.render('reset', {
+  renderExperienceView(req, res, 'reset', {
     title: '重置密码',
     code: resetCode,
     message: req.query.msg,
-    messageType: req.query.type
+    messageType: req.query.type,
+    pageKey: 'reset'
   });
 }));
 
@@ -794,20 +932,22 @@ app.post('/reset/:code', resetRateLimiter, wrapAsync(async (req, res) => {
   const { password, confirmPassword } = req.body;
 
   if (!password || password.length < 6) {
-    return res.render('reset', {
+    return renderExperienceView(req, res, 'reset', {
       title: '重置密码',
       message: '密码长度至少6位',
       messageType: 'error',
-      code
+      code,
+      pageKey: 'reset'
     });
   }
 
   if (password !== confirmPassword) {
-    return res.render('reset', {
+    return renderExperienceView(req, res, 'reset', {
       title: '重置密码',
       message: '两次输入的密码不一致',
       messageType: 'error',
-      code
+      code,
+      pageKey: 'reset'
     });
   }
 
@@ -817,11 +957,12 @@ app.post('/reset/:code', resetRateLimiter, wrapAsync(async (req, res) => {
   );
 
   if (!user) {
-    return res.render('login', {
+    return renderExperienceView(req, res, 'login', {
       title: '登录',
       message: '重置链接已过期，请重新发起',
       messageType: 'error',
-      loginMethod: 'login'
+      loginMethod: 'login',
+      pageKey: 'login'
     });
   }
 
@@ -846,41 +987,40 @@ app.post('/reset/:code', resetRateLimiter, wrapAsync(async (req, res) => {
 
 // 注册
 app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
-  const { email, password, nickname } = req.body;
+  const { email, password, confirmPassword, nickname } = req.body;
   const lowerEmail = normalizeEmail(email);
+  const trimmedNickname = typeof nickname === 'string' ? nickname.trim() : '';
+
+  function renderRegisterError(message) {
+    return renderExperienceView(req, res, 'login', {
+      title: '登录',
+      message,
+      messageType: 'error',
+      email: lowerEmail,
+      nickname: trimmedNickname,
+      loginMethod: 'register',
+      pageKey: 'login'
+    });
+  }
 
   // 验证邮箱格式
   const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
   if (!emailPattern.test(lowerEmail)) {
-    return res.render('login', {
-      title: '登录',
-      message: '请使用 @shu.edu.cn 结尾的学校邮箱',
-      messageType: 'error',
-      email: lowerEmail,
-      loginMethod: 'register'
-    });
+    return renderRegisterError('请使用 @shu.edu.cn 结尾的学校邮箱');
   }
 
   // 验证密码
   if (!password || password.length < 6) {
-    return res.render('login', {
-      title: '登录',
-      message: '密码长度至少6位',
-      messageType: 'error',
-      email: lowerEmail,
-      loginMethod: 'register'
-    });
+    return renderRegisterError('密码长度至少6位');
+  }
+
+  if (password !== confirmPassword) {
+    return renderRegisterError('两次输入的密码不一致');
   }
 
   // 验证昵称
-  if (!nickname || nickname.trim().length === 0) {
-    return res.render('login', {
-      title: '登录',
-      message: '请输入昵称',
-      messageType: 'error',
-      email: lowerEmail,
-      loginMethod: 'register'
-    });
+  if (!trimmedNickname) {
+    return renderRegisterError('请输入昵称');
   }
 
   // 检查用户是否已存在
@@ -896,7 +1036,7 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
     const verificationToken = generateToken();
     await db.execute(
       'UPDATE users SET password_hash = $1, nickname = $2, verification_token = $3, verification_expire = $4, verified = 0 WHERE id = $5',
-      [passwordHash, nickname.trim(), verificationToken, new Date(Date.now() + 30 * 60 * 1000), existingUser.id]
+      [passwordHash, trimmedNickname, verificationToken, new Date(Date.now() + 30 * 60 * 1000), existingUser.id]
     );
     // 发送验证邮件
     const { sendVerifyEmail } = require('./mailer');
@@ -906,11 +1046,12 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
     if (verifyResult && verifyResult.simulated) {
       message += ` （测试模式：<a href="${verifyResult.url}">${verifyResult.url}</a>）`;
     }
-    return res.render('login', {
+    return renderExperienceView(req, res, 'login', {
       title: '登录',
       message,
       messageType,
-      loginMethod: 'login'
+      loginMethod: 'login',
+      pageKey: 'login'
     });
   }
 
@@ -919,17 +1060,11 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
   const verificationToken = generateToken();
   const writeResult = await db.execute(
     'INSERT INTO users (email, password_hash, nickname, verified, verification_token, verification_expire) VALUES ($1, $2, $3, 0, $4, $5)',
-    [lowerEmail, passwordHash, nickname.trim(), verificationToken, new Date(Date.now() + 30 * 60 * 1000)]
+    [lowerEmail, passwordHash, trimmedNickname, verificationToken, new Date(Date.now() + 30 * 60 * 1000)]
   );
 
   if (!writeResult || writeResult.changes !== 1) {
-    return res.render('login', {
-      title: '登录',
-      message: '注册失败，请稍后重试',
-      messageType: 'error',
-      email: lowerEmail,
-      loginMethod: 'register'
-    });
+    return renderRegisterError('注册失败，请稍后重试');
   }
 
   // 发送验证邮件
@@ -947,11 +1082,12 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
     messageType = 'warning';
   }
 
-  return res.render('login', {
+  return renderExperienceView(req, res, 'login', {
     title: '登录',
     message,
     messageType,
-    loginMethod: 'login'
+    loginMethod: 'login',
+    pageKey: 'login'
   });
 }));
 
@@ -963,12 +1099,13 @@ app.post('/login', loginRateLimiter, wrapAsync(async (req, res) => {
   // 验证邮箱格式
   const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailPattern.test(lowerEmail)) {
-    return res.render('login', {
+    return renderExperienceView(req, res, 'login', {
       title: '登录',
       message: '请输入有效的邮箱地址',
       messageType: 'error',
       email: lowerEmail,
-      loginMethod: 'login'
+      loginMethod: 'login',
+      pageKey: 'login'
     });
   }
 
@@ -987,23 +1124,25 @@ app.post('/login', loginRateLimiter, wrapAsync(async (req, res) => {
   // 验证密码
   const passwordValid = await verifyPassword(password, user.password_hash, db, user.id);
   if (!passwordValid) {
-    return res.render('login', {
+    return renderExperienceView(req, res, 'login', {
       title: '登录',
       message: '密码错误，请重试',
       messageType: 'error',
       email: lowerEmail,
-      loginMethod: 'login'
+      loginMethod: 'login',
+      pageKey: 'login'
     });
   }
 
   // 检查邮箱是否已验证
   if (!user.verified) {
-    return res.render('login', {
+    return renderExperienceView(req, res, 'login', {
       title: '登录',
       message: '邮箱还未验证，请先查收验证邮件完成验证',
       messageType: 'error',
       email: lowerEmail,
-      loginMethod: 'login'
+      loginMethod: 'login',
+      pageKey: 'login'
     });
   }
 
@@ -1015,12 +1154,13 @@ app.post('/login', loginRateLimiter, wrapAsync(async (req, res) => {
     await saveSession(req);
   } catch (error) {
     console.error('建立登录会话失败:', error);
-    return res.render('login', {
+    return renderExperienceView(req, res, 'login', {
       title: '登录',
       message: '登录失败，请重试',
       messageType: 'error',
       email: lowerEmail,
-      loginMethod: 'login'
+      loginMethod: 'login',
+      pageKey: 'login'
     });
   }
 
@@ -1054,30 +1194,33 @@ app.get('/register/verify/:token', wrapAsync(async (req, res) => {
     );
 
     if (!user) {
-      return res.render('login', {
+      return renderExperienceView(req, res, 'login', {
         title: '登录',
         message: '验证链接无效',
         messageType: 'error',
-        loginMethod: 'login'
+        loginMethod: 'login',
+        pageKey: 'login'
       });
     }
 
     // 检查token是否过期
     if (!user.verification_expire || new Date(user.verification_expire) < new Date()) {
-      return res.render('login', {
+      return renderExperienceView(req, res, 'login', {
         title: '登录',
         message: '验证链接已过期，请重新注册',
         messageType: 'error',
-        loginMethod: 'login'
+        loginMethod: 'login',
+        pageKey: 'login'
       });
     }
 
     if (user.verified) {
-      return res.render('login', {
+      return renderExperienceView(req, res, 'login', {
         title: '登录',
         message: '邮箱已验证，请直接登录',
         messageType: 'success',
-        loginMethod: 'login'
+        loginMethod: 'login',
+        pageKey: 'login'
       });
     }
 
@@ -1088,27 +1231,30 @@ app.get('/register/verify/:token', wrapAsync(async (req, res) => {
     );
 
     if (result && result.changes === 1) {
-      return res.render('login', {
+      return renderExperienceView(req, res, 'login', {
         title: '登录',
         message: '邮箱验证成功！请登录',
         messageType: 'success',
-        loginMethod: 'login'
+        loginMethod: 'login',
+        pageKey: 'login'
       });
     } else {
-      return res.render('login', {
+      return renderExperienceView(req, res, 'login', {
         title: '登录',
         message: '验证失败，请稍后重试',
         messageType: 'error',
-        loginMethod: 'login'
+        loginMethod: 'login',
+        pageKey: 'login'
       });
     }
   } catch (error) {
     console.error('验证邮箱失败:', error);
-    return res.render('login', {
+    return renderExperienceView(req, res, 'login', {
       title: '登录',
       message: '验证链接无效',
       messageType: 'error',
-      loginMethod: 'login'
+      loginMethod: 'login',
+      pageKey: 'login'
     });
   }
 }));
@@ -1130,31 +1276,34 @@ app.get('/profile', isLoggedIn, wrapAsync(async (req, res) => {
 // 账户设置
 app.get('/settings', isLoggedIn, wrapAsync(async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
-  res.render('settings', {
+  renderExperienceView(req, res, 'settings', {
     user: req.user,
     nickname: req.session.nickname,
-    hasProfile: !!profile
+    hasProfile: !!profile,
+    pageKey: 'settings'
   });
 }));
 
 // 通知中心
 app.get('/notifications', isLoggedIn, wrapAsync(async (req, res) => {
-  res.render('notifications', {
+  renderExperienceView(req, res, 'notifications', {
     user: req.user,
     nickname: req.session.nickname,
-    hasProfile: req.user.hasProfile
+    hasProfile: req.user.hasProfile,
+    pageKey: 'notifications'
   });
 }));
 
 // 修改密码页面
 app.get('/settings/password', isLoggedIn, wrapAsync(async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
-  res.render('password', {
+  renderExperienceView(req, res, 'password', {
     user: req.user,
     nickname: req.session.nickname,
     hasProfile: !!profile,
     passwordMessage: req.query.msg || '',
-    passwordMessageType: req.query.type || ''
+    passwordMessageType: req.query.type || '',
+    pageKey: 'settings-password'
   });
 }));
 
@@ -1182,32 +1331,35 @@ app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings,
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.session.userId]);
 
   if (!currentPassword || !newPassword || !confirmPassword) {
-    return res.render('password', {
+    return renderExperienceView(req, res, 'password', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
       passwordMessage: '请填写所有字段',
-      passwordMessageType: 'error'
+      passwordMessageType: 'error',
+      pageKey: 'settings-password'
     });
   }
 
   if (newPassword.length < 6) {
-    return res.render('password', {
+    return renderExperienceView(req, res, 'password', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
       passwordMessage: '新密码长度至少6位',
-      passwordMessageType: 'error'
+      passwordMessageType: 'error',
+      pageKey: 'settings-password'
     });
   }
 
   if (newPassword !== confirmPassword) {
-    return res.render('password', {
+    return renderExperienceView(req, res, 'password', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
       passwordMessage: '两次输入的密码不一致',
-      passwordMessageType: 'error'
+      passwordMessageType: 'error',
+      pageKey: 'settings-password'
     });
   }
 
@@ -1218,12 +1370,13 @@ app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings,
   if (user.password_hash) {
     const currentPasswordValid = await verifyPassword(currentPassword, user.password_hash, db, req.session.userId);
     if (!currentPasswordValid) {
-      return res.render('password', {
+      return renderExperienceView(req, res, 'password', {
         user: req.user,
         nickname: req.session.nickname,
         hasProfile: !!profile,
         passwordMessage: '当前密码错误',
-        passwordMessageType: 'error'
+        passwordMessageType: 'error',
+        pageKey: 'settings-password'
       });
     }
   }
@@ -1237,12 +1390,13 @@ app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings,
 
   if (result && result.changes === 1) {
     return res.redirect('/settings/password?msg=密码修改成功&type=success');  } else {
-    return res.render('password', {
+    return renderExperienceView(req, res, 'password', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
       passwordMessage: '密码修改失败，请重试',
-      passwordMessageType: 'error'
+      passwordMessageType: 'error',
+      pageKey: 'settings-password'
     });
   }
 }));
@@ -1250,11 +1404,12 @@ app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings,
 // 注销账号页面
 app.get('/settings/delete', isLoggedIn, wrapAsync(async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
-  res.render('delete-account', {
+  renderExperienceView(req, res, 'delete-account', {
     user: req.user,
     nickname: req.session.nickname,
     hasProfile: !!profile,
-    csrfToken: ensureCsrfToken(req)
+    csrfToken: ensureCsrfToken(req),
+    pageKey: 'settings-delete'
   });
 }));
 
@@ -1264,12 +1419,14 @@ app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req,
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.session.userId]);
 
   if (!email || !password) {
-    return res.render('delete-account', {
+    return renderExperienceView(req, res, 'delete-account', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
+      csrfToken: ensureCsrfToken(req),
       deleteMessage: '请填写邮箱和密码',
-      deleteMessageType: 'error'
+      deleteMessageType: 'error',
+      pageKey: 'settings-delete'
     });
   }
 
@@ -1279,12 +1436,14 @@ app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req,
   // 校验邮箱（对输入 email 做 normalize 后再比较）
   const normalizedEmail = normalizeEmail(email);
   if (user.email !== normalizedEmail) {
-    return res.render('delete-account', {
+    return renderExperienceView(req, res, 'delete-account', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
+      csrfToken: ensureCsrfToken(req),
       deleteMessage: '邮箱或密码错误',
-      deleteMessageType: 'error'
+      deleteMessageType: 'error',
+      pageKey: 'settings-delete'
     });
   }
 
@@ -1292,12 +1451,14 @@ app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req,
   if (user.password_hash) {
     const passwordValid = await verifyPassword(password, user.password_hash, db, req.session.userId);
     if (!passwordValid) {
-      return res.render('delete-account', {
+      return renderExperienceView(req, res, 'delete-account', {
         user: req.user,
         nickname: req.session.nickname,
         hasProfile: !!profile,
+        csrfToken: ensureCsrfToken(req),
         deleteMessage: '邮箱或密码错误',
-        deleteMessageType: 'error'
+        deleteMessageType: 'error',
+        pageKey: 'settings-delete'
       });
     }
   }
@@ -1321,11 +1482,14 @@ app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req,
     }
 
     console.error('Error deleting user account:', error);
-    return res.render('delete-account', {
+    return renderExperienceView(req, res, 'delete-account', {
+      user: req.user,
       nickname: req.session.nickname,
       hasProfile: true,
+      csrfToken: ensureCsrfToken(req),
       deleteMessage: '账号注销失败，请稍后重试',
-      deleteMessageType: 'error'
+      deleteMessageType: 'error',
+      pageKey: 'settings-delete'
     });
   }
   // 销毁 session
@@ -1482,11 +1646,11 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
         ELSE m.user_id_1
       END
     LEFT JOIN profiles p ON p.user_id = partner.id
-    WHERE m.week_number = $2
+    WHERE m.match_year = $3 AND m.week_number = $2
       AND ($1 = m.user_id_1 OR $1 = m.user_id_2)
     ORDER BY m.matched_at DESC, m.id DESC
     LIMIT 1
-  `, [req.user.id, weekNumber]);
+  `, [req.user.id, weekNumber, getYear()]);
 
   const weeklyMatch = weeklyMatches.length > 0 ? {
     weekNumber: weeklyMatches[0].week_number,
@@ -1559,8 +1723,145 @@ app.get('/admin/match', isLoggedIn, requireAdmin, wrapAsync(async (req, res) => 
 }));
 
 app.post('/admin/match', isLoggedIn, requireAdmin, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
+  const { confirmPassword: passwordConfirm } = req.body;
+  // 二次密码确认
+  const isValid = await confirmCurrentUserPassword(req, passwordConfirm);
+  if (!isValid) {
+    return res.redirect('/admin?msg=' + encodeURIComponent('密码错误，操作已拒绝') + '&type=error');
+  }
   const result = await runWeeklyMatch();
   res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
+}));
+
+// 补跑匹配
+app.post('/admin/match/rerun', isLoggedIn, requireAdmin, adminActionRateLimiter, requireValidCsrf, wrapAsync(async (req, res) => {
+  const { targetWeek, targetYear, force, confirmPassword: passwordConfirm } = req.body;
+
+  // 二次密码确认
+  const isValid = await confirmCurrentUserPassword(req, passwordConfirm);
+  if (!isValid) {
+    return res.redirect('/admin?msg=' + encodeURIComponent('密码错误，操作已拒绝') + '&type=error');
+  }
+
+  const currentYear = getYear();
+  const currentWeek = getWeekNumber();
+
+  // 校验并解析 targetWeek
+  let weekToRun;
+  if (targetWeek !== undefined && targetWeek !== null && targetWeek !== '') {
+    const parsed = parseInt(targetWeek, 10);
+    if (Number.isNaN(parsed) || parsed < WEEK_NUMBER_MIN || parsed > WEEK_NUMBER_MAX) {
+      return res.redirect('/admin?msg=' + encodeURIComponent(`周数必须是 ${WEEK_NUMBER_MIN}-${WEEK_NUMBER_MAX} 之间的整数`) + '&type=error');
+    }
+    weekToRun = parsed;
+  } else {
+    weekToRun = currentWeek;
+  }
+
+  // 校验并解析 targetYear
+  let yearToRun;
+  if (targetYear !== undefined && targetYear !== null && targetYear !== '') {
+    const parsed = parseInt(targetYear, 10);
+    if (Number.isNaN(parsed) || parsed < 2020 || parsed > 2100) {
+      return res.redirect('/admin?msg=' + encodeURIComponent('年份必须是 2020-2100 之间的整数') + '&type=error');
+    }
+    yearToRun = parsed;
+  } else {
+    yearToRun = currentYear;
+  }
+
+  // 安全限制: 不允许补跑未来的周/年
+  if (yearToRun > currentYear || (yearToRun === currentYear && weekToRun > currentWeek)) {
+    return res.redirect('/admin?msg=' + encodeURIComponent('不能补跑未来的周') + '&type=error');
+  }
+  // 检查目标周是否已有匹配记录
+  const existingMatches = await db.queryOne(
+    'SELECT COUNT(*) as count FROM matches WHERE match_year = $1 AND week_number = $2',
+    [yearToRun, weekToRun]
+  );
+
+  const matchCount = parseInt(existingMatches?.count || '0', 10);
+
+  if (matchCount > 0 && force !== 'true') {
+    return res.redirect(
+      '/admin?msg=' + encodeURIComponent(`第${weekToRun}周已有 ${matchCount} 对匹配记录，如需重新执行请勾选"强制重跑"`) +
+      '&type=warning'
+    );
+  }
+
+  // 强制重跑: 删除现有记录
+  if (matchCount > 0 && force === 'true') {
+    await db.execute('DELETE FROM matches WHERE match_year = $1 AND week_number = $2', [yearToRun, weekToRun]);
+    console.log(`[Admin] 已删除第${yearToRun}年第${weekToRun}周的 ${matchCount} 条匹配记录`);
+  }
+  // 执行补跑
+  console.log(`[Admin] 开始补跑第${yearToRun}年第${weekToRun}周的匹配`);
+  const result = await runWeeklyMatchWithWeek(yearToRun, weekToRun);
+
+  res.redirect('/admin?msg=' + encodeURIComponent(result.message) + '&type=' + (result.success ? 'success' : 'error'));
+}));
+
+// ============ Cron 调度接口 ============
+
+const CRON_SECRET = process.env.CRON_SECRET;
+
+function requireValidCronSecret(req, res, next) {
+  const timestamp = new Date().toISOString();
+
+  const authHeader = req.headers['x-cron-secret'] || req.body?.cronSecret;
+  if (!CRON_SECRET || authHeader !== CRON_SECRET) {
+    console.warn(`[Cron] 无效的调度请求: 密钥不匹配 (${timestamp})`);
+    return res.status(403).json({
+      success: false,
+      error: 'Unauthorized',
+      timestamp
+    });
+  }
+
+  next();
+}
+
+app.post('/api/cron/weekly-match', requireValidCronSecret, cronRateLimiter, wrapAsync(async (req, res) => {
+  const timestamp = new Date().toISOString();
+
+  console.log(`[Cron] 开始执行周匹配: ${timestamp}`);
+
+  try {
+    const result = await runWeeklyMatch();
+
+    // 发送告警通知
+    const { alertMatchSuccess, alertMatchSkipped } = require('./alertService');
+
+    if (result.success) {
+      console.log(`[Cron] 匹配成功: ${result.message}`);
+      await alertMatchSuccess(result);
+    } else {
+      console.log(`[Cron] 匹配跳过: ${result.message}`);
+      await alertMatchSkipped(result.message);
+    }
+
+    res.json({
+      success: result.success,
+      message: result.message,
+      matchCount: result.results?.length || 0,
+      timestamp
+    });
+  } catch (error) {
+    console.error('[Cron] 匹配执行失败:', error);
+
+    // 发送失败告警
+    const { alertMatchFailed } = require('./alertService');
+    await alertMatchFailed(error, {
+      timestamp,
+      weekNumber: getWeekNumber()
+    });
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp
+    });
+  }
 }));
 
 // ============ 匹配逻辑 ============
@@ -1568,6 +1869,47 @@ app.post('/admin/match', isLoggedIn, requireAdmin, adminActionRateLimiter, requi
 async function runWeeklyMatch() {
   const matchService = require('./matchService');
   const result = await matchService.saveWeeklyMatches();
+
+  if (!result.success) {
+    return result;
+  }
+
+  const { sendMatchEmail } = require('./mailer');
+  const emailTasks = [];
+  for (const pair of result.results || []) {
+    emailTasks.push(sendMatchEmail(
+      pair.user1.email,
+      pair.user1.nickname || '同学',
+      pair.user2.nickname || 'TA',
+      pair.user2.my_grade,
+      null
+    ));
+    emailTasks.push(sendMatchEmail(
+      pair.user2.email,
+      pair.user2.nickname || '同学',
+      pair.user1.nickname || 'TA',
+      pair.user1.my_grade,
+      null
+    ));
+  }
+
+  const emailResults = await Promise.all(emailTasks);
+  const failedEmailCount = emailResults.filter(item => !item?.success).length;
+  if (failedEmailCount > 0) {
+    console.error(`❌ 本次匹配共有 ${failedEmailCount} 封邮件发送失败`);
+  }
+
+  return result;
+}
+
+/**
+ * 执行指定年份和周数的匹配（用于补跑）
+ * @param {number} targetYear - 目标年份
+ * @param {number} targetWeek - 目标周数
+ */
+async function runWeeklyMatchWithWeek(targetYear, targetWeek) {
+  const matchService = require('./matchService');
+  const result = await matchService.saveWeeklyMatches(targetYear, targetWeek);
 
   if (!result.success) {
     return result;

@@ -3,6 +3,6 @@
   <div class="footer-links">
     <a href="/guide">使用说明</a>
     <a href="/privacy">隐私政策</a>
-    <a href="/data-deletion">删除数据说明</a>
+    <a href="<%= isV2Enabled ? switchToClassicUrl : switchToV2Url %>"><%= isV2Enabled ? '返回经典版' : '体验新版' %></a>
   </div>
 </footer>

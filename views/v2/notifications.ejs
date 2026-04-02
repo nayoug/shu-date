@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <%- include('partials/head', { title: '通知中心' }) %>
+</head>
+<body class="v2-page" data-page="<%= pageKey %>">
+  <%- include('partials/navbar', { pageKey, user, nickname, hasProfile }) %>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">通知中心</p>
+        <h1 class="page-intro__title">通知页先统一到新版壳层，内容能力后续再加</h1>
+        <p class="page-intro__text">当前主线还没有真正的站内通知数据，这里先把空状态、入口层级和说明整理清楚。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/notifications</span>
+        <span class="pill pill--system">空状态</span>
+      </div>
+    </section>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">你会在这里看到什么</h2>
+          </div>
+          <ul class="side-list">
+            <li><strong>系统公告</strong><p>后续如果接入站内公告，会直接出现在这里。</p></li>
+            <li><strong>匹配提醒</strong><p>自动匹配跑通后，这里可以承接每周结果相关提醒。</p></li>
+            <li><strong>未读状态</strong><p>这版先预留层级和样式，不提前假设后台已有完整通知系统。</p></li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface reveal">
+        <div class="surface__head">
+          <h2 class="surface__title">现在还没有新通知</h2>
+          <p class="surface__text">当前页保持空状态，不伪造任何通知数据。</p>
+        </div>
+        <div class="empty-state v2-empty-state">
+          <h2>通知能力后续再接</h2>
+          <p>这版先把入口、空态和暗色模式统一好。真正的通知列表可以等后端能力准备好后再接。</p>
+          <div class="v2-inline-actions">
+            <a class="button" href="/settings">返回设置</a>
+            <a class="button button--ghost" href="/matches">去看匹配页</a>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <%- include('partials/footer', { user }) %>
+  <script src="/v2/assets/app.js"></script>
+</body>
+</html>
+

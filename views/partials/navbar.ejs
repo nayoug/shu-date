@@ -6,10 +6,13 @@
       <a href="/">主页</a>
       <a href="/matches">匹配</a>
       <a href="/notifications">通知</a>
+      <a href="<%= isV2Enabled ? switchToClassicUrl : switchToV2Url %>" class="btn" style="padding: 6px 14px; font-size: 0.85rem; background: transparent; color: var(--foreground); border: 1px solid var(--border);">
+        <%= isV2Enabled ? '返回经典版' : '体验新版' %>
+      </a>
       <% if (typeof user !== 'undefined' && user) { %>
         <!-- 昵称下拉菜单 -->
         <div class="dropdown">
-          <button class="dropdown-toggle" style="background: none; border: none; cursor: pointer; padding: 6px 12px; font-size: 0.9rem; color: var(--foreground); display: flex; align-items: center; gap: 4px;">
+          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" style="background: none; border: none; cursor: pointer; padding: 6px 12px; font-size: 0.9rem; color: var(--foreground); display: flex; align-items: center; gap: 4px;">
             <%= typeof nickname !== 'undefined' && nickname ? nickname : (user.name || user.email.split('@')[0]) %>
             <span style="font-size: 10px;">▼</span>
           </button>
@@ -38,3 +41,57 @@
     </div>
   </div>
 </nav>
+
+
+<% if (typeof showV2FallbackNotice !== 'undefined' && showV2FallbackNotice) { %>
+<div class="container" style="padding-top: 16px;">
+  <div class="alert alert-info" style="margin-bottom: 0;">
+    <%= v2FallbackMessage || '该页面暂未适配新版，当前显示经典版' %>
+  </div>
+</div>
+<% } %>
+
+<script>
+(function() {
+  if (window.__dropdownInitialized) return;
+  window.__dropdownInitialized = true;
+
+  function isTouchDropdownMode() {
+    return window.matchMedia('(hover: none), (pointer: coarse)').matches || window.innerWidth <= 768;
+  }
+
+  function closeOpenMenus() {
+    document.querySelectorAll('.dropdown-menu.show').forEach(function(menu) {
+      menu.classList.remove('show');
+      var dropdown = menu.closest('.dropdown');
+      var toggle = dropdown ? dropdown.querySelector('.dropdown-toggle') : null;
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    var toggle = e.target.closest('.dropdown-toggle');
+    if (toggle) {
+      if (!isTouchDropdownMode()) {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      var dropdown = toggle.closest('.dropdown');
+      var menu = dropdown ? dropdown.querySelector('.dropdown-menu') : null;
+      if (menu) {
+        var willOpen = !menu.classList.contains('show');
+        closeOpenMenus();
+        if (willOpen) {
+          menu.classList.add('show');
+          toggle.setAttribute('aria-expanded', 'true');
+        }
+      }
+    } else if (!e.target.closest('.dropdown-menu')) {
+      closeOpenMenus();
+    }
+  });
+})();
+</script>

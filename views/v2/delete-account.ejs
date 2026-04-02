@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <%- include('partials/head', { title: '注销账号' }) %>
+</head>
+<body class="v2-page" data-page="<%= pageKey %>">
+  <%- include('partials/navbar', { pageKey, user, nickname, hasProfile }) %>
+  <main class="app-main">
+    <% const tone = deleteMessageType === 'error' ? 'danger' : (deleteMessageType || 'warning'); %>
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">注销账号</p>
+        <h1 class="page-intro__title">高风险操作单独放一页，继续走现有删除逻辑</h1>
+        <p class="page-intro__text">新版只整理视觉层级，不改变邮箱、密码、CSRF 和事务删除链路。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/settings/delete</span>
+        <span class="pill pill--announcement">高风险</span>
+      </div>
+    </section>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--danger reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">注销前提醒</h2>
+          </div>
+          <ul class="warning-list">
+            <li>账号、资料、正式匹配记录都会一起删除，无法恢复。</li>
+            <li>注销完成后当前会话也会被销毁，需要重新注册或重新登录。</li>
+            <li>如果只是想修改资料或密码，请先返回设置页，不要误触删除。</li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface surface--danger reveal">
+        <div class="surface__head">
+          <h2 class="surface__title">确认注销账号</h2>
+          <p class="surface__text">提交到 <code>POST /settings/delete</code>，仍然要求邮箱和密码一致。</p>
+        </div>
+        <% if (deleteMessage) { %>
+          <div class="status-banner status-banner--<%= tone %>">
+            <strong class="status-banner__title"><%= tone === 'danger' ? '删除未完成' : '请再次确认' %></strong>
+            <p class="status-banner__body"><%= deleteMessage %></p>
+          </div>
+        <% } %>
+        <form action="/settings/delete" method="POST" class="fields">
+          <div class="field">
+            <label for="delete-email">确认当前邮箱</label>
+            <input id="delete-email" name="email" type="email" placeholder="<%= user.email %>" autocomplete="email" autocapitalize="none" autocorrect="off" inputmode="email" required>
+          </div>
+          <div class="field">
+            <label for="delete-password">输入密码</label>
+            <input id="delete-password" name="password" type="password" placeholder="用于二次确认" autocomplete="current-password" required>
+          </div>
+          <% if (csrfToken) { %>
+            <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+          <% } %>
+          <div class="surface__actions">
+            <button class="button button--danger" type="submit">确认注销账号</button>
+            <a class="button button--ghost" href="/settings">取消并返回</a>
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+  <%- include('partials/footer', { user }) %>
+  <script src="/v2/assets/app.js"></script>
+</body>
+</html>
+

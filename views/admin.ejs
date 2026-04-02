@@ -18,6 +18,7 @@
         <a href="/profile">我的资料</a>
         <a href="/matches">匹配结果</a>
         <a href="/admin" style="color: var(--primary); font-weight: 600;">管理</a>
+        <a href="<%= isV2Enabled ? switchToClassicUrl : switchToV2Url %>" class="btn" style="background: transparent; color: var(--foreground); border: 1px solid var(--border);"><%= isV2Enabled ? '返回经典版' : '体验新版' %></a>
         <a href="/logout" class="btn">退出</a>
       </div>
     </div>
@@ -26,6 +27,9 @@
   <div class="container">
     <% if (typeof message !== 'undefined' && message) { %>
       <div class="alert alert-<%= messageType || 'info' %>"><%= message %></div>
+    <% } %>
+    <% if (typeof showV2FallbackNotice !== 'undefined' && showV2FallbackNotice) { %>
+      <div class="alert alert-info"><%= v2FallbackMessage || '该页面暂未适配新版，当前显示经典版' %></div>
     <% } %>
 
     <div class="card">

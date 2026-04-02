@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <%- include('partials/head', { title: '设置中心' }) %>
+</head>
+<body class="v2-page" data-page="<%= pageKey %>">
+  <%- include('partials/navbar', { pageKey, user, nickname, hasProfile }) %>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">设置中心</p>
+        <h1 class="page-intro__title">常用账户操作先统一到新版壳层</h1>
+        <p class="page-intro__text">这一批先接入设置、通知、改密和注销，让账号相关页面形成统一体验，问卷和匹配仍保留经典版。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/settings</span>
+        <span class="pill"><%= user.verified ? '已验证' : '待验证' %></span>
+      </div>
+    </section>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">账户摘要</h2>
+          </div>
+          <div class="surface__meta v2-user-summary">
+            <div>
+              <strong><%= nickname || user.nickname || user.name || user.email.split('@')[0] %></strong>
+              <span><%= user.email %></span>
+            </div>
+            <div class="v2-badge-row">
+              <span class="pill"><%= hasProfile ? '资料已填写' : '资料待填写' %></span>
+              <span class="pill"><%= user.verified ? '邮箱已验证' : '邮箱待验证' %></span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="surface reveal">
+        <div class="surface__head">
+          <h2 class="surface__title">账户操作</h2>
+          <p class="surface__text">先把常用操作集中，让用户不用在菜单里来回找。</p>
+        </div>
+        <div class="setting-list">
+          <article class="setting-item">
+            <div class="setting-item__row">
+              <div>
+                <h3>通知中心</h3>
+                <p>查看匹配提醒、系统公告和未读消息。当前仍以空状态为主，但入口已经切进新版。</p>
+              </div>
+              <a class="arrow-link" href="/notifications">进入</a>
+            </div>
+          </article>
+          <article class="setting-item setting-item--theme">
+            <div>
+              <h3>外观模式</h3>
+              <p>新版页面支持跟随系统、浅色和深色三种模式，切换结果会记在本地。</p>
+            </div>
+            <div class="theme-switch theme-switch--inline" role="group" aria-label="外观模式">
+              <button class="theme-switch__option" type="button" data-theme-option="system" aria-pressed="false">跟随系统</button>
+              <button class="theme-switch__option" type="button" data-theme-option="light" aria-pressed="false">浅色</button>
+              <button class="theme-switch__option" type="button" data-theme-option="dark" aria-pressed="false">深色</button>
+            </div>
+            <p class="mini-note" data-theme-summary>当前：跟随系统</p>
+          </article>
+          <article class="setting-item">
+            <div class="setting-item__row">
+              <div>
+                <h3>修改密码</h3>
+                <p>继续复用当前后端表单和校验逻辑，只把页面换成新版样式。</p>
+              </div>
+              <a class="arrow-link" href="/settings/password">修改</a>
+            </div>
+          </article>
+          <article class="setting-item">
+            <div class="setting-item__row">
+              <div>
+                <h3>注销账号</h3>
+                <p>风险操作单独放在一个页面，继续要求邮箱、密码和 CSRF 二次确认。</p>
+              </div>
+              <a class="arrow-link" href="/settings/delete">查看</a>
+            </div>
+          </article>
+        </div>
+      </section>
+    </section>
+  </main>
+  <%- include('partials/footer', { user }) %>
+  <script src="/v2/assets/app.js"></script>
+</body>
+</html>
+

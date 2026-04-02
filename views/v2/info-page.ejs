@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <%- include('partials/head', { title }) %>
+</head>
+<body class="v2-page" data-page="<%= pageKey %>">
+  <%- include('partials/navbar', { pageKey, user, nickname, hasProfile }) %>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow"><%= pageKey === 'privacy' ? '隐私政策' : '使用说明' %></p>
+        <h1 class="page-intro__title"><%= pageTitle %></h1>
+        <p class="page-intro__text"><%= lead %></p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill"><%= pageKey === 'privacy' ? '/privacy' : '/guide' %></span>
+        <span class="pill">最后更新 <%= updatedAt %></span>
+      </div>
+    </section>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">阅读建议</h2>
+          </div>
+          <ul class="side-list">
+            <li><strong>这不是新文档体系</strong><p>内容仍然直接复用当前主线里的 <code>INFO_PAGES</code> 数据源。</p></li>
+            <li><strong>新版先只改壳层</strong><p>把公开说明页和认证/设置页统一起来，方便后面继续迁更多页面。</p></li>
+            <li><strong>有问题优先看最后一节</strong><p>联系方式、删除说明和边界提示都保留在当前数据里。</p></li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface reveal">
+        <div class="surface__head">
+          <h2 class="surface__title"><%= pageTitle %></h2>
+          <p class="surface__text">以下内容直接来源于当前主线后端定义的公开说明数据。</p>
+        </div>
+        <div class="info-stack">
+          <% sections.forEach(function(section) { %>
+            <section>
+              <h2><%= section.title %></h2>
+              <% if (section.paragraphs) { %>
+                <% section.paragraphs.forEach(function(paragraph) { %>
+                  <p><%= paragraph %></p>
+                <% }); %>
+              <% } %>
+              <% if (section.bullets) { %>
+                <ul>
+                  <% section.bullets.forEach(function(item) { %>
+                    <li><%= item %></li>
+                  <% }); %>
+                </ul>
+              <% } %>
+            </section>
+          <% }); %>
+        </div>
+      </section>
+    </section>
+  </main>
+  <%- include('partials/footer', { user }) %>
+  <script src="/v2/assets/app.js"></script>
+</body>
+</html>
+

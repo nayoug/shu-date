@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <%- include('partials/head', { title }) %>
+</head>
+<body class="v2-page" data-page="<%= pageKey %>">
+  <%- include('partials/navbar', { pageKey, user, nickname, hasProfile, headerOverlay: true }) %>
+  <main>
+    <section class="hero hero--v2-home">
+      <div class="hero__layout hero__layout--feature">
+        <div class="hero__copy reveal">
+          <p class="hero__brandline">校园匹配体验版</p>
+          <h1 class="hero__title">心有所SHU</h1>
+          <p class="hero__headline">
+            <% if (!user) { %>
+              先用上大邮箱验证身份，再慢慢认识聊得来的人。
+            <% } else if (!user.verified) { %>
+              你的账号已经创建，先完成邮箱验证，再继续使用新版入口。
+            <% } else if (hasProfile) { %>
+              资料已经就绪，这一版把入口、说明和设置先整理得更清楚。
+            <% } else { %>
+              先把资料填完整，新版首页会把下一步放到你眼前。
+            <% } %>
+          </p>
+          <p class="hero__text">
+            这不是整站重做，而是先把首页、认证、设置、通知和说明页做成一套能共存的新版壳层。问卷、匹配和后台仍然保持经典版，避免把现有流程打断。
+          </p>
+          <% if (message) { %>
+            <% const tone = messageType === 'error' ? 'danger' : (messageType || 'info'); %>
+            <div class="status-banner status-banner--<%= tone %>">
+              <strong class="status-banner__title">状态提示</strong>
+              <p class="status-banner__body"><%= message %></p>
+            </div>
+          <% } %>
+          <div class="hero__actions">
+            <% if (!user) { %>
+              <a class="button" href="/login?method=register">开始注册</a>
+              <a class="button button--ghost" href="/login?method=login">已有账号，去登录</a>
+            <% } else if (!user.verified) { %>
+              <a class="button" href="/guide">先看使用说明</a>
+              <a class="button button--ghost" href="/notifications">查看通知</a>
+            <% } else if (hasProfile) { %>
+              <a class="button" href="/matches">查看本周匹配</a>
+              <a class="button button--ghost" href="/settings">进入设置</a>
+            <% } else { %>
+              <a class="button" href="/profile">去填写问卷</a>
+              <a class="button button--ghost" href="/guide">先看说明</a>
+            <% } %>
+          </div>
+          <div class="hero__signals">
+            <div class="signal-item">
+              <span class="signal-item__label">当前模式</span>
+              <span class="signal-item__value">新版体验</span>
+            </div>
+            <div class="signal-item">
+              <span class="signal-item__label">账号状态</span>
+              <span class="signal-item__value"><%= !user ? '未登录' : (user.verified ? '已验证' : '待验证') %></span>
+            </div>
+            <div class="signal-item">
+              <span class="signal-item__label">资料状态</span>
+              <span class="signal-item__value"><%= user ? (hasProfile ? '已填写' : '未填写') : '登录后可见' %></span>
+            </div>
+          </div>
+        </div>
+        <div class="hero__visual hero__visual--stack reveal">
+          <article class="feature-card feature-card--primary">
+            <p class="feature-card__eyebrow">首批已接入</p>
+            <h2>首页、认证、设置、通知和公开说明页</h2>
+            <p>先让用户最常经过的入口统一视觉、暗色模式和切换逻辑，再逐步碰问卷与匹配。</p>
+            <div class="feature-card__tags">
+              <span class="pill">首页</span>
+              <span class="pill">登录 / 注册</span>
+              <span class="pill">设置</span>
+              <span class="pill">说明页</span>
+            </div>
+          </article>
+          <article class="feature-card feature-card--secondary">
+            <p class="feature-card__eyebrow">暂时仍走经典版</p>
+            <ul class="feature-card__list">
+              <li>/profile 问卷</li>
+              <li>/matches 匹配结果</li>
+              <li>/admin 管理后台</li>
+            </ul>
+            <p class="feature-card__note">开启新版后访问这些页面，会自动回到经典版并给出提示。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--flush">
+      <div class="section__inner">
+        <div class="section__head reveal">
+          <p class="section-kicker">体验切换</p>
+          <h2 class="section-title">先把切换和深浅色做成可见功能，而不是藏在角落里</h2>
+          <p class="section-text">如果你现在只是想感受新版方向，先看下面这组切换按钮。它们会直接把偏好存到本地，并只影响新版页面。</p>
+        </div>
+        <div class="showcase-grid showcase-grid--dual">
+          <article class="showcase-link reveal">
+            <div class="showcase-link__meta">
+              <span class="pill pill--match">当前是新版</span>
+              <span class="showcase-link__route">/experience/v2</span>
+            </div>
+            <h3>新版入口</h3>
+            <p>适合体验新的首页、登录、设置、通知和公开说明页。</p>
+            <div class="v2-inline-actions">
+              <a class="button" href="/experience/v2">保持新版</a>
+              <a class="button button--ghost" href="/experience/classic">切回经典版</a>
+            </div>
+          </article>
+          <article class="showcase-link reveal">
+            <div class="showcase-link__meta">
+              <span class="pill pill--system">主题模式</span>
+              <span class="showcase-link__route">localStorage</span>
+            </div>
+            <h3>浅色 / 深色 / 跟随系统</h3>
+            <p>这组按钮现在直接放在页面中间，切换后应该立即看到背景、文字和卡片层级的变化。</p>
+            <div class="theme-switch theme-switch--inline" role="group" aria-label="外观模式">
+              <button class="theme-switch__option" type="button" data-theme-option="system" aria-pressed="false">跟随系统</button>
+              <button class="theme-switch__option" type="button" data-theme-option="light" aria-pressed="false">浅色</button>
+              <button class="theme-switch__option" type="button" data-theme-option="dark" aria-pressed="false">深色</button>
+            </div>
+            <p class="theme-switch__summary" data-theme-summary>当前：跟随系统</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__inner flow-layout">
+        <div class="flow-visual reveal">
+          <img src="/v2/assets/match-atlas.svg" alt="从验证到匹配的新版流程示意图">
+        </div>
+        <div class="flow-steps">
+          <article class="flow-step reveal">
+            <h3>01 先注册并验证</h3>
+            <p>继续复用现有登录、注册、邮箱验证和重置密码逻辑，不新引入业务 API，也不改变验证链路。</p>
+          </article>
+          <article class="flow-step reveal">
+            <h3>02 再填写问卷与查看匹配</h3>
+            <p>这两块先保持经典版，避免新版壳层还没收稳时把最核心的表单和匹配逻辑一起改乱。</p>
+          </article>
+          <article class="flow-step reveal">
+            <h3>03 用设置与通知承接后续功能</h3>
+            <p>先把账号管理、通知空态和说明页做扎实，新版才能从“壳子”变成真正可用的入口。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+  <%- include('partials/footer', { user }) %>
+  <script src="/v2/assets/app.js"></script>
+</body>
+</html>
+

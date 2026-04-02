@@ -1,0 +1,93 @@
+<%
+  const currentNav = (pageKey || '').startsWith('settings') ? 'settings' : (pageKey || 'home');
+  const hasHeaderOverlay = typeof headerOverlay !== 'undefined' && headerOverlay;
+  const displayName = nickname || user?.nickname || user?.name || (user ? user.email.split('@')[0] : '同学');
+  const verificationText = user ? (user.verified ? '已验证' : '待验证') : '未登录';
+  const navItems = [
+    { key: 'home', label: '主页', href: '/' },
+    { key: 'guide', label: '使用说明', href: '/guide' }
+  ];
+
+  if (user) {
+    navItems.push(
+      { key: 'matches', label: '本周匹配', href: '/matches' },
+      { key: 'notifications', label: '通知', href: '/notifications' },
+      { key: 'settings', label: '设置', href: '/settings' }
+    );
+  }
+%>
+<header class="site-header<%= hasHeaderOverlay ? ' site-header--overlay' : '' %>">
+  <div class="site-header__inner">
+    <a class="brandmark" href="/">
+      <span class="brandmark__symbol" aria-hidden="true"></span>
+      <span class="brandmark__copy">
+        <span class="brandmark__name">心有所SHU</span>
+        <span class="brandmark__tag">新版体验</span>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <% navItems.forEach(function(item) { %>
+        <a class="nav-link" href="<%= item.href %>"<%= currentNav === item.key ? ' aria-current="page"' : '' %>><%= item.label %></a>
+      <% }); %>
+    </nav>
+    <div class="site-header__actions">
+      <div class="theme-switch theme-switch--header desktop-only" role="group" aria-label="外观模式">
+        <button class="theme-switch__option" type="button" data-theme-option="system" aria-pressed="false">系统</button>
+        <button class="theme-switch__option" type="button" data-theme-option="light" aria-pressed="false">浅色</button>
+        <button class="theme-switch__option" type="button" data-theme-option="dark" aria-pressed="false">深色</button>
+      </div>
+      <% if (user) { %>
+        <a class="user-pill desktop-only" href="<%= hasProfile ? '/profile?edit=1' : '/profile' %>">
+          <span class="user-pill__label"><%= displayName %></span>
+          <span class="user-pill__meta"><%= verificationText %></span>
+        </a>
+      <% } else { %>
+        <a class="button button--ghost button--sm desktop-only" href="/login?method=login">登录</a>
+        <a class="button button--sm desktop-only" href="/login?method=register">注册</a>
+      <% } %>
+      <a class="button button--ghost button--sm desktop-only" href="<%= switchToClassicUrl %>">返回经典版</a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="v2-mobile-drawer" data-v2-drawer-toggle>
+        <span class="menu-toggle__lines" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+        <span class="menu-toggle__label">菜单</span>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="drawer" id="v2-mobile-drawer" data-v2-drawer aria-hidden="true">
+  <button class="drawer__backdrop" type="button" data-v2-drawer-close aria-label="关闭导航"></button>
+  <aside class="drawer__panel" role="dialog" aria-modal="true" aria-labelledby="v2-drawer-title">
+    <div class="drawer__head">
+      <div>
+        <p class="microcopy">当前模式</p>
+        <h2 class="drawer__title" id="v2-drawer-title">新版体验</h2>
+        <p class="drawer__subtitle"><%= user ? `${displayName} · ${verificationText}` : '未登录也可体验新版公开页面' %></p>
+      </div>
+      <button class="drawer__close" type="button" data-v2-drawer-close aria-label="关闭">
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <nav class="drawer__nav" aria-label="移动导航">
+      <% navItems.forEach(function(item) { %>
+        <a class="drawer-link" href="<%= item.href %>"<%= currentNav === item.key ? ' aria-current="page"' : '' %>><%= item.label %></a>
+      <% }); %>
+      <% if (!user) { %>
+        <a class="drawer-link" href="/login?method=login">登录</a>
+        <a class="drawer-link" href="/login?method=register">注册</a>
+      <% } %>
+    </nav>
+    <div class="drawer__footer">
+      <div class="theme-switch theme-switch--drawer" role="group" aria-label="外观模式">
+        <button class="theme-switch__option" type="button" data-theme-option="system" aria-pressed="false">跟随系统</button>
+        <button class="theme-switch__option" type="button" data-theme-option="light" aria-pressed="false">浅色</button>
+        <button class="theme-switch__option" type="button" data-theme-option="dark" aria-pressed="false">深色</button>
+      </div>
+      <a class="button button--ghost button--sm" href="<%= switchToClassicUrl %>">返回经典版</a>
+    </div>
+  </aside>
+</div>
+

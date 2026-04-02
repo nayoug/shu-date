@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <%- include('partials/head', { title }) %>
+</head>
+<body class="v2-page" data-page="<%= pageKey %>">
+  <%- include('partials/navbar', { pageKey, user: null, nickname: null, hasProfile: false }) %>
+  <main class="app-main">
+    <% const tone = messageType === 'error' ? 'danger' : (messageType || 'info'); %>
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">忘记密码</p>
+        <h1 class="page-intro__title">输入学校邮箱，系统会继续走现有重置链路</h1>
+        <p class="page-intro__text">这页只是换成新版视觉，仍然使用当前的重置 token、邮件发送和错误回显逻辑。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/forgot</span>
+        <span class="pill pill--announcement">公开页面</span>
+      </div>
+    </section>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">忘记密码时会发生什么</h2>
+          </div>
+          <ul class="side-list">
+            <li><strong>先验证邮箱格式</strong><p>仍然只接受 <code>@shu.edu.cn</code> 邮箱。</p></li>
+            <li><strong>重置链接继续发邮件</strong><p>如果邮件失败，页面会直接显示当前主线已有的错误提示。</p></li>
+            <li><strong>成功后留在当前页面</strong><p>避免“发送成功”后突然跳走，降低手机端迷失感。</p></li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface reveal">
+        <div class="surface__head">
+          <h2 class="surface__title">发送重置链接</h2>
+          <p class="surface__text">后端不会改动，仍然提交到 <code>POST /forgot</code>。</p>
+        </div>
+        <% if (message) { %>
+          <div class="status-banner status-banner--<%= tone %>">
+            <strong class="status-banner__title"><%= tone === 'success' ? '邮件已发送' : '请先处理这个问题' %></strong>
+            <p class="status-banner__body"><%= message %></p>
+          </div>
+        <% } %>
+        <form action="/forgot" method="POST" class="fields">
+          <div class="field">
+            <label for="forgot-email">学校邮箱</label>
+            <input id="forgot-email" name="email" type="email" value="<%= email || '' %>" placeholder="name@shu.edu.cn" autocomplete="username" autocapitalize="none" autocorrect="off" inputmode="email" required>
+          </div>
+          <div class="surface__actions">
+            <button class="button" type="submit">发送重置链接</button>
+            <a class="button button--ghost" href="/login?method=login">返回登录</a>
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+  <%- include('partials/footer', { user: null }) %>
+  <script src="/v2/assets/app.js"></script>
+</body>
+</html>
+
