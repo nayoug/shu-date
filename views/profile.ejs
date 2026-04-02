@@ -1509,7 +1509,6 @@
     </div>
   <% }); %>
 </div>
-</div>
 
     <!-- 分页按钮 -->
     <div class="pagination-buttons">
@@ -1764,6 +1763,9 @@ function updateCoreTraitsCounter() {
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
+  const surveyForm = document.querySelector('form[action="/survey/submit"]');
+  if (!surveyForm) return;
+
   updateMyAgeDisplay();
   updateAgeRangeDisplay();
   updateMyHeightDisplay();
@@ -1854,8 +1856,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const submitBtn = document.getElementById('submitBtn');
   const steps = document.querySelectorAll('.pagination-step');
   const sections = document.querySelectorAll('.form-section-pagination');
+  const hasPaginationControls = prevBtn && nextBtn && submitBtn && steps.length && sections.length;
 
   function updatePagination() {
+    if (!hasPaginationControls) return;
+
     // 更新步骤指示器
     steps.forEach((step, index) => {
       const stepNum = index + 1;
@@ -1919,10 +1924,26 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    // 隐藏必填字段对应到可见的多选组，避免把焦点落在 hidden input 上
+    const hiddenRequiredGroups = [
+      { fieldId: 'acceptedCampusGroupRequired', inputSelector: 'input[name="accepted_campus"]' },
+      { fieldId: 'coreTraitsGroupRequired', inputSelector: 'input[name="core_traits"]' }
+    ];
+    for (const groupConfig of hiddenRequiredGroups) {
+      const hiddenField = currentSection.querySelector(`#${groupConfig.fieldId}[required]`);
+      if (!hiddenField || hiddenField.value) continue;
+
+      isValid = false;
+      if (!firstInvalid) {
+        firstInvalid = currentSection.querySelector(groupConfig.inputSelector);
+      }
+    }
+
     // 非 radio/checkbox 的 required 字段
     for (const field of currentSection.querySelectorAll('[required]')) {
       if (field.type === 'radio') continue;
       if (field.type === 'checkbox') continue;
+      if (field.type === 'hidden') continue;
       if (!field.value) {
         isValid = false;
         if (!firstInvalid) firstInvalid = field;
