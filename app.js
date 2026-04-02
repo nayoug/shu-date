@@ -860,41 +860,39 @@ app.post('/reset/:code', resetRateLimiter, wrapAsync(async (req, res) => {
 
 // 注册
 app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
-  const { email, password, nickname } = req.body;
+  const { email, password, confirmPassword, nickname } = req.body;
   const lowerEmail = normalizeEmail(email);
+  const trimmedNickname = typeof nickname === 'string' ? nickname.trim() : '';
+
+  function renderRegisterError(message) {
+    return res.render('login', {
+      title: '登录',
+      message,
+      messageType: 'error',
+      email: lowerEmail,
+      nickname: trimmedNickname,
+      loginMethod: 'register'
+    });
+  }
 
   // 验证邮箱格式
   const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
   if (!emailPattern.test(lowerEmail)) {
-    return res.render('login', {
-      title: '登录',
-      message: '请使用 @shu.edu.cn 结尾的学校邮箱',
-      messageType: 'error',
-      email: lowerEmail,
-      loginMethod: 'register'
-    });
+    return renderRegisterError('请使用 @shu.edu.cn 结尾的学校邮箱');
   }
 
   // 验证密码
   if (!password || password.length < 6) {
-    return res.render('login', {
-      title: '登录',
-      message: '密码长度至少6位',
-      messageType: 'error',
-      email: lowerEmail,
-      loginMethod: 'register'
-    });
+    return renderRegisterError('密码长度至少6位');
+  }
+
+  if (password !== confirmPassword) {
+    return renderRegisterError('两次输入的密码不一致');
   }
 
   // 验证昵称
-  if (!nickname || nickname.trim().length === 0) {
-    return res.render('login', {
-      title: '登录',
-      message: '请输入昵称',
-      messageType: 'error',
-      email: lowerEmail,
-      loginMethod: 'register'
-    });
+  if (!trimmedNickname) {
+    return renderRegisterError('请输入昵称');
   }
 
   // 检查用户是否已存在
@@ -910,7 +908,7 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
     const verificationToken = generateToken();
     await db.execute(
       'UPDATE users SET password_hash = $1, nickname = $2, verification_token = $3, verification_expire = $4, verified = 0 WHERE id = $5',
-      [passwordHash, nickname.trim(), verificationToken, new Date(Date.now() + 30 * 60 * 1000), existingUser.id]
+      [passwordHash, trimmedNickname, verificationToken, new Date(Date.now() + 30 * 60 * 1000), existingUser.id]
     );
     // 发送验证邮件
     const { sendVerifyEmail } = require('./mailer');
@@ -933,17 +931,11 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
   const verificationToken = generateToken();
   const writeResult = await db.execute(
     'INSERT INTO users (email, password_hash, nickname, verified, verification_token, verification_expire) VALUES ($1, $2, $3, 0, $4, $5)',
-    [lowerEmail, passwordHash, nickname.trim(), verificationToken, new Date(Date.now() + 30 * 60 * 1000)]
+    [lowerEmail, passwordHash, trimmedNickname, verificationToken, new Date(Date.now() + 30 * 60 * 1000)]
   );
 
   if (!writeResult || writeResult.changes !== 1) {
-    return res.render('login', {
-      title: '登录',
-      message: '注册失败，请稍后重试',
-      messageType: 'error',
-      email: lowerEmail,
-      loginMethod: 'register'
-    });
+    return renderRegisterError('注册失败，请稍后重试');
   }
 
   // 发送验证邮件
