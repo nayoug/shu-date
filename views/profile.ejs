@@ -1895,8 +1895,14 @@ document.addEventListener('DOMContentLoaded', function() {
       section.classList.toggle('active', sectionStep === currentStep);
     });
 
-    // 跳转到每一页的顶端
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 仅在步骤发生变更时才跳转到每一页的顶端，避免在每次调用时打断用户填写
+    if (typeof updatePagination.lastStep === 'undefined') {
+      updatePagination.lastStep = currentStep;
+    }
+    if (updatePagination.lastStep !== currentStep) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      updatePagination.lastStep = currentStep;
+    }
 
     // 更新按钮状态 - 始终显示按钮，通过disabled控制
     prevBtn.disabled = currentStep === 1;
