@@ -499,8 +499,8 @@
       <% if (lovetypeResult.traits && lovetypeResult.traits.length) { %>
         <div class="lovetype-copy-block">
           <h4><%= lovetypeResult.title %>在爱情中的特征</h4>
-          <% lovetypeResult.traits.forEach(function(paragraph) { %>
-            <p><%= paragraph %></p>
+          <% lovetypeResult.traits.forEach(function(trait) { %>
+            <p><strong><%= trait.title %></strong> <br> <%= trait.description.join(' ') %></p>
           <% }); %>
         </div>
       <% } %>
