@@ -4,8 +4,24 @@
     <a href="/" class="logo">心有所<span>SHU</span></a>
     <div class="nav-links">
       <a href="/">主页</a>
-      <a href="/matches">匹配</a>
-      <a href="/notifications">通知</a>
+      <!-- 匹配下拉菜单 -->
+      <div class="dropdown">
+        <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" style="background: none; border: none; cursor: pointer; padding: 6px 12px; font-size: 0.9rem; color: var(--foreground); display: flex; align-items: center; gap: 4px;">
+          匹配
+          <span style="font-size: 10px;">▼</span>
+        </button>
+        <div class="dropdown-menu">
+          <a href="/matches">每周推荐</a>
+          <a href="/couple-match">情侣匹配</a>
+        </div>
+      </div>
+      <% const notificationCount = typeof user !== 'undefined' && user ? (user.unreadNotifications || 0) : (typeof unreadNotifications !== 'undefined' ? unreadNotifications : 0); %>
+      <a href="/notifications" class="notification-link" style="position: relative;">
+        通知
+        <% if (notificationCount > 0) { %>
+          <span class="notification-badge" style="position: absolute; top: -2px; right: -8px; background: #ef4444; color: white; font-size: 10px; padding: 2px 5px; border-radius: 10px; min-width: 16px; text-align: center;"><%= notificationCount > 99 ? '99+' : notificationCount %></span>
+        <% } %>
+      </a>
       <% if (typeof user !== 'undefined' && user) { %>
         <!-- 昵称下拉菜单 -->
         <div class="dropdown">

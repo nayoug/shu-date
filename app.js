@@ -272,13 +272,21 @@ async function loadCurrentUserFromSession(req) {
   }
 
   const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [currentUser.id]);
+
+  // 查询未读通知数量
+  const unreadResult = await db.queryOne(
+    'SELECT COUNT(*) as count FROM notifications WHERE user_id = $1 AND is_read = 0',
+    [currentUser.id]
+  );
+
   const user = {
     id: currentUser.id,
     email: currentUser.email,
     nickname: currentUser.nickname,
     name: currentUser.name,
     verified: currentUser.verified,
-    hasProfile: !!profile
+    hasProfile: !!profile,
+    unreadNotifications: parseInt(unreadResult?.count || 0, 10)
   };
 
   if (user.nickname) {
@@ -512,7 +520,8 @@ async function buildPublicNavigationModel(req) {
     user,
     nickname: req.session?.nickname || user?.nickname,
     hasProfile: !!user?.hasProfile,
-    showPassword: !!user
+    showPassword: !!user,
+    unreadNotifications: user?.unreadNotifications || 0
   };
 }
 
@@ -1136,10 +1145,28 @@ app.get('/settings', isLoggedIn, wrapAsync(async (req, res) => {
 
 // 通知中心
 app.get('/notifications', isLoggedIn, wrapAsync(async (req, res) => {
+  // 获取用户通知（关联 couple_requests 获取状态）
+  const notifications = await db.query(`
+    SELECT n.*, cr.status
+    FROM notifications n
+    LEFT JOIN couple_requests cr ON cr.id = n.related_request_id
+    WHERE n.user_id = $1
+    ORDER BY n.created_at DESC
+    LIMIT 20
+  `, [req.user.id]);
+
+  // 标记已读
+  if (notifications.some(n => !n.is_read)) {
+    await db.execute('UPDATE notifications SET is_read = 1 WHERE user_id = $1 AND is_read = 0', [req.user.id]);
+  }
+
   res.render('notifications', {
     user: req.user,
     nickname: req.session.nickname,
-    hasProfile: req.user.hasProfile
+    hasProfile: req.user.hasProfile,
+    notifications,
+    message: req.query.msg,
+    messageType: req.query.type
   });
 }));
 
@@ -1515,6 +1542,380 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
   });
 }));
 
+// 情侣匹配页
+app.get('/couple-match', isLoggedIn, wrapAsync(async (req, res) => {
+  const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
+  if (!profile) {
+    return res.redirect('/profile?msg=请先填写问卷&type=warning');
+  }
+
+  // 获取我发出的匹配请求
+  const myRequests = await db.query(`
+    SELECT cr.id, cr.status, cr.created_at, u.nickname, u.email
+    FROM couple_requests cr
+    JOIN users u ON u.id = cr.receiver_id
+    WHERE cr.requester_id = $1
+    ORDER BY cr.created_at DESC
+    LIMIT 10
+  `, [req.user.id]);
+
+  // 获取我收到的匹配请求
+  const receivedRequests = await db.query(`
+    SELECT cr.id, cr.status, cr.created_at, u.nickname, u.email
+    FROM couple_requests cr
+    JOIN users u ON u.id = cr.requester_id
+    WHERE cr.receiver_id = $1
+    ORDER BY cr.created_at DESC
+    LIMIT 10
+  `, [req.user.id]);
+
+  // 获取已接受的匹配
+  const acceptedMatches = await db.query(`
+    SELECT cr.id, cr.created_at as matched_at,
+      CASE
+        WHEN cr.requester_id = $1 THEN receiver.id
+        ELSE requester.id
+      END as partner_id,
+      CASE
+        WHEN cr.requester_id = $1 THEN receiver.nickname
+        ELSE requester.nickname
+      END as partner_nickname,
+      CASE
+        WHEN cr.requester_id = $1 THEN receiver.email
+        ELSE requester.email
+      END as partner_email
+    FROM couple_requests cr
+    JOIN users requester ON requester.id = cr.requester_id
+    JOIN users receiver ON receiver.id = cr.receiver_id
+    WHERE (cr.requester_id = $1 OR cr.receiver_id = $1)
+      AND cr.status = 'accepted'
+    ORDER BY cr.updated_at DESC
+  `, [req.user.id]);
+
+  res.render('couple-match', {
+    title: '情侣匹配度测试',
+    user: req.user,
+    nickname: req.session.nickname,
+    hasProfile: true,
+    myRequests,
+    receivedRequests,
+    acceptedMatches,
+    message: req.query.msg,
+    messageType: req.query.type
+  });
+}));
+
+// 发送情侣匹配度测试申请
+app.post('/couple-match/request', isLoggedIn, wrapAsync(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.redirect('/couple-match?msg=请输入对方邮箱&type=error');
+  }
+
+  const targetUser = await findUserByEmailInsensitive(email);
+  if (!targetUser) {
+    return res.redirect('/couple-match?msg=用户不存在&type=error');
+  }
+
+  // 不能是自己
+  if (targetUser.id === req.user.id) {
+    return res.redirect('/couple-match?msg=不能对自己发起匹配申请&type=error');
+  }
+
+  // 检查目标用户是否完成问卷
+  const targetProfile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [targetUser.id]);
+  if (!targetProfile) {
+    return res.redirect('/couple-match?msg=对方还未填写问卷&type=error');
+  }
+
+  // 检查是否已存在请求
+  const existingRequest = await db.queryOne(`
+    SELECT id FROM couple_requests
+    WHERE (requester_id = $1 AND receiver_id = $2)
+       OR (requester_id = $2 AND receiver_id = $1)
+  `, [req.user.id, targetUser.id]);
+
+  if (existingRequest) {
+    return res.redirect('/couple-match?msg=已存在匹配申请&type=error');
+  }
+
+  // 检查今天申请次数（每天最多3次）
+  const todayCount = await db.queryOne(`
+    SELECT COUNT(*) as count FROM couple_requests
+    WHERE requester_id = $1 AND created_at >= CURRENT_DATE
+  `, [req.user.id]);
+
+  if (parseInt(todayCount?.count || '0', 10) >= 3) {
+    return res.redirect('/couple-match?msg=今日申请次数已达上限（3次）&type=error');
+  }
+
+  // 创建匹配请求
+  const result = await db.execute(`
+    INSERT INTO couple_requests (requester_id, receiver_id, status)
+    VALUES ($1, $2, 'pending')
+  `, [req.user.id, targetUser.id]);
+
+  if (!result || result.changes !== 1) {
+    return res.redirect('/couple-match?msg=发送失败，请重试&type=error');
+  }
+
+  // 获取刚创建的请求ID
+  const newRequest = await db.queryOne(`
+    SELECT id FROM couple_requests
+    WHERE requester_id = $1 AND receiver_id = $2
+    ORDER BY id DESC LIMIT 1
+  `, [req.user.id, targetUser.id]);
+
+  // 创建通知
+  await db.execute(`
+    INSERT INTO notifications (user_id, type, content, related_user_id, related_request_id)
+    VALUES ($1, 'match_request', $2, $3, $4)
+  `, [
+    targetUser.id,
+    `用户 ${req.user.nickname || req.user.email} 请求与你进行情侣匹配度测试`,
+    req.user.id,
+    newRequest.id
+  ]);
+
+  res.redirect('/couple-match?msg=匹配申请已发送&type=success');
+}));
+
+// 同意情侣匹配度测试申请
+app.post('/couple-match/accept/:id', isLoggedIn, wrapAsync(async (req, res) => {
+  const requestId = parseInt(req.params.id, 10);
+
+  // 查找请求
+  const coupleRequest = await db.queryOne(`
+    SELECT cr.*, requester.nickname as requester_nickname, receiver.nickname as receiver_nickname
+    FROM couple_requests cr
+    JOIN users requester ON requester.id = cr.requester_id
+    JOIN users receiver ON receiver.id = cr.receiver_id
+    WHERE cr.id = $1 AND cr.receiver_id = $2 AND cr.status = 'pending'
+  `, [requestId, req.user.id]);
+
+  if (!coupleRequest) {
+    return res.redirect('/notifications?msg=匹配请求不存在或已处理&type=error');
+  }
+
+  // 先只更新状态为 accepted，不在此处生成评语（评语会在查看结果时异步生成）
+  await db.execute(`
+    UPDATE couple_requests SET status = 'accepted', updated_at = CURRENT_TIMESTAMP WHERE id = $1
+  `, [requestId]);
+
+  // 通知申请人
+  await db.execute(`
+    INSERT INTO notifications (user_id, type, content, related_user_id, related_request_id)
+    VALUES ($1, 'match_accepted', $2, $3, $4)
+  `, [
+    coupleRequest.requester_id,
+    `用户 ${req.user.nickname || req.user.email} 已同意你的情侣匹配度测试申请`,
+    req.user.id,
+    requestId
+  ]);
+
+  res.redirect(`/couple-match/result/${requestId}?msg=匹配成功&type=success`);
+}));
+
+// 拒绝情侣匹配度测试申请
+app.post('/couple-match/reject/:id', isLoggedIn, wrapAsync(async (req, res) => {
+  const requestId = parseInt(req.params.id, 10);
+
+  const coupleRequest = await db.queryOne(`
+    SELECT cr.*, requester.nickname as requester_nickname
+    FROM couple_requests cr
+    JOIN users requester ON requester.id = cr.requester_id
+    WHERE cr.id = $1 AND cr.receiver_id = $2 AND cr.status = 'pending'
+  `, [requestId, req.user.id]);
+
+  if (!coupleRequest) {
+    return res.redirect('/notifications?msg=匹配请求不存在或已处理&type=error');
+  }
+
+  await db.execute(`
+    UPDATE couple_requests SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE id = $1
+  `, [requestId]);
+
+  // 通知申请人
+  await db.execute(`
+    INSERT INTO notifications (user_id, type, content, related_user_id, related_request_id)
+    VALUES ($1, 'match_rejected', $2, $3, $4)
+  `, [
+    coupleRequest.requester_id,
+    `用户 ${req.user.nickname || req.user.email} 已拒绝你的情侣匹配度测试申请`,
+    req.user.id,
+    requestId
+  ]);
+
+  res.redirect('/notifications?msg=已拒绝匹配度测试申请&type=success');
+}));
+
+// DeepSeek API 调用函数
+async function generateMatchComment(userAProfile, userBProfile, matchScore) {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (!apiKey) {
+    console.error('DeepSeek API Key 未配置');
+    return null;
+  }
+  const url = 'https://api.deepseek.com/v1/chat/completions';
+
+  // 构建双方信息摘要，包含所有问卷题目
+  const buildProfileSummary = (profile) => {
+    const info = [];
+    // 基础信息
+    if (profile.gender) info.push(`性别: ${profile.gender}`);
+    if (profile.my_grade) info.push(`年级: ${profile.my_grade}`);
+    if (profile.age) info.push(`年龄: ${profile.age}`);
+    if (profile.campus) info.push(`校区: ${profile.campus}`);
+    if (profile.height) info.push(`身高: ${profile.height}cm`);
+    if (profile.hometown) info.push(`家乡: ${profile.hometown}`);
+    if (profile.purpose) info.push(`交友目的: ${profile.purpose}`);
+    if (profile.core_traits) info.push(`核心特质: ${profile.core_traits}`);
+    // 恋爱观念
+    if (profile.relationship_rhythm !== null) info.push(`恋爱节奏: ${profile.relationship_rhythm}`);
+    if (profile.romantic_ritual !== null) info.push(`仪式感: ${profile.romantic_ritual}`);
+    if (profile.relationship_style !== null) info.push(`相处模式: ${profile.relationship_style}`);
+    if (profile.sleep_pattern !== null) info.push(`作息习惯: ${profile.sleep_pattern}`);
+    if (profile.diet_preference !== null) info.push(`饮食偏好: ${profile.diet_preference}`);
+    if (profile.spice_tolerance !== null) info.push(`辣度接受度: ${profile.spice_tolerance}`);
+    if (profile.date_preference !== null) info.push(`约会偏好: ${profile.date_preference}`);
+    if (profile.spending_style !== null) info.push(`消费观念: ${profile.spending_style}`);
+    if (profile.drinking_habit !== null) info.push(`饮酒习惯: ${profile.drinking_habit}`);
+    if (profile.smoking_habit !== null) info.push(`吸烟习惯: ${profile.smoking_habit}`);
+    if (profile.pet_attitude !== null) info.push(`宠物态度: ${profile.pet_attitude}`);
+    if (profile.sexual_timing !== null) info.push(`性观念: ${profile.sexual_timing}`);
+    if (profile.conflict_style !== null) info.push(`应对冲突: ${profile.conflict_style}`);
+    if (profile.meeting_frequency !== null) info.push(`见面频率: ${profile.meeting_frequency}`);
+    // 个人特征
+    if (profile.my_traits) info.push(`个人特征: ${profile.my_traits}`);
+    if (profile.partner_traits) info.push(`偏好特质: ${profile.partner_traits}`);
+    if (profile.interests) info.push(`兴趣爱好: ${profile.interests}`);
+    if (profile.partner_interest !== null) info.push(`对方兴趣权重: ${profile.partner_interest}`);
+    // 择偶偏好
+    if (profile.preferred_gender) info.push(`偏好性别: ${profile.preferred_gender}`);
+    if (profile.age_min !== null && profile.age_max !== null) info.push(`年龄偏好: ${profile.age_min}-${profile.age_max}`);
+    if (profile.preferred_height_min !== null && profile.preferred_height_max !== null) info.push(`身高偏好: ${profile.preferred_height_min}-${profile.preferred_height_max}`);
+    if (profile.preferred_hometown) info.push(`家乡偏好: ${profile.preferred_hometown}`);
+    if (profile.accepted_campus) info.push(`接受校区: ${profile.accepted_campus}`);
+    if (profile.partner_drinking !== null) info.push(`对方饮酒偏好: ${profile.partner_drinking}`);
+    if (profile.partner_smoking !== null) info.push(`对方吸烟偏好: ${profile.partner_smoking}`);
+    // LoveType
+    if (profile.lovetype_code) info.push(`恋爱类型: ${profile.lovetype_code}`);
+    return info.join('， ');
+  };
+
+  const prompt = `请为以下两位用户生成一段100-150字的匹配评语，要有梗、有趣、活泼一些：
+
+用户A问卷: ${buildProfileSummary(userAProfile)}
+用户B问卷: ${buildProfileSummary(userBProfile)}
+匹配得分: ${Math.round(matchScore)}分
+
+要求：
+- 语言生动有趣
+- 若性取向不符合，可以用活泼有趣的方式提及
+- 适度调侃但不过分
+- 适度提及双方的加分项和亮点
+- 我们都是上海大学大学生
+- 给一些简单的聊天话题开启建议
+- 不要夸大或过于乐观
+
+- 100-150字，直接输出评语内容，按段落分为换成2-3段显示，不需要开场白`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 300,
+        temperature: 0.7
+      })
+    });
+
+    if (!response.ok) {
+      console.error('DeepSeek API 错误:', response.status, await response.text());
+      return null;
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content?.trim() || null;
+  } catch (error) {
+    console.error('调用 DeepSeek API 失败:', error);
+    return null;
+  }
+}
+
+// 查看情侣匹配度测试结果
+app.get('/couple-match/result/:id', isLoggedIn, wrapAsync(async (req, res) => {
+  const requestId = parseInt(req.params.id, 10);
+
+  const coupleRequest = await db.queryOne(`
+    SELECT cr.*,
+      requester.id as requester_id, requester.nickname as requester_nickname, requester.email as requester_email,
+      receiver.id as receiver_id, receiver.nickname as receiver_nickname, receiver.email as receiver_email
+    FROM couple_requests cr
+    JOIN users requester ON requester.id = cr.requester_id
+    JOIN users receiver ON receiver.id = cr.receiver_id
+    WHERE cr.id = $1 AND cr.status = 'accepted'
+      AND (cr.requester_id = $2 OR cr.receiver_id = $2)
+  `, [requestId, req.user.id]);
+
+  if (!coupleRequest) {
+    return res.redirect('/couple-match?msg=匹配度测试结果不存在&type=error');
+  }
+
+  // 直接从数据库读取已保存的得分（如果有的话）
+  let savedScore = coupleRequest.match_score;
+
+  // 如果没有保存的得分，先计算并保存
+  if (!savedScore) {
+    const matchService = require('./matchService');
+    const matchResult = await matchService.getCoupleMatch(coupleRequest.requester_id, coupleRequest.receiver_id);
+    if (matchResult) {
+      await db.execute(`
+        UPDATE couple_requests SET match_score = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2
+      `, [matchResult.total, requestId]);
+      savedScore = matchResult.total; // 立即使用计算出的得分
+    }
+  }
+
+  // 确定谁是对方
+  const isRequester = coupleRequest.requester_id === req.user.id;
+  const partnerId = isRequester ? coupleRequest.receiver_id : coupleRequest.requester_id;
+  const partnerNickname = isRequester ? coupleRequest.receiver_nickname : coupleRequest.requester_nickname;
+  const partnerEmail = isRequester ? coupleRequest.receiver_email : coupleRequest.requester_email;
+
+  // 获取对方的 profile 信息
+  const partnerProfile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [partnerId]);
+
+  // 获取对方的 loveType
+  const lovettService = require('./lovetypeService');
+  const partnerLoveType = partnerProfile?.lovetype_code ? lovettService.getLoveTypeProfile(partnerProfile.lovetype_code) : null;
+
+  res.render('couple-result', {
+    title: '匹配度测试结果',
+    user: req.user,
+    nickname: req.session.nickname,
+    hasProfile: true,
+    partner: {
+      id: partnerId,
+      nickname: partnerNickname,
+      email: partnerEmail,
+      ...partnerProfile,
+      loveTypeProfile: partnerLoveType
+    },
+    matchResult: savedScore ? { total: savedScore } : null,
+    matchComment: undefined,
+    requestId
+  });
+}));
+
 // API: 获取实时推荐列表
 app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
   const matchService = require('./matchService');
@@ -1527,6 +1928,54 @@ app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
   const matchService = require('./matchService');
   const matches = await matchService.getTopMatches(req.user.id, 5);
   res.json({ success: true, source: 'recommendation', data: matches });
+}));
+
+// API: 异步获取匹配评语
+app.get('/api/couple-match/comment/:id', isLoggedIn, wrapAsync(async (req, res) => {
+  const requestId = parseInt(req.params.id, 10);
+
+  const coupleRequest = await db.queryOne(`
+    SELECT cr.*,
+      requester.id as requester_id, receiver.id as receiver_id
+    FROM couple_requests cr
+    JOIN users requester ON requester.id = cr.requester_id
+    JOIN users receiver ON receiver.id = cr.receiver_id
+    WHERE cr.id = $1 AND cr.status = 'accepted'
+      AND (cr.requester_id = $2 OR cr.receiver_id = $2)
+  `, [requestId, req.user.id]);
+
+  if (!coupleRequest) {
+    return res.status(404).json({ success: false, error: '匹配结果不存在' });
+  }
+
+  // 如果已有保存的评语则直接返回
+  if (coupleRequest.match_comment) {
+    return res.json({ success: true, comment: coupleRequest.match_comment, score: coupleRequest.match_score });
+  }
+
+  // 否则重新生成
+  const profileA = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [coupleRequest.requester_id]);
+  const profileB = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [coupleRequest.receiver_id]);
+
+  if (!profileA || !profileB) {
+    return res.json({ success: false, error: '无法获取用户资料' });
+  }
+
+  const matchService = require('./matchService');
+  const matchResult = await matchService.getCoupleMatch(coupleRequest.requester_id, coupleRequest.receiver_id);
+
+  if (!matchResult) {
+    return res.json({ success: false, error: '无法计算匹配得分' });
+  }
+
+  const comment = await generateMatchComment(profileA, profileB, matchResult.total);
+
+  // 保存到数据库
+  await db.execute(`
+    UPDATE couple_requests SET match_score = $1, match_comment = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3
+  `, [matchResult.total, comment, requestId]);
+
+  res.json({ success: true, comment, score: matchResult.total });
 }));
 
 // 管理页

@@ -1,5 +1,5 @@
 /**
- * 匹配服务 - 100分制匹配算法
+ * 匹配服务 - 100分制匹配算法（开根号乘10版）
  *
  * 硬筛选条件（必须满足）：
  * - 性别偏好互相对应
@@ -374,11 +374,47 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
   return { success: true, message: `匹配完成，共 ${results.length} 对`, results };
 }
 
+// 获取情侣匹配得分
+async function getCoupleMatch(userAId, userBId) {
+  const profileA = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userAId]);
+  const profileB = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userBId]);
+
+  if (!profileA || !profileB) {
+    return null;
+  }
+
+  const scoreAB = calculateMatchScore(profileA, profileB);
+  const scoreBA = calculateMatchScore(profileB, profileA);
+  const scoreRaw = harmonicMean(scoreAB, scoreBA);
+
+  // 归一化：开根号乘10
+  const score = Math.sqrt(scoreRaw) * 10;
+
+  // 计算双方各自的 breakdown
+  const detailsA = calculateMatchDetails(profileA, profileB);
+  const detailsB = calculateMatchDetails(profileB, profileA);
+
+  // 调和平均 breakdown
+  const breakdown = {};
+  for (const key in detailsA.breakdown) {
+    const vA = detailsA.breakdown[key];
+    const vB = detailsB.breakdown[key];
+    breakdown[key] = vA > 0 && vB > 0 ? (2 * vA * vB) / (vA + vB) : 0;
+  }
+
+  return {
+    score: Math.round(score * 100) / 100,
+    breakdown: breakdown,
+    total: Math.round(score * 100) / 100
+  };
+}
+
 module.exports = {
   findMatches,
   getTopMatches,
   saveWeeklyMatches,
   calculateMatchScore,
   calculateMatchDetails,
-  filterCandidates
+  filterCandidates,
+  getCoupleMatch
 };

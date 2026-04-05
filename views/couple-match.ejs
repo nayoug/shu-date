@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>情侣匹配 - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <%- include('partials/head-icons') %>
+  <% if (typeof isDev !== 'undefined' && isDev) { %>
+  <link rel="stylesheet" href="/css/dev-tools.css">
+  <% } %>
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container" style="max-width: 600px; padding-top: 40px;">
+    <div class="card">
+      <h2 style="margin-bottom: 24px;">情侣匹配</h2>
+
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 20px;">
+          <%- message %>
+        </div>
+      <% } %>
+
+      <p style="color: var(--muted-foreground); margin-bottom: 20px;">
+        输入对方邮箱，向TA发送情侣匹配申请。双方完成问卷后，在通知中心同意即可查看匹配结果。
+      </p>
+
+      <form method="POST" action="/couple-match/request" style="margin-bottom: 32px;">
+        <div style="display: flex; gap: 12px;">
+          <input
+            type="email"
+            name="email"
+            placeholder="对方邮箱（@shu.edu.cn）"
+            required
+            style="flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 6px;"
+          >
+          <button type="submit" class="btn btn-primary">发送申请</button>
+        </div>
+      </form>
+
+      <% if (acceptedMatches && acceptedMatches.length > 0) { %>
+        <h3 style="margin-top: 32px; margin-bottom: 16px;">已匹配</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <% acceptedMatches.forEach(function(match) { %>
+            <div style="padding: 16px; background: var(--accent); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <p style="margin: 0; font-weight: 500;"><%= match.partner_nickname || match.partner_email %></p>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--muted-foreground);">
+                  匹配于 <%= new Date(match.matched_at).toLocaleDateString('zh-CN') %>
+                </p>
+              </div>
+              <a href="/couple-match/result/<%= match.id %>" class="btn btn-secondary" style="padding: 8px 16px;">查看结果</a>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+
+      <% if (myRequests && myRequests.length > 0) { %>
+        <h3 style="margin-top: 32px; margin-bottom: 16px;">我发出的申请</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <% myRequests.forEach(function(req) { %>
+            <div style="padding: 12px; border: 1px solid var(--border); border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <p style="margin: 0;"><%= req.nickname || req.email %></p>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--muted-foreground);">
+                  <%= new Date(req.created_at).toLocaleString('zh-CN') %>
+                </p>
+              </div>
+              <span style="padding: 4px 8px; font-size: 12px; border-radius: 4px; <% if (req.status === 'pending') { %>background: var(--accent);<% } else if (req.status === 'accepted') { %>background: #dcfce7; color: #166534;<% } else if (req.status === 'rejected') { %>background: #fee2e2; color: #991b1b;<% } %>">
+                <% if (req.status === 'pending') { %>待回复<% } else if (req.status === 'accepted') { %>已同意<% } else if (req.status === 'rejected') { %>已拒绝<% } %>
+              </span>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+
+      <% if (receivedRequests && receivedRequests.length > 0) { %>
+        <h3 style="margin-top: 32px; margin-bottom: 16px;">收到的申请</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <% receivedRequests.forEach(function(req) { %>
+            <div style="padding: 12px; border: 1px solid var(--border); border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <p style="margin: 0;"><%= req.nickname || req.email %></p>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--muted-foreground);">
+                  <%= new Date(req.created_at).toLocaleString('zh-CN') %>
+                </p>
+              </div>
+              <% if (req.status === 'pending') { %>
+                <span style="color: var(--muted-foreground); font-size: 12px;">请在通知中心处理</span>
+              <% } else { %>
+                <span style="padding: 4px 8px; font-size: 12px; border-radius: 4px; <% if (req.status === 'accepted') { %>background: #dcfce7; color: #166534;<% } else if (req.status === 'rejected') { %>background: #fee2e2; color: #991b1b;<% } %>">
+                  <% if (req.status === 'accepted') { %>已同意<% } else if (req.status === 'rejected') { %>已拒绝<% } %>
+                </span>
+              <% } %>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+</body>
+</html>

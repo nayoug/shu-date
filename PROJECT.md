@@ -98,6 +98,8 @@
 
 - **匹配算法**：按用户顺序依次为每位用户选择当前最优且未被匹配的对象（基于局部贪心策略）
 
+- **归一化**：把分数开根号再乘10，优化分数显示
+
 ### 2.4 管理后台
 
 | 功能 | 状态 | 说明 |
@@ -226,6 +228,18 @@ shu-date/
 | created_at | TIMESTAMP | 创建时间 |
 | updated_at | TIMESTAMP | 更新时间 |
 
+#### couple_requests 表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | SERIAL | 主键 |
+| requester_id | INTEGER | 发起者ID（外键） |
+| receiver_id | INTEGER | 接收者ID（外键） |
+| status | TEXT | 状态（pending/accepted/rejected） |
+| match_score | NUMERIC(5,2) | 匹配得分（固定保存） |
+| match_comment | TEXT | 匹配评语（固定保存，DeepSeek生成） |
+| created_at | TIMESTAMP | 创建时间 |
+| updated_at | TIMESTAMP | 更新时间 |
+
 #### matches 表
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -272,8 +286,14 @@ shu-date/
 | POST | /settings/delete | 注销账号 | 已登录 |
 | GET | /notifications | 通知中心 | 已登录 |
 | GET | /matches | 查看本周正式匹配结果 | 已登录 |
+| GET | /couple-match | 情侣匹配页 | 已登录 |
+| POST | /couple-match/request | 发送情侣匹配申请 | 已登录 |
+| POST | /couple-match/accept/:id | 同意匹配申请 | 已登录 |
+| POST | /couple-match/reject/:id | 拒绝匹配申请 | 已登录 |
+| GET | /couple-match/result/:id | 查看匹配结果 | 已登录 |
 | GET | /api/matches | 获取实时推荐列表 | 已登录 |
 | GET | /api/match/top | 获取前 5 名实时推荐 | 已登录 |
+| GET | /api/couple-match/comment/:id | 异步获取匹配评语 | 已登录 |
 | GET | /admin | 管理后台 | 管理员 |
 | POST | /admin/match | 手动触发匹配 | 管理员 |
 | GET | /version | 版本信息 | 公开 |
@@ -298,6 +318,12 @@ shu-date/
 |--------|------|------|
 | `RESEND_API_KEY` | 生产必需 | Resend API Key |
 | `FROM_EMAIL` | 否 | 发件人邮箱 |
+
+### 5.3 AI 相关环境变量
+
+| 变量名 | 必需 | 说明 |
+|--------|------|------|
+| `DEEPSEEK_API_KEY` | 生成评语必需 | DeepSeek API Key |
 
 ### 5.3 环境区分
 
