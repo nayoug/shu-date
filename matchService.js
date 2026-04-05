@@ -1,5 +1,5 @@
 /**
- * 匹配服务 - 100分制匹配算法
+ * 匹配服务 - 100分制匹配算法（开根号乘10版）
  *
  * 硬筛选条件（必须满足）：
  * - 性别偏好互相对应
@@ -385,7 +385,10 @@ async function getCoupleMatch(userAId, userBId) {
 
   const scoreAB = calculateMatchScore(profileA, profileB);
   const scoreBA = calculateMatchScore(profileB, profileA);
-  const score = harmonicMean(scoreAB, scoreBA);
+  const scoreRaw = harmonicMean(scoreAB, scoreBA);
+
+  // 归一化：开根号乘10
+  const score = Math.sqrt(scoreRaw) * 10;
 
   // 计算双方各自的 breakdown
   const detailsA = calculateMatchDetails(profileA, profileB);

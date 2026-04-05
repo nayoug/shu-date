@@ -1759,34 +1759,67 @@ async function generateMatchComment(userAProfile, userBProfile, matchScore) {
   }
   const url = 'https://api.deepseek.com/v1/chat/completions';
 
-  // 构建双方信息摘要
+  // 构建双方信息摘要，包含所有问卷题目
   const buildProfileSummary = (profile) => {
     const info = [];
+    // 基础信息
     if (profile.gender) info.push(`性别: ${profile.gender}`);
     if (profile.my_grade) info.push(`年级: ${profile.my_grade}`);
-    if (profile.campus) info.push(`校区: ${profile.campus}`);
     if (profile.age) info.push(`年龄: ${profile.age}`);
+    if (profile.campus) info.push(`校区: ${profile.campus}`);
+    if (profile.height) info.push(`身高: ${profile.height}cm`);
     if (profile.hometown) info.push(`家乡: ${profile.hometown}`);
-    if (profile.interests) info.push(`兴趣爱好: ${profile.interests}`);
-    if (profile.lovetype_code) info.push(`恋爱类型: ${profile.lovetype_code}`);
     if (profile.purpose) info.push(`交友目的: ${profile.purpose}`);
     if (profile.core_traits) info.push(`核心特质: ${profile.core_traits}`);
+    // 恋爱观念
+    if (profile.relationship_rhythm !== null) info.push(`恋爱节奏: ${profile.relationship_rhythm}`);
+    if (profile.romantic_ritual !== null) info.push(`仪式感: ${profile.romantic_ritual}`);
+    if (profile.relationship_style !== null) info.push(`相处模式: ${profile.relationship_style}`);
+    if (profile.sleep_pattern !== null) info.push(`作息习惯: ${profile.sleep_pattern}`);
+    if (profile.diet_preference !== null) info.push(`饮食偏好: ${profile.diet_preference}`);
+    if (profile.spice_tolerance !== null) info.push(`辣度接受度: ${profile.spice_tolerance}`);
+    if (profile.date_preference !== null) info.push(`约会偏好: ${profile.date_preference}`);
+    if (profile.spending_style !== null) info.push(`消费观念: ${profile.spending_style}`);
+    if (profile.drinking_habit !== null) info.push(`饮酒习惯: ${profile.drinking_habit}`);
+    if (profile.smoking_habit !== null) info.push(`吸烟习惯: ${profile.smoking_habit}`);
+    if (profile.pet_attitude !== null) info.push(`宠物态度: ${profile.pet_attitude}`);
+    if (profile.sexual_timing !== null) info.push(`性观念: ${profile.sexual_timing}`);
+    if (profile.conflict_style !== null) info.push(`应对冲突: ${profile.conflict_style}`);
+    if (profile.meeting_frequency !== null) info.push(`见面频率: ${profile.meeting_frequency}`);
+    // 个人特征
     if (profile.my_traits) info.push(`个人特征: ${profile.my_traits}`);
+    if (profile.partner_traits) info.push(`偏好特质: ${profile.partner_traits}`);
+    if (profile.interests) info.push(`兴趣爱好: ${profile.interests}`);
+    if (profile.partner_interest !== null) info.push(`对方兴趣权重: ${profile.partner_interest}`);
+    // 择偶偏好
+    if (profile.preferred_gender) info.push(`偏好性别: ${profile.preferred_gender}`);
+    if (profile.age_min !== null && profile.age_max !== null) info.push(`年龄偏好: ${profile.age_min}-${profile.age_max}`);
+    if (profile.preferred_height_min !== null && profile.preferred_height_max !== null) info.push(`身高偏好: ${profile.preferred_height_min}-${profile.preferred_height_max}`);
+    if (profile.preferred_hometown) info.push(`家乡偏好: ${profile.preferred_hometown}`);
+    if (profile.accepted_campus) info.push(`接受校区: ${profile.accepted_campus}`);
+    if (profile.partner_drinking !== null) info.push(`对方饮酒偏好: ${profile.partner_drinking}`);
+    if (profile.partner_smoking !== null) info.push(`对方吸烟偏好: ${profile.partner_smoking}`);
+    // LoveType
+    if (profile.lovetype_code) info.push(`恋爱类型: ${profile.lovetype_code}`);
     return info.join('， ');
   };
 
-  const prompt = `请为以下两位用户生成一段100-150字的匹配评语，要求客观、温和、理性：
+  const prompt = `请为以下两位用户生成一段100-150字的匹配评语，要有梗、有趣、活泼一些：
 
-用户A: ${buildProfileSummary(userAProfile)}
-用户B: ${buildProfileSummary(userBProfile)}
+用户A问卷: ${buildProfileSummary(userAProfile)}
+用户B问卷: ${buildProfileSummary(userBProfile)}
 匹配得分: ${Math.round(matchScore)}分
 
 要求：
-- 客观描述双方的匹配特点
-- 语气温和友善
-- 适度提及加分项（如共同爱好、价值观等）
+- 语言生动有趣
+- 若性取向不符合，可以用活泼有趣的方式提及
+- 适度调侃但不过分
+- 适度提及双方的加分项和亮点
+- 我们都是上海大学大学生
+- 给一些简单的聊天话题开启建议
 - 不要夸大或过于乐观
-- 100-150字，直接输出评语内容，不需要开场白`;
+
+- 100-150字，直接输出评语内容，按段落分为换成2-3段显示，不需要开场白`;
 
   try {
     const response = await fetch(url, {
@@ -1838,9 +1871,8 @@ app.get('/couple-match/result/:id', isLoggedIn, wrapAsync(async (req, res) => {
   }
 
   // 直接从数据库读取已保存的得分（如果有的话）
-  const savedScore = coupleRequest.match_score;
+  let savedScore = coupleRequest.match_score;
 
-  // 不再在此处生成评语，完全依赖前端异步加载
   // 如果没有保存的得分，先计算并保存
   if (!savedScore) {
     const matchService = require('./matchService');
@@ -1849,6 +1881,7 @@ app.get('/couple-match/result/:id', isLoggedIn, wrapAsync(async (req, res) => {
       await db.execute(`
         UPDATE couple_requests SET match_score = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2
       `, [matchResult.total, requestId]);
+      savedScore = matchResult.total; // 立即使用计算出的得分
     }
   }
 
