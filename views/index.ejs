@@ -46,22 +46,63 @@
     </div>
 
     <% if (typeof user !== 'undefined' && user) { %>
-    <div class="card">
-      <h3 style="margin-bottom: 12px;">Hi, <%= user.name || user.email.split('@')[0] %></h3>
-      <% if (!user.verified) { %>
-        <div class="alert alert-warning" style="margin-bottom: 16px;">
-          邮箱还没验证，去邮箱里点一下验证链接
-        </div>
-      <% } else { %>
-        <% if (user.hasProfile) { %>
-          <p style="color: var(--muted-foreground); margin-bottom: 16px;">资料填好了，等匹配结果吧</p>
-          <a href="/matches" class="btn">看看匹配</a>
+    <% const displayName = user.nickname || user.name || user.email.split('@')[0]; %>
+    <section class="card home-status" aria-label="首页状态">
+      <div class="home-status__main">
+        <p class="home-status__eyebrow">欢迎回来</p>
+        <h2 class="home-status__title"><%= displayName %></h2>
+        <p class="home-status__identity"><%= user.email %></p>
+
+        <% if (!user.verified) { %>
+          <div class="alert alert-warning home-status__alert">
+            邮箱还没验证，去邮箱里点一下验证链接
+          </div>
+          <p class="home-status__summary">先完成学校邮箱验证，后面的问卷和每周推荐才会解锁。</p>
+          <div class="home-status__actions">
+            <a href="/login" class="btn">回到登录页</a>
+          </div>
+        <% } else if (user.hasProfile) { %>
+          <p class="home-status__summary">资料已经提交完成，接下来等每周推荐更新，再回来看看这周系统给你的结果。</p>
+          <div class="home-status__actions">
+            <a href="/matches" class="btn">看看匹配</a>
+            <a href="/profile?edit=1" class="btn btn-secondary">查看资料</a>
+          </div>
         <% } else { %>
-          <p style="color: var(--muted-foreground); margin-bottom: 16px;">还差个问卷没填</p>
-          <a href="/profile" class="btn">去填</a>
+          <p class="home-status__summary">账号已经准备好，还差一份问卷。填完后系统才知道你想认识什么样的人。</p>
+          <div class="home-status__actions">
+            <a href="/profile" class="btn">去填问卷</a>
+            <a href="/guide" class="btn btn-secondary">先看说明</a>
+          </div>
         <% } %>
-      <% } %>
-    </div>
+      </div>
+
+      <aside class="home-status__aside" aria-label="当前进度">
+        <p class="home-status__aside-title">当前进度</p>
+        <ul class="home-status__steps">
+          <li class="home-status__step <%= user.verified ? 'is-done' : 'is-current' %>">
+            <span class="home-status__step-badge"><%= user.verified ? '✓' : '1' %></span>
+            <div>
+              <strong>学校邮箱验证</strong>
+              <p><%= user.verified ? '已完成身份验证，可以继续下一步。' : '先去邮箱里点一下验证链接。' %></p>
+            </div>
+          </li>
+          <li class="home-status__step <%= user.verified && user.hasProfile ? 'is-done' : (user.verified ? 'is-current' : 'is-pending') %>">
+            <span class="home-status__step-badge"><%= user.verified && user.hasProfile ? '✓' : '2' %></span>
+            <div>
+              <strong>填写问卷</strong>
+              <p><%= user.hasProfile ? '资料已经提交，偏好和性格信息都在库里。' : '补完资料后，系统才会进入匹配流程。' %></p>
+            </div>
+          </li>
+          <li class="home-status__step <%= user.verified && user.hasProfile ? 'is-current' : 'is-pending' %>">
+            <span class="home-status__step-badge">3</span>
+            <div>
+              <strong>查看每周推荐</strong>
+              <p><%= user.verified && user.hasProfile ? '接下来只要等每周推荐更新，就可以回来看结果。' : '完成前两步后，这里会成为你的主要入口。' %></p>
+            </div>
+          </li>
+        </ul>
+      </aside>
+    </section>
     <% } %>
   </div>
 
