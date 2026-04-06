@@ -24,6 +24,11 @@
       <% if (typeof message !== 'undefined' && message) { %>
         <div class="alert alert-<%= messageType || 'info' %>">
           <%= message %>
+          <% if (typeof messageHtml !== 'undefined' && messageHtml) { %>
+            <div style="margin-top: 10px;">
+              <%- messageHtml %>
+            </div>
+          <% } %>
         </div>
       <% } %>
 

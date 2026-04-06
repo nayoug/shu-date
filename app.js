@@ -73,6 +73,22 @@ function redirectWithMessage(res, path, message, type = 'error') {
   return res.redirect(303, `${path}${separator}msg=${encodeURIComponent(message)}&type=${encodeURIComponent(type)}`);
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildDevLinkMessage(label, url) {
+  const safeLabel = escapeHtml(label);
+  const safeUrl = escapeHtml(url);
+
+  return `测试模式：<a href="${safeUrl}">${safeLabel}</a>`;
+}
+
 function hashRateLimitFragment(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
@@ -764,6 +780,7 @@ app.post('/forgot', forgotRateLimiter, wrapAsync(async (req, res) => {
       title: '忘记密码',
       message: '重置链接已发送到你的邮箱，请查收',
       messageType: 'success',
+      messageHtml: result.simulated ? buildDevLinkMessage('打开重置链接', result.url) : '',
       email: lowerEmail
     });
   } else {
@@ -915,12 +932,14 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
     const verifyResult = await sendVerifyEmail(lowerEmail, verificationToken);
     let message = '请前往邮箱点击验证链接完成验证。';
     let messageType = 'success';
+    let messageHtml = '';
     if (verifyResult && verifyResult.simulated) {
-      message += ` （测试模式：<a href="${verifyResult.url}">${verifyResult.url}</a>）`;
+      messageHtml = buildDevLinkMessage('打开验证链接', verifyResult.url);
     }
     return res.render('login', {
       title: '登录',
       message,
+      messageHtml,
       messageType,
       loginMethod: 'login'
     });
@@ -945,9 +964,10 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
   // 无论邮件是否发送成功，都显示验证提示（邮件发送失败时显示模拟链接）
   let message = '注册成功！请前往邮箱点击验证链接完成验证。';
   let messageType = 'success';
+  let messageHtml = '';
 
   if (verifyResult && verifyResult.simulated) {
-    message += ` （测试模式：<a href="${verifyResult.url}">${verifyResult.url}</a>）`;
+    messageHtml = buildDevLinkMessage('打开验证链接', verifyResult.url);
   } else if (verifyResult && !verifyResult.success) {
     message = '注册成功，但邮件发送失败。请稍后尝试重新发送验证邮件。';
     messageType = 'warning';
@@ -956,6 +976,7 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
   return res.render('login', {
     title: '登录',
     message,
+    messageHtml,
     messageType,
     loginMethod: 'login'
   });
