@@ -1506,6 +1506,12 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
   }
 
   const weekNumber = getWeekNumber();
+  const matchYear = getYear();
+  const weeklyRelease = await db.queryOne(
+    'SELECT COUNT(*) as count FROM matches WHERE match_year = $1 AND week_number = $2',
+    [matchYear, weekNumber]
+  );
+  const hasWeeklyRelease = parseInt(weeklyRelease?.count || '0', 10) > 0;
   const weeklyMatches = await db.query(`
     SELECT
       m.week_number,
@@ -1531,7 +1537,7 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
       AND ($1 = m.user_id_1 OR $1 = m.user_id_2)
     ORDER BY m.matched_at DESC, m.id DESC
     LIMIT 1
-  `, [req.user.id, weekNumber, getYear()]);
+  `, [req.user.id, weekNumber, matchYear]);
 
   const weeklyMatch = weeklyMatches.length > 0 ? {
     weekNumber: weeklyMatches[0].week_number,
@@ -1559,7 +1565,8 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     matches: weeklyMatch ? [weeklyMatch.partner] : [],
     isAdmin: req.isAdmin,
     matchSource: 'weekly',
-    weekNumber
+    weekNumber,
+    hasWeeklyRelease
   });
 }));
 
