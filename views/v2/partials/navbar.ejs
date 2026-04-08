@@ -1,6 +1,7 @@
 <%
   const currentNav = (pageKey || '').startsWith('settings') ? 'settings' : (pageKey || 'home');
   const hasHeaderOverlay = typeof headerOverlay !== 'undefined' && headerOverlay;
+  const showAdmin = typeof isAdmin !== 'undefined' && isAdmin;
   const displayName = nickname || user?.nickname || user?.name || (user ? user.email.split('@')[0] : '同学');
   const verificationText = user ? (user.verified ? '已验证' : '待验证') : '未登录';
   const navItems = [
@@ -10,10 +11,14 @@
 
   if (user) {
     navItems.push(
+      { key: 'profile', label: '问卷', href: '/profile' },
       { key: 'matches', label: '本周匹配', href: '/matches' },
       { key: 'notifications', label: '通知', href: '/notifications' },
       { key: 'settings', label: '设置', href: '/settings' }
     );
+    if (showAdmin) {
+      navItems.push({ key: 'admin', label: '后台', href: '/admin' });
+    }
   }
 %>
 <header class="site-header<%= hasHeaderOverlay ? ' site-header--overlay' : '' %>">
@@ -90,4 +95,7 @@
     </div>
   </aside>
 </div>
+
+
+
 

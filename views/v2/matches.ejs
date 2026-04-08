@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <%- include('partials/head', { title: '匹配结果' }) %>
+</head>
+<body class="v2-page" data-page="<%= pageKey %>">
+  <%- include('partials/navbar', { pageKey, user, nickname, hasProfile }) %>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">正式匹配</p>
+        <h1 class="page-intro__title"><%= !user.verified ? '先完成邮箱验证，再查看本周正式匹配结果' : (!weeklyMatch ? '本周正式匹配还没发布，或者你本周暂未匹配成功' : '本周正式匹配结果已经发布') %></h1>
+        <p class="page-intro__text">这页继续读取已经落库的正式匹配结果，不混用实时推荐。新版先把结果展示、空状态和说明文案接进统一壳层。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/matches</span>
+        <span class="pill"><%= matchSource === 'weekly' ? '正式结果' : '推荐结果' %></span>
+        <% if (typeof weekNumber !== 'undefined') { %>
+        <span class="pill pill--system">Week <%= weekNumber %></span>
+        <% } %>
+      </div>
+    </section>
+
+    <section class="page-frame">
+      <aside class="page-side">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">结果说明</h2>
+            <p class="surface__text">这里只有已经发布并写入数据库的正式匹配，不会因为刷新页面就重新计算。</p>
+          </div>
+          <ul class="side-list">
+            <li><strong>先验证邮箱</strong><p>未验证账号仍会被拦在结果页之外，避免把核心流程提前暴露。</p></li>
+            <li><strong>问卷先填完整</strong><p>没有资料时仍然会跳回问卷页，保持当前主线行为。</p></li>
+            <li><strong>正式结果优先</strong><p>实时推荐仍保留在 API 中，但这里展示的是正式匹配结果。</p></li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="surface reveal">
+        <% if (!user.verified) { %>
+          <div class="empty-state v2-empty-state">
+            <h2>邮箱还未验证</h2>
+            <p>请先完成邮箱验证，再回来查看本周正式匹配结果。</p>
+            <div class="v2-inline-actions">
+              <a class="button" href="/guide">查看使用说明</a>
+              <a class="button button--ghost" href="/notifications">查看通知</a>
+            </div>
+          </div>
+        <% } else if (!weeklyMatch) { %>
+          <div class="empty-state v2-empty-state">
+            <h2>本周暂无正式匹配结果</h2>
+            <p>本周匹配尚未发布，或你本周暂未匹配成功。你可以稍后再回来刷新这一页。</p>
+            <div class="v2-inline-actions">
+              <a class="button" href="/profile?edit=1">继续完善问卷</a>
+              <a class="button button--ghost" href="/notifications">查看通知</a>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="surface__head">
+            <h2 class="surface__title">你的本周正式匹配对象</h2>
+            <p class="surface__text">结果已落库并发布，下方展示的是当前周的正式匹配信息。</p>
+          </div>
+
+          <article class="surface surface--soft" style="padding: 1.5rem; margin-bottom: 1.25rem;">
+            <div class="surface__meta" style="gap: 1rem;">
+              <div class="v2-user-summary">
+                <strong><%= weeklyMatch.partner.nickname || 'TA' %></strong>
+                <span><%= weeklyMatch.partner.my_grade || '年级未填写' %> · <%= weeklyMatch.partner.gender || '性别未填写' %> · <%= weeklyMatch.partner.campus || '校区未填写' %></span>
+              </div>
+              <div class="v2-badge-row">
+                <% if (weeklyMatch.partner.lovetype_code) { %>
+                  <span class="pill"><%= weeklyMatch.partner.lovetype_code %></span>
+                <% } %>
+                <% if (weeklyMatch.score !== null && weeklyMatch.score !== undefined) { %>
+                  <span class="pill pill--match"><%= Math.round(weeklyMatch.score * 100) %>% 匹配度</span>
+                <% } %>
+              </div>
+            </div>
+            <p class="legacy-tip" style="margin-top: 1rem;">
+              <strong>兴趣爱好：</strong>
+              <%= weeklyMatch.partner.interests || '暂未填写' %>
+            </p>
+          </article>
+
+          <div class="result-band">
+            <h3>这是正式结果，不是实时推荐</h3>
+            <p>正式匹配会在后台流程执行后写入数据库。这一页只负责读取并展示当前周的正式结果，不会在浏览时临时重算。</p>
+            <div class="result-band__meta">
+              <span class="pill">正式发布</span>
+              <span class="pill">落库读取</span>
+              <span class="pill">每周结果</span>
+            </div>
+          </div>
+        <% } %>
+      </section>
+    </section>
+  </main>
+  <%- include('partials/footer', { user }) %>
+  <script src="/v2/assets/app.js"></script>
+</body>
+</html>

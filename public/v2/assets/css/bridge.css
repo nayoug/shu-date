@@ -326,3 +326,57 @@ html:not([data-theme="dark"]) .hero--v2-home .feature-card .pill {
   background: rgba(16, 40, 86, 0.08);
   color: var(--ink);
 }
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+.toggle-row input {
+  width: auto;
+  margin: 0;
+}
+
+.table-shell {
+  overflow-x: auto;
+}
+
+.v2-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.v2-table th,
+.v2-table td {
+  padding: 0.85rem 0.9rem;
+  border-bottom: 1px solid rgba(21, 48, 79, 0.08);
+  text-align: left;
+}
+
+.v2-table th {
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+html[data-theme="dark"] .v2-table th,
+html[data-theme="dark"] .v2-table td {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 768px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+}

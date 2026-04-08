@@ -23,7 +23,7 @@
             <% } %>
           </p>
           <p class="hero__text">
-            这不是整站重做，而是先把首页、认证、设置、通知和说明页做成一套能共存的新版壳层。问卷、匹配和后台仍然保持经典版，避免把现有流程打断。
+            这不是整站重做，而是先把首页、认证、设置、通知和说明页做成一套能共存的新版壳层。首页、认证、问卷、匹配、设置、通知与后台都已接入新版壳层，后续主要是继续打磨细节与交互。
           </p>
           <% if (message) { %>
             <% const tone = messageType === 'error' ? 'danger' : (messageType || 'info'); %>
@@ -65,8 +65,8 @@
         <div class="hero__visual hero__visual--stack reveal">
           <article class="feature-card feature-card--primary">
             <p class="feature-card__eyebrow">首批已接入</p>
-            <h2>首页、认证、设置、通知和公开说明页</h2>
-            <p>先让用户最常经过的入口统一视觉、暗色模式和切换逻辑，再逐步碰问卷与匹配。</p>
+            <h2>首页、认证、问卷、匹配、设置、通知、后台和公开说明页</h2>
+            <p>先把用户主流程和管理员入口统一到一套新版壳层，再逐步打磨细节和交互。</p>
             <div class="feature-card__tags">
               <span class="pill">首页</span>
               <span class="pill">登录 / 注册</span>
@@ -77,11 +77,9 @@
           <article class="feature-card feature-card--secondary">
             <p class="feature-card__eyebrow">暂时仍走经典版</p>
             <ul class="feature-card__list">
-              <li>/profile 问卷</li>
-              <li>/matches 匹配结果</li>
-              <li>/admin 管理后台</li>
+              <li>后台治理页也已接入新版</li>`r`n              <li>旧版仅作为随时可切回的安全兜底</li>`r`n              <li>后续重点是打磨细节而不是继续铺壳层</li>
             </ul>
-            <p class="feature-card__note">开启新版后访问这些页面，会自动回到经典版并给出提示。</p>
+            <p class="feature-card__note">新版与经典版现在可以双向切换，后续会继续打磨这些页面内部细节。</p>
           </article>
         </div>
       </div>
@@ -137,7 +135,7 @@
           </article>
           <article class="flow-step reveal">
             <h3>02 再填写问卷与查看匹配</h3>
-            <p>这两块先保持经典版，避免新版壳层还没收稳时把最核心的表单和匹配逻辑一起改乱。</p>
+            <p>现在新版已经覆盖用户主流程与后台，下一步重点会转向细节打磨，而不是继续扩页面壳层。</p>
           </article>
           <article class="flow-step reveal">
             <h3>03 用设置与通知承接后续功能</h3>
@@ -151,4 +149,7 @@
   <script src="/v2/assets/app.js"></script>
 </body>
 </html>
+
+
+
 

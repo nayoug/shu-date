@@ -64,13 +64,16 @@ const V2_VIEW_MAP = {
   login: 'v2/login',
   forgot: 'v2/forgot',
   reset: 'v2/reset',
+  profile: 'v2/profile',
+  matches: 'v2/matches',
+  admin: 'v2/admin',
   settings: 'v2/settings',
   notifications: 'v2/notifications',
   password: 'v2/password',
   'delete-account': 'v2/delete-account',
   'info-page': 'v2/info-page'
 };
-const CLASSIC_FALLBACK_PREFIXES = ['/profile', '/matches', '/admin'];
+const CLASSIC_FALLBACK_PREFIXES = [];
 
 function buildLoginRedirectPath(method, email) {
   const params = new URLSearchParams({
@@ -595,7 +598,8 @@ function buildProfilePageModel(req, profile) {
     isProduction,
     message: req.query.msg,
     messageType: req.query.type,
-    editMode: req.query.edit === '1'
+    editMode: req.query.edit === '1',
+    pageKey: 'profile'
   };
 }
 
@@ -1271,7 +1275,7 @@ app.get('/profile', isLoggedIn, wrapAsync(async (req, res) => {
   // 传递密码修改相关变量
   model.passwordMessage = req.query.passwordMsg || (res.locals.passwordMessage || '');
   model.passwordMessageType = res.locals.passwordMessageType || '';
-  res.render('profile', model);
+  renderExperienceView(req, res, 'profile', model);
 }));
 // 账户设置
 app.get('/settings', isLoggedIn, wrapAsync(async (req, res) => {
@@ -1609,13 +1613,14 @@ app.post('/profile', isLoggedIn, (req, res) => {
 // 匹配结果页
 app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
   if (!req.user.verified) {
-    return res.render('matches', {
+    return renderExperienceView(req, res, 'matches', {
       title: '匹配结果',
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: false,
       showPassword: true,
-      matchSource: 'weekly'
+      matchSource: 'weekly',
+      pageKey: 'matches'
     });
   }
 
@@ -1668,7 +1673,7 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     }
   } : null;
 
-  res.render('matches', {
+  renderExperienceView(req, res, 'matches', {
     title: '匹配结果',
     user: req.user,
     nickname: req.session.nickname,
@@ -1678,7 +1683,8 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     matches: weeklyMatch ? [weeklyMatch.partner] : [],
     isAdmin: req.isAdmin,
     matchSource: 'weekly',
-    weekNumber
+    weekNumber,
+    pageKey: 'matches'
   });
 }));
 
@@ -1704,16 +1710,21 @@ app.get('/admin', isLoggedIn, requireAdmin, wrapAsync(async (req, res) => {
     LEFT JOIN profiles p ON u.id = p.user_id
     ORDER BY u.created_at DESC
   `);
+  const currentUserProfile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
 
-  res.render('admin', {
+  renderExperienceView(req, res, 'admin', {
     title: '管理',
     user: req.user,
     users,
     weekNumber: getWeekNumber(),
+    currentYear: getYear(),
     csrfToken: ensureCsrfToken(req),
     message: req.query.msg,
     messageType: req.query.type,
-    isAdmin: true
+    isAdmin: true,
+    nickname: req.session.nickname,
+    hasProfile: !!currentUserProfile,
+    pageKey: 'admin'
   });
 }));
 
@@ -1999,3 +2010,10 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
+
+
+
+
+
+
+

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <%- include('partials/head', { title: '管理后台' }) %>
+</head>
+<body class="v2-page" data-page="<%= pageKey %>">
+  <%- include('partials/navbar', { pageKey, user, nickname, hasProfile, isAdmin }) %>
+  <main class="app-main">
+    <section class="page-intro reveal">
+      <div>
+        <p class="page-intro__eyebrow">管理后台</p>
+        <h1 class="page-intro__title">把管理员最常用的动作也放进新版壳层</h1>
+        <p class="page-intro__text">这页继续复用现有管理员鉴权、限流、CSRF 和二次密码确认逻辑，只把操作面板和用户列表换成新版层级。</p>
+      </div>
+      <div class="page-intro__meta">
+        <span class="pill">/admin</span>
+        <span class="pill pill--system">Week <%= weekNumber %></span>
+        <span class="pill"><%= users.length %> 位用户</span>
+      </div>
+    </section>
+
+    <section class="page-frame page-frame--wide">
+      <aside class="page-side page-side--stacked">
+        <% if (typeof message !== 'undefined' && message) { %>
+          <div class="status-banner status-banner--<%= messageType || 'info' %> reveal">
+            <strong class="status-banner__title">后台提示</strong>
+            <p class="status-banner__body"><%= message %></p>
+          </div>
+        <% } %>
+
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">本周匹配</h2>
+            <p class="surface__text">手动触发和补跑都会继续要求二次密码确认，并走当前已有的限流与 CSRF 保护。</p>
+          </div>
+          <form action="/admin/match" method="POST" class="fields">
+            <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+            <div class="field">
+              <label for="admin-confirm-password">确认密码</label>
+              <input id="admin-confirm-password" name="confirmPassword" type="password" placeholder="输入当前账号密码以确认操作" autocomplete="current-password" required>
+            </div>
+            <div class="surface__actions">
+              <button type="submit" class="button">手动触发本周匹配</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="surface reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">补跑指定周</h2>
+            <p class="surface__text">如果目标周已经有结果，需要勾选强制重跑后才能覆盖。</p>
+          </div>
+          <form action="/admin/match/rerun" method="POST" class="fields">
+            <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+            <div class="field-grid">
+              <div class="field">
+                <label for="rerun-year">年份</label>
+                <input id="rerun-year" name="targetYear" type="number" min="2020" max="2100" value="<%= currentYear %>" required>
+              </div>
+              <div class="field">
+                <label for="rerun-week">周数</label>
+                <input id="rerun-week" name="targetWeek" type="number" min="0" max="53" value="<%= weekNumber %>" required>
+              </div>
+            </div>
+            <label class="toggle-row">
+              <input type="checkbox" name="force" value="true">
+              <span>已确认需要覆盖当前周已有结果</span>
+            </label>
+            <div class="field">
+              <label for="rerun-confirm-password">确认密码</label>
+              <input id="rerun-confirm-password" name="confirmPassword" type="password" placeholder="再次输入密码以确认补跑" autocomplete="current-password" required>
+            </div>
+            <div class="surface__actions">
+              <button type="submit" class="button button--ghost">执行补跑</button>
+            </div>
+          </form>
+        </div>
+      </aside>
+
+      <section class="surface reveal">
+        <div class="surface__head">
+          <h2 class="surface__title">注册用户概览</h2>
+          <p class="surface__text">这里只保留后台当前真实拥有的数据，不凭空生成新的治理能力。</p>
+        </div>
+        <div class="table-shell">
+          <table class="v2-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>邮箱</th>
+                <th>昵称</th>
+                <th>验证状态</th>
+                <th>有无资料</th>
+                <th>注册时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% users.forEach(function(u) { %>
+              <tr>
+                <td><%= u.id %></td>
+                <td><%= u.email %></td>
+                <td><%= u.nickname || u.name || '-' %></td>
+                <td><%= u.verified ? '已验证' : '未验证' %></td>
+                <td><%= u.hasProfile ? '已填写' : '未填写' %></td>
+                <td><%= u.created_at ? u.created_at.slice(0, 10) : '-' %></td>
+              </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+        <p class="legacy-tip">当前共 <strong><%= users.length %></strong> 位用户注册。</p>
+      </section>
+    </section>
+  </main>
+  <%- include('partials/footer', { user }) %>
+  <script src="/v2/assets/app.js"></script>
+</body>
+</html>
