@@ -176,6 +176,7 @@ shu-date/
 | verification_expire | TIMESTAMP | 注册验证 token 过期时间 |
 | reset_token | TEXT | 密码重置 token |
 | reset_token_expire | TIMESTAMP | 密码重置 token 过期时间 |
+| weekly_match_confirmed | INTEGER | 是否确认参与本周匹配（0/1） |
 | created_at | TIMESTAMP | 创建时间 |
 
 #### profiles 表
@@ -285,7 +286,8 @@ shu-date/
 | GET | /settings/delete | 注销账号页 | 已登录 |
 | POST | /settings/delete | 注销账号 | 已登录 |
 | GET | /notifications | 通知中心 | 已登录 |
-| GET | /matches | 查看本周正式匹配结果 | 已登录 |
+| GET | /confirm-match | 确认匹配页 | 已登录，需先填写问卷 |
+| GET | /matches | 查看本周正式匹配结果 | 已登录，需确认匹配 |
 | GET | /couple-match | 情侣匹配页 | 已登录 |
 | POST | /couple-match/request | 发送情侣匹配申请 | 已登录 |
 | POST | /couple-match/accept/:id | 同意匹配申请 | 已登录 |
@@ -405,6 +407,7 @@ PORT=3000
 - [x] 测试模式（无需真实邮件）
 - [x] 恋爱类型测试服务
 - [x] 统一导航栏
+- [x] 确认匹配功能（需手动确认参与本周匹配）
 
 ### 7.2 待优化事项
 

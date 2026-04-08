@@ -37,6 +37,7 @@ async function initDatabase() {
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_expire TIMESTAMP');
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT');
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expire TIMESTAMP');
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_match_confirmed INTEGER DEFAULT 0');
   
   // profiles 表
   await pool.query(`
@@ -153,6 +154,7 @@ await pool.query(`
 
 // 为现有数据添加 match_year 列（迁移）
 await pool.query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS match_year INTEGER`);
+await pool.query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS match_comment TEXT`);
 await pool.query(`CREATE INDEX IF NOT EXISTS idx_matches_year_week ON matches (match_year, week_number)`);
 // 仅在存在旧记录时回填 match_year，避免每次启动都全表 UPDATE
 const missingMatchYear = await pool.query(`SELECT 1 FROM matches WHERE match_year IS NULL LIMIT 1`);
