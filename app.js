@@ -157,6 +157,22 @@ function renderExperienceView(req, res, classicView, locals = {}) {
   return res.render(resolveExperienceView(req, classicView), locals);
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildDevLinkMessage(label, url) {
+  const safeLabel = escapeHtml(label);
+  const safeUrl = escapeHtml(url);
+
+  return `测试模式：<a href="${safeUrl}">${safeLabel}</a>`;
+}
+
 function hashRateLimitFragment(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
@@ -928,7 +944,7 @@ app.post('/forgot', forgotRateLimiter, wrapAsync(async (req, res) => {
 
   if (result.success || (result.simulated && !isProduction)) {
     const messageHtml = result.simulated && result.url
-      ? `测试模式：<a href="${result.url}">${result.url}</a>`
+      ? buildDevLinkMessage('打开重置链接', result.url)
       : '';
     renderExperienceView(req, res, 'forgot', {
       title: '忘记密码',
@@ -1096,7 +1112,7 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
     let messageType = 'success';
     let messageHtml = '';
     if (verifyResult && verifyResult.simulated) {
-      messageHtml = `测试模式：<a href="${verifyResult.url}">${verifyResult.url}</a>`;
+      messageHtml = buildDevLinkMessage('打开验证链接', verifyResult.url);
     }
     return renderExperienceView(req, res, 'login', {
       title: '登录',
@@ -1130,7 +1146,7 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
   let messageHtml = '';
 
   if (verifyResult && verifyResult.simulated) {
-    messageHtml = `测试模式：<a href="${verifyResult.url}">${verifyResult.url}</a>`;
+    messageHtml = buildDevLinkMessage('打开验证链接', verifyResult.url);
   } else if (verifyResult && !verifyResult.success) {
     message = '注册成功，但邮件发送失败。请稍后尝试重新发送验证邮件。';
     messageType = 'warning';
@@ -1480,6 +1496,8 @@ app.get('/settings/delete', isLoggedIn, wrapAsync(async (req, res) => {
     nickname: req.session.nickname,
     hasProfile: !!profile,
     csrfToken: ensureCsrfToken(req),
+    deleteMessage: req.query.msg || '',
+    deleteMessageType: req.query.type || '',
     pageKey: 'settings-delete'
   });
 }));
@@ -1488,13 +1506,14 @@ app.get('/settings/delete', isLoggedIn, wrapAsync(async (req, res) => {
 app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
   const { email, password } = req.body;
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.session.userId]);
+  const csrfToken = ensureCsrfToken(req);
 
   if (!email || !password) {
     return renderExperienceView(req, res, 'delete-account', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
-      csrfToken: ensureCsrfToken(req),
+      csrfToken,
       deleteMessage: '请填写邮箱和密码',
       deleteMessageType: 'error',
       pageKey: 'settings-delete'
@@ -1511,7 +1530,7 @@ app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req,
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
-      csrfToken: ensureCsrfToken(req),
+      csrfToken,
       deleteMessage: '邮箱或密码错误',
       deleteMessageType: 'error',
       pageKey: 'settings-delete'
@@ -1526,7 +1545,7 @@ app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req,
         user: req.user,
         nickname: req.session.nickname,
         hasProfile: !!profile,
-        csrfToken: ensureCsrfToken(req),
+        csrfToken,
         deleteMessage: '邮箱或密码错误',
         deleteMessageType: 'error',
         pageKey: 'settings-delete'
@@ -1556,8 +1575,8 @@ app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req,
     return renderExperienceView(req, res, 'delete-account', {
       user: req.user,
       nickname: req.session.nickname,
-      hasProfile: true,
-      csrfToken: ensureCsrfToken(req),
+      hasProfile: !!profile,
+      csrfToken,
       deleteMessage: '账号注销失败，请稍后重试',
       deleteMessageType: 'error',
       pageKey: 'settings-delete'
@@ -1722,7 +1741,7 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
       AND ($1 = m.user_id_1 OR $1 = m.user_id_2)
     ORDER BY m.matched_at DESC, m.id DESC
     LIMIT 1
-  `, [req.user.id, weekNumber, getYear()]);
+  `, [req.user.id, weekNumber, matchYear]);
 
   const weeklyMatch = weeklyMatches.length > 0 ? {
     weekNumber: weeklyMatches[0].week_number,
@@ -1751,6 +1770,7 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     isAdmin: req.isAdmin,
     matchSource: 'weekly',
     weekNumber,
+    hasWeeklyRelease,
     pageKey: 'matches'
   });
 }));

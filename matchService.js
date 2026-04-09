@@ -1,5 +1,5 @@
 /**
- * 匹配服务 - 120分制匹配算法
+ * 匹配服务 - 100分制匹配算法（开根号乘10版）
  *
  * 硬筛选条件（必须满足）：
  * - 性别偏好互相对应
@@ -8,18 +8,18 @@
  * - 身高在对方要求范围内
  * - 家乡（同家乡要求）
  *
- * 加分项（总分上限120分）：
- * - 交友目的（purpose）相同：+4分
+ * 加分项（总分上限100分）：
+ * - 交友目的（purpose）相同：+2分
  * - 核心特质（core_traits）每相同一项：+2分（满分6分）
- * - 恋爱观念（14个维度）整数距离：每项4分（共56分）
+ * - 恋爱观念（14个维度）整数距离：每项3分（共42分）
  * - 性格特质（partner_traits）每命中一项：+6分（满分30分）
  * - 兴趣爱好（interests）Jaccard × partner_interest 权重（满分12分）
- * - lovetype 最佳配对+12 / 良好配对+8 / 需要磨合-5
+ * - lovetype 最佳配对+8 / 良好配对+5 / 需要磨合-2
  */
 
 const dbModule = require('./database');
 const lovetypeService = require('./lovetypeService');
-const { getWeekNumber } = require('./weekNumber');
+const { getWeekNumber, getYear } = require('./weekNumber');
 
 // ============ 工具函数 ============
 
@@ -99,10 +99,10 @@ function filterCandidates(myProfile, allProfiles) {
 
 // ============ 加分项计算 ============
 
-// purpose 相同：+4分
+// purpose 相同：+2分
 function scorePurpose(myProfile, theirProfile) {
   if (!myProfile.purpose || !theirProfile.purpose) return 0;
-  if (myProfile.purpose.trim() === theirProfile.purpose.trim()) return 4;
+  if (myProfile.purpose.trim() === theirProfile.purpose.trim()) return 2;
   return 0;
 }
 
@@ -128,7 +128,7 @@ function scoreCoreTraits(myProfile, theirProfile) {
   return cappedMatches * 2;
 }
 
-// 14个维度整数距离打分：每题4分（共56分）
+// 14个维度整数距离打分：每题3分（共42分）
 // 值域 -2 到 2，差值越大分数越低
 // 12项直接配对 + 2项交叉配对（drinking_habit vs partner_drinking，smoking_habit vs partner_smoking）
 function scoreLifestyleDimensions(myProfile, theirProfile) {
@@ -153,25 +153,25 @@ function scoreLifestyleDimensions(myProfile, theirProfile) {
     const myVal = parseNullableInt(myProfile[field]);
     const theirVal = parseNullableInt(theirProfile[field]);
     totalScore += (myVal === null || theirVal === null)
-      ? 2
-      : Math.max(0, 4 - Math.abs(myVal - theirVal));
+      ? 1.5
+      : Math.max(0, 0.75*(4 - Math.abs(myVal - theirVal)));
   }
 
   // 交叉配对：我的 drinking_habit vs 对方的 partner_drinking
   const myDrinking = parseNullableInt(myProfile.drinking_habit);
   const theirPartnerDrinking = parseNullableInt(theirProfile.partner_drinking);
   totalScore += (myDrinking === null || theirPartnerDrinking === null)
-    ? 2
-    : Math.max(0, 4 - Math.abs(myDrinking - theirPartnerDrinking));
+    ? 1.5
+    : Math.max(0, 0.75*(4 - Math.abs(myDrinking - theirPartnerDrinking)));
 
   // 交叉配对：我的 smoking_habit vs 对方的 partner_smoking
   const mySmoking = parseNullableInt(myProfile.smoking_habit);
   const theirPartnerSmoking = parseNullableInt(theirProfile.partner_smoking);
   totalScore += (mySmoking === null || theirPartnerSmoking === null)
-    ? 2
-    : Math.max(0, 4 - Math.abs(mySmoking - theirPartnerSmoking));
+    ? 1.5
+    : Math.max(0, 0.75*(4 - Math.abs(mySmoking - theirPartnerSmoking)));
 
-  return totalScore; // 满分 56
+  return totalScore; // 满分 42
 }
 
 // partner_traits 每命中一项：+6分（共30分）
@@ -208,9 +208,9 @@ function scoreLovetype(myProfile, theirProfile) {
 
   const label = lovetypeService.getCompatibilityLabel(myProfile.lovetype_code, theirProfile.lovetype_code);
 
-  if (label === '最佳配对') return 12;
-  if (label === '良好配对') return 8;
-  if (label === '需要磨合') return -5;
+  if (label === '最佳配对') return 8;
+  if (label === '良好配对') return 5;
+  if (label === '需要磨合') return -2;
   return 0;
 }
 
@@ -233,8 +233,8 @@ function calculateMatchScore(myProfile, theirProfile) {
   total += scoreInterests(myProfile, theirProfile);
   total += scoreLovetype(myProfile, theirProfile);
 
-  // 上限 120 分
-  return Math.max(0, Math.min(120, total));
+  // 上限 100 分
+  return Math.max(0, Math.min(100, total));
 }
 
 function calculateMatchDetails(myProfile, theirProfile) {
@@ -247,7 +247,7 @@ function calculateMatchDetails(myProfile, theirProfile) {
   const total = purposeScore + coreTraitsScore + lifestyleScore + partnerTraitsScore + interestsScore + lovetypeScore;
 
   return {
-    total: Math.max(0, Math.min(120, total)),
+    total: Math.max(0, Math.min(100, total)),
     breakdown: {
       purpose: purposeScore,
       core_traits: coreTraitsScore,
@@ -300,7 +300,7 @@ async function findMatches(userId) {
       interests: candidate.interests,
       lovetype_code: candidate.lovetype_code,
       lovetype_label: lovetypeService.getCompatibilityLabel(myProfile.lovetype_code, candidate.lovetype_code),
-      score: Math.round((score / 120) * 100) / 100,
+      score: Math.round(score / 100),
       score_ab: scoreAB,
       score_ba: scoreBA,
       score_breakdown: detailsA.breakdown
@@ -316,10 +316,11 @@ async function getTopMatches(userId, topN = 5) {
   return matches.slice(0, topN);
 }
 
-async function saveWeeklyMatches() {
-  const weekNumber = getWeekNumber();
+async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
+  const year = targetYear !== null ? targetYear : getYear();
+  const weekNumber = targetWeek !== null ? targetWeek : getWeekNumber();
 
-  const existing = await dbModule.queryOne('SELECT id FROM matches WHERE week_number = $1', [weekNumber]);
+  const existing = await dbModule.queryOne('SELECT id FROM matches WHERE match_year = $1 AND week_number = $2', [year, weekNumber]);
   if (existing) {
     return { success: false, message: '本周已执行匹配' };
   }
@@ -346,9 +347,9 @@ async function saveWeeklyMatches() {
     if (matches.length > 0) {
       const bestMatch = matches[0];
       await dbModule.execute(`
-        INSERT INTO matches (user_id_1, user_id_2, score, week_number)
-        VALUES ($1, $2, $3, $4)
-      `, [user.id, bestMatch.user_id, bestMatch.score, weekNumber]);
+        INSERT INTO matches (user_id_1, user_id_2, score, week_number, match_year)
+        VALUES ($1, $2, $3, $4, $5)
+      `, [user.id, bestMatch.user_id, bestMatch.score, weekNumber, year]);
       matched.add(user.id);
       matched.add(bestMatch.user_id);
 
@@ -373,11 +374,47 @@ async function saveWeeklyMatches() {
   return { success: true, message: `匹配完成，共 ${results.length} 对`, results };
 }
 
+// 获取情侣匹配得分
+async function getCoupleMatch(userAId, userBId) {
+  const profileA = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userAId]);
+  const profileB = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userBId]);
+
+  if (!profileA || !profileB) {
+    return null;
+  }
+
+  const scoreAB = calculateMatchScore(profileA, profileB);
+  const scoreBA = calculateMatchScore(profileB, profileA);
+  const scoreRaw = harmonicMean(scoreAB, scoreBA);
+
+  // 归一化：开根号乘10
+  const score = Math.sqrt(scoreRaw) * 10;
+
+  // 计算双方各自的 breakdown
+  const detailsA = calculateMatchDetails(profileA, profileB);
+  const detailsB = calculateMatchDetails(profileB, profileA);
+
+  // 调和平均 breakdown
+  const breakdown = {};
+  for (const key in detailsA.breakdown) {
+    const vA = detailsA.breakdown[key];
+    const vB = detailsB.breakdown[key];
+    breakdown[key] = vA > 0 && vB > 0 ? (2 * vA * vB) / (vA + vB) : 0;
+  }
+
+  return {
+    score: Math.round(score * 100) / 100,
+    breakdown: breakdown,
+    total: Math.round(score * 100) / 100
+  };
+}
+
 module.exports = {
   findMatches,
   getTopMatches,
   saveWeeklyMatches,
   calculateMatchScore,
   calculateMatchDetails,
-  filterCandidates
+  filterCandidates,
+  getCoupleMatch
 };

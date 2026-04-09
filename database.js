@@ -145,10 +145,20 @@ await pool.query(`
     score REAL,
     matched_at TIMESTAMP DEFAULT NOW(),
     week_number INTEGER,
+    match_year INTEGER,
     FOREIGN KEY (user_id_1) REFERENCES users(id),
     FOREIGN KEY (user_id_2) REFERENCES users(id)
   )
 `);
+
+// 为现有数据添加 match_year 列（迁移）
+await pool.query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS match_year INTEGER`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_matches_year_week ON matches (match_year, week_number)`);
+// 仅在存在旧记录时回填 match_year，避免每次启动都全表 UPDATE
+const missingMatchYear = await pool.query(`SELECT 1 FROM matches WHERE match_year IS NULL LIMIT 1`);
+if (missingMatchYear.rowCount > 0) {
+  await pool.query(`UPDATE matches SET match_year = EXTRACT(YEAR FROM matched_at) WHERE match_year IS NULL`);
+}
 
 await pool.query(`
   CREATE TABLE IF NOT EXISTS ${SESSION_TABLE_NAME} (
@@ -158,6 +168,50 @@ await pool.query(`
   )
 `);
 await pool.query(`CREATE INDEX IF NOT EXISTS ${SESSION_EXPIRE_INDEX_NAME} ON ${SESSION_TABLE_NAME} (expire)`);
+
+// 情侣匹配请求表
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS couple_requests (
+    id SERIAL PRIMARY KEY,
+    requester_id INTEGER NOT NULL,
+    receiver_id INTEGER NOT NULL,
+    status TEXT DEFAULT 'pending', -- pending, accepted, rejected
+    match_score NUMERIC(5,2), -- 匹配得分，固定保存
+    match_comment TEXT, -- 匹配评语，固定保存
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (requester_id) REFERENCES users(id),
+    FOREIGN KEY (receiver_id) REFERENCES users(id),
+    UNIQUE(requester_id, receiver_id)
+  )
+`);
+
+// 迁移：为已存在的 couple_requests 表添加新字段
+await pool.query(`ALTER TABLE couple_requests ADD COLUMN IF NOT EXISTS match_score NUMERIC(5,2)`);
+await pool.query(`ALTER TABLE couple_requests ADD COLUMN IF NOT EXISTS match_comment TEXT`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_couple_requests_requester_id ON couple_requests (requester_id)`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_couple_requests_receiver_id ON couple_requests (receiver_id)`);
+
+// 通知表
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    type TEXT NOT NULL, -- match_request, etc.
+    content TEXT,
+    related_user_id INTEGER,
+    related_request_id INTEGER,
+    is_read INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (related_user_id) REFERENCES users(id),
+    FOREIGN KEY (related_request_id) REFERENCES couple_requests(id)
+  )
+`);
+
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications (user_id)`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications (user_id, is_read)`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_notifications_related_user_id ON notifications (related_user_id)`);
 
   isInitialized = true;
   console.log('✅ Supabase PostgreSQL 数据库初始化完成');
@@ -182,12 +236,37 @@ async function execute(sql, params = []) {
   return { changes: result.rowCount, lastInsertRowid: null };
 }
 
+async function getClient() {
+  return pool.connect();
+}
+
+async function withTransaction(callback) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await callback(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Transaction rollback failed:', rollbackError);
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   SESSION_TABLE_NAME,
   initDatabase,
   query,
   queryOne,
   execute,
+  getClient,
+  withTransaction,
   init: initDatabase,
   getPool: () => pool
 };
