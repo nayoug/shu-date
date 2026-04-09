@@ -2004,7 +2004,7 @@ app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
     return res.status(403).json({ success: false, error: '请先确认参与本周匹配' });
   }
   const matchService = require('./matchService');
-  const matches = await matchService.findMatches(req.user.id);
+  const matches = await matchService.findMatches(req.user.id, getYear(), getWeekNumber());
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
 
@@ -2015,7 +2015,7 @@ app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
     return res.status(403).json({ success: false, error: '请先确认参与本周匹配' });
   }
   const matchService = require('./matchService');
-  const matches = await matchService.getTopMatches(req.user.id, 5);
+  const matches = await matchService.getTopMatches(req.user.id, 5, getYear(), getWeekNumber());
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
 

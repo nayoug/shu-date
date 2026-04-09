@@ -261,19 +261,28 @@ function calculateMatchDetails(myProfile, theirProfile) {
 
 // ============ 数据库查询接口 ============
 
-async function findMatches(userId) {
+async function findMatches(userId, targetYear = null, targetWeek = null) {
   const myUser = await dbModule.queryOne('SELECT * FROM users WHERE id = $1', [userId]);
   if (!myUser) return [];
 
   const myProfile = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userId]);
   if (!myProfile) return [];
 
+  const filters = ['u.id != $1', 'u.verified = 1'];
+  const params = [userId];
+
+  if (targetYear !== null && targetWeek !== null) {
+    params.push(targetYear, targetWeek);
+    filters.push(`u.weekly_match_year = $${params.length - 1}`);
+    filters.push(`u.weekly_match_week = $${params.length}`);
+  }
+
   const allProfiles = await dbModule.query(`
     SELECT u.id, u.email, u.nickname, u.name, p.*
     FROM users u
     JOIN profiles p ON u.id = p.user_id
-    WHERE u.id != $1 AND u.verified = 1
-  `, [userId]);
+    WHERE ${filters.join(' AND ')}
+  `, params);
 
   if (allProfiles.length === 0) return [];
 
@@ -311,8 +320,8 @@ async function findMatches(userId) {
   return scored;
 }
 
-async function getTopMatches(userId, topN = 5) {
-  const matches = await findMatches(userId);
+async function getTopMatches(userId, topN = 5, targetYear = null, targetWeek = null) {
+  const matches = await findMatches(userId, targetYear, targetWeek);
   return matches.slice(0, topN);
 }
 
@@ -330,7 +339,9 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
     FROM users u
     JOIN profiles p ON u.id = p.user_id
     WHERE u.verified = 1
-  `);
+      AND u.weekly_match_year = $1
+      AND u.weekly_match_week = $2
+  `, [year, weekNumber]);
 
   if (users.length < 2) {
     return { success: false, message: '用户数量不足' };
@@ -342,7 +353,7 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
   for (const user of users) {
     if (matched.has(user.id)) continue;
 
-    const matches = (await findMatches(user.id)).filter(m => !matched.has(m.user_id));
+    const matches = (await findMatches(user.id, year, weekNumber)).filter(m => !matched.has(m.user_id));
 
     if (matches.length > 0) {
       const bestMatch = matches[0];
