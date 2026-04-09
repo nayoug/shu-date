@@ -1,9 +1,12 @@
+<%
+  const currentClassicUrl = typeof switchToClassicUrl !== 'undefined' ? switchToClassicUrl : '/experience/classic';
+%>
 <footer class="site-footer">
   <div class="site-footer__inner">
     <div class="site-footer__lead">
       <p class="microcopy">心有所SHU</p>
-      <p class="site-footer__brand">新版体验</p>
-      <p class="site-footer__text">首批已接公共页、认证页、设置页、通知页、问卷页和匹配页，后台也已纳入新版壳层。</p>
+      <p class="site-footer__brand">校园匹配</p>
+      <p class="site-footer__text">在这里继续查看首页、问卷、匹配、通知、设置和公开说明页面。</p>
     </div>
     <div class="site-footer__links">
       <a href="/">主页</a>
@@ -15,8 +18,8 @@
       <% } %>
     </div>
     <div class="v2-footer-actions">
-      <a class="button button--ghost button--sm" href="<%= switchToClassicUrl %>">返回经典版</a>
-      <a class="v2-classic-link" href="/matches">新版与经典版可随时切换</a>
+      <a class="button button--ghost button--sm" href="<%= currentClassicUrl %>">返回经典版</a>
+      <a class="v2-classic-link" href="/matches">继续查看本周匹配</a>
     </div>
   </div>
 </footer>

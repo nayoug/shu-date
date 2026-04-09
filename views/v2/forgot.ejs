@@ -6,12 +6,13 @@
 <body class="v2-page" data-page="<%= pageKey %>">
   <%- include('partials/navbar', { pageKey, user: null, nickname: null, hasProfile: false }) %>
   <main class="app-main">
+    <% const safeMessageHtml = typeof messageHtml !== 'undefined' ? messageHtml : ''; %>
     <% const tone = messageType === 'error' ? 'danger' : (messageType || 'info'); %>
     <section class="page-intro reveal">
       <div>
         <p class="page-intro__eyebrow">忘记密码</p>
-        <h1 class="page-intro__title">输入学校邮箱，系统会继续走现有重置链路</h1>
-        <p class="page-intro__text">这页只是换成新版视觉，仍然使用当前的重置 token、邮件发送和错误回显逻辑。</p>
+        <h1 class="page-intro__title">输入学校邮箱，我们会发送密码重置链接</h1>
+        <p class="page-intro__text">填写正确的学校邮箱后，系统会向该邮箱发送重置密码所需的链接。</p>
       </div>
       <div class="page-intro__meta">
         <span class="pill">/forgot</span>
@@ -36,12 +37,17 @@
       <section class="surface reveal">
         <div class="surface__head">
           <h2 class="surface__title">发送重置链接</h2>
-          <p class="surface__text">后端不会改动，仍然提交到 <code>POST /forgot</code>。</p>
+          <p class="surface__text">提交后会停留在当前页，并展示成功或失败的提示。</p>
         </div>
         <% if (message) { %>
           <div class="status-banner status-banner--<%= tone %>">
             <strong class="status-banner__title"><%= tone === 'success' ? '邮件已发送' : '请先处理这个问题' %></strong>
             <p class="status-banner__body"><%= message %></p>
+            <% if (safeMessageHtml) { %>
+              <div class="mini-note">
+                <%- safeMessageHtml %>
+              </div>
+            <% } %>
           </div>
         <% } %>
         <form action="/forgot" method="POST" class="fields">

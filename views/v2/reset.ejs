@@ -11,7 +11,7 @@
       <div>
         <p class="page-intro__eyebrow">重置密码</p>
         <h1 class="page-intro__title">设置一个新密码，然后直接回到当前登录状态</h1>
-        <p class="page-intro__text">重置成功后仍沿用现有主线逻辑：直接登录并跳回首页。</p>
+        <p class="page-intro__text">输入两次一致的新密码，保存后系统会直接帮你回到登录状态。</p>
       </div>
       <div class="page-intro__meta">
         <span class="pill">/reset/<%= code %></span>
@@ -25,9 +25,9 @@
             <h2 class="surface__title">提交前确认</h2>
           </div>
           <ul class="side-list">
-            <li><strong>新密码至少 6 位</strong><p>这是当前主线真实要求，不在新版里额外加码。</p></li>
-            <li><strong>两次输入必须一致</strong><p>如果不一致，错误提示会留在当前新版页面。</p></li>
-            <li><strong>链接过期会回到登录</strong><p>失效 token 仍按现有后端规则处理。</p></li>
+            <li><strong>新密码至少 6 位</strong><p>请输入至少 6 位的新密码，以便后续正常登录。</p></li>
+            <li><strong>两次输入必须一致</strong><p>如果两次输入不同，页面会直接提示你重新检查。</p></li>
+            <li><strong>链接过期会回到登录</strong><p>如果链接已失效，需要重新申请新的重置链接。</p></li>
           </ul>
         </div>
       </aside>
@@ -35,7 +35,7 @@
       <section class="surface reveal">
         <div class="surface__head">
           <h2 class="surface__title">重置密码</h2>
-          <p class="surface__text">提交到 <code>POST /reset/:code</code>，不改变任何 token 行为。</p>
+          <p class="surface__text">保存成功后会直接进入登录状态，无需再次手动登录。</p>
         </div>
         <% if (message) { %>
           <div class="status-banner status-banner--<%= tone %>">

@@ -9,6 +9,7 @@
     <% const safeLoginMethod = typeof loginMethod !== 'undefined' && loginMethod ? loginMethod : 'login'; %>
     <% const safeMessage = typeof message !== 'undefined' ? message : ''; %>
     <% const safeMessageType = typeof messageType !== 'undefined' ? messageType : ''; %>
+    <% const safeMessageHtml = typeof messageHtml !== 'undefined' ? messageHtml : ''; %>
     <% const safeEmail = typeof email !== 'undefined' && email ? email : ''; %>
     <% const safeNickname = typeof nickname !== 'undefined' && nickname ? nickname : ''; %>
     <% const activeMethod = safeLoginMethod; %>
@@ -18,7 +19,7 @@
       <div>
         <p class="page-intro__eyebrow">账号入口</p>
         <h1 class="page-intro__title"><%= activeMethod === 'register' ? '先注册，再继续填写资料和查看匹配' : '先登录，再继续填写资料和查看匹配' %></h1>
-        <p class="page-intro__text">新版登录页继续复用当前后端表单提交和错误回显，只改页面结构、移动端层级和主题体验，不改变账户逻辑。</p>
+        <p class="page-intro__text">使用学校邮箱注册或登录，完成验证后即可继续填写资料、查看恋爱人格结果和匹配信息。</p>
       </div>
       <div class="page-intro__meta">
         <span class="pill">/login</span>
@@ -30,20 +31,20 @@
       <aside class="page-side page-side--stacked">
         <div class="surface surface--soft reveal">
           <div class="surface__head">
-            <h2 class="surface__title">这版认证页先解决什么</h2>
-            <p class="surface__text">把登录、注册、忘记密码和重置密码做成一套风格统一、适合手机的入口，而不是继续堆在旧页面里。</p>
+            <h2 class="surface__title">登录前你会用到的功能</h2>
+            <p class="surface__text">在这里完成注册、登录、忘记密码和主题切换，常用入口都集中在同一页里。</p>
           </div>
           <ul class="side-list">
             <li><strong>错误提示留在当前页</strong><p>登录失败、注册失败和密码不一致时，不再把用户扔回另一套界面。</p></li>
             <li><strong>邮箱和昵称回填</strong><p>重新提交前保留用户已经输入的关键信息，降低二次操作成本。</p></li>
-            <li><strong>暗色模式先在认证页落地</strong><p>这页保留独立的主题开关，方便你直接看浅色和深色的实际区别。</p></li>
+            <li><strong>浅色与深色自由切换</strong><p>你可以直接在页面里切换主题，选择自己看着最舒服的模式。</p></li>
           </ul>
         </div>
 
         <div class="surface reveal">
           <div class="surface__head">
             <h2 class="surface__title">页面内主题切换</h2>
-            <p class="surface__text">为了方便演示，主题切换不只放在顶部导航，在表单旁边也放了一组可见开关。</p>
+            <p class="surface__text">你可以在这里切换跟随系统、浅色和深色主题，表单和页面背景会立即变化。</p>
           </div>
           <div class="theme-switch theme-switch--inline" role="group" aria-label="外观模式">
             <button class="theme-switch__option" type="button" data-theme-option="system" aria-pressed="false">跟随系统</button>
@@ -57,7 +58,7 @@
       <section class="surface reveal">
         <div class="surface__head">
           <h2 class="surface__title">校园邮箱账号</h2>
-          <p class="surface__text">保留现有表单 action：<code>POST /register</code> 与 <code>POST /login</code>，这版只动视觉和交互壳层。</p>
+          <p class="surface__text">只支持 <code>@shu.edu.cn</code> 邮箱，注册后需要先完成邮箱验证。</p>
         </div>
 
         <div class="auth-tabs">
@@ -69,6 +70,21 @@
           <div class="status-banner status-banner--<%= tone %>">
             <strong class="status-banner__title"><%= tone === 'success' ? '操作完成' : '请先处理这个问题' %></strong>
             <p class="status-banner__body"><%= safeMessage %></p>
+            <% if (safeMessageHtml) { %>
+              <div class="mini-note">
+                <%- safeMessageHtml %>
+              </div>
+            <% } %>
+          </div>
+        <% } %>
+
+        <% if (typeof debugLoginUrl !== 'undefined' && debugLoginUrl) { %>
+          <div class="status-banner status-banner--warning">
+            <strong class="status-banner__title">开发模式快捷入口</strong>
+            <p class="status-banner__body">本地联调时可直接进入登录态，不必先走注册和邮箱验证。</p>
+            <div class="surface__actions">
+              <a class="button" href="<%= debugLoginUrl %>">测试登录</a>
+            </div>
           </div>
         <% } %>
 
@@ -121,14 +137,16 @@
           </form>
           <div class="result-band">
             <h3>登录后可以去哪里</h3>
-            <p>新版已经接入首页、问卷、匹配、设置、通知、说明和后台入口，主流程与管理入口都能在同一套壳层里体验。</p>
+            <p>登录成功后，你可以继续填写资料、查看本周匹配、进入设置页，或查看通知与使用说明。</p>
             <div class="result-band__meta">
-              <span class="pill">/profile</span>`r`n              <span class="pill">/matches</span>`r`n              <span class="pill">/settings</span>
+              <span class="pill">/profile</span>
+              <span class="pill">/matches</span>
+              <span class="pill">/settings</span>
             </div>
           </div>
         <% } %>
 
-        <p class="legacy-tip">目前只支持 <code>@shu.edu.cn</code> 邮箱。邮箱验证、密码重置成功后的跳转仍然沿用当前主线行为。</p>
+        <p class="legacy-tip">目前只支持 <code>@shu.edu.cn</code> 邮箱。验证完成后即可继续填写资料并使用完整功能。</p>
       </section>
     </section>
   </main>

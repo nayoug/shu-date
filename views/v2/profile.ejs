@@ -357,41 +357,28 @@
       font-size: 15px;
     }
 
+  .v2-page[data-page="profile"] {
+    --primary: var(--accent-strong);
+    --muted-foreground: var(--ink-soft);
+    --card-foreground: var(--ink);
+  }
+
   .v2-page[data-page="profile"] .site-header {
     position: sticky;
     top: 0;
   }
 
-  .v2-profile-shell {
-    max-width: 980px !important;
-    margin-top: 0;
+  .v2-page[data-page="profile"] .page-intro {
+    margin-bottom: 1.25rem;
   }
 
-  .v2-profile-shell .card {
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(16, 40, 86, 0.08);
-    box-shadow: 0 18px 36px rgba(29, 56, 106, 0.12);
-    backdrop-filter: blur(14px);
+  .v2-page[data-page="profile"] .page-intro__title {
+    max-width: 12ch;
+    font-size: clamp(2.2rem, 4.8vw, 4.4rem);
   }
 
-  .v2-profile-shell .form-section:first-child {
-    padding-top: 0;
-  }
-
-  html[data-theme="dark"] .v2-profile-shell .card,
-  html[data-theme="dark"] .v2-profile-shell .option-group label,
-  html[data-theme="dark"] .v2-profile-shell .checkbox-group-grid label,
-  html[data-theme="dark"] .v2-profile-shell .interest-tag,
-  html[data-theme="dark"] .v2-profile-shell .scale-option {
-    background: rgba(12, 18, 33, 0.88);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: none;
-  }
-
-  html[data-theme="dark"] .v2-profile-shell .province-select {
-    background: rgba(12, 18, 33, 0.88);
-    color: #f5f7fb;
-    border-color: rgba(255, 255, 255, 0.08);
+  .v2-page[data-page="profile"] .page-intro__text {
+    max-width: 56rem;
   }
 
   .v2-profile-status {
@@ -401,9 +388,194 @@
     margin-top: 1rem;
   }
 
+  .v2-profile-layout {
+    width: min(var(--content), 100%);
+    margin: 0 auto;
+    display: block;
+  }
+
+  .v2-profile-layout > .page-side {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .v2-profile-main {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .v2-profile-container.container {
+    width: 100%;
+    max-width: none !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  .v2-page[data-page="profile"] .card,
+  .v2-page[data-page="profile"] .lovetype-result-card,
+  .v2-page[data-page="profile"] .lovetype-copy-block {
+    color: var(--ink);
+  }
+
+  .v2-profile-container > .card {
+    margin-bottom: 1rem;
+    padding: 1.5rem 1.6rem;
+    border-radius: var(--radius-lg);
+    background: var(--surface-bg);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .v2-profile-container > .card:last-child {
+    margin-bottom: 0;
+  }
+
+  .v2-profile-container .form-section:first-child {
+    padding-top: 0;
+  }
+
+  .v2-profile-container .form-section {
+    margin-bottom: 0;
+    padding: 1.4rem 0 1.2rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .v2-profile-container .form-section:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .v2-profile-password-card {
+    background: var(--surface-soft-bg) !important;
+  }
+
+  .v2-profile-password-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .v2-profile-password-grid input {
+    background: var(--input-bg) !important;
+    border: 1px solid var(--input-line) !important;
+    color: var(--ink) !important;
+  }
+
+  .v2-profile-password-grid label,
+  .v2-page[data-page="profile"] .form-group > label,
+  .v2-page[data-page="profile"] .interest-category-title {
+    color: var(--ink) !important;
+  }
+
+  .v2-page[data-page="profile"] .checkbox-group label,
+  .v2-page[data-page="profile"] .checkbox-group-grid label,
+  .v2-page[data-page="profile"] .option-group label,
+  .v2-page[data-page="profile"] .interest-tag,
+  .v2-page[data-page="profile"] .scale-option label,
+  .v2-page[data-page="profile"] .scale-5 label {
+    background: var(--surface-bg);
+    border-color: var(--line);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px rgba(16, 40, 86, 0.04);
+  }
+
+  .v2-page[data-page="profile"] .checkbox-group label.checked,
+  .v2-page[data-page="profile"] .checkbox-group-grid label.checked,
+  .v2-page[data-page="profile"] .option-group label.selected,
+  .v2-page[data-page="profile"] .interest-tag.selected,
+  .v2-page[data-page="profile"] .scale-5 label.selected {
+    background: rgba(58, 134, 255, 0.12);
+    border-color: rgba(58, 134, 255, 0.28);
+    color: var(--accent-strong);
+  }
+
+  .v2-page[data-page="profile"] .province-select,
+  .v2-page[data-page="profile"] select,
+  .v2-page[data-page="profile"] textarea,
+  .v2-page[data-page="profile"] input[type="text"],
+  .v2-page[data-page="profile"] input[type="email"],
+  .v2-page[data-page="profile"] input[type="number"],
+  .v2-page[data-page="profile"] input[type="password"] {
+    background: var(--input-bg);
+    border-color: var(--input-line);
+    color: var(--ink);
+  }
+
+  .v2-page[data-page="profile"] .scale-circle {
+    background: var(--surface-bg);
+    border-color: var(--line);
+    color: var(--ink-soft);
+  }
+
+  .v2-page[data-page="profile"] .scale-option.selected .scale-circle {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .v2-page[data-page="profile"] .scale-label-text,
+  .v2-page[data-page="profile"] .range-labels,
+  .v2-page[data-page="profile"] .dual-range-labels,
+  .v2-page[data-page="profile"] .interest-counter,
+  .v2-page[data-page="profile"] .trait-counter,
+  .v2-page[data-page="profile"] .card p,
+  .v2-page[data-page="profile"] .form-hint,
+  .v2-page[data-page="profile"] small {
+    color: var(--ink-soft);
+  }
+
+  .v2-page[data-page="profile"] .dual-range-track {
+    background: rgba(16, 40, 86, 0.14);
+  }
+
+  .v2-page[data-page="profile"] .dual-range-track-highlight,
+  .v2-page[data-page="profile"] .range-value,
+  .v2-page[data-page="profile"] .dual-range-value {
+    color: var(--accent-strong);
+    background-color: transparent;
+  }
+
+  html[data-theme="dark"] .v2-page[data-page="profile"] .checkbox-group label,
+  html[data-theme="dark"] .v2-page[data-page="profile"] .checkbox-group-grid label,
+  html[data-theme="dark"] .v2-page[data-page="profile"] .option-group label,
+  html[data-theme="dark"] .v2-page[data-page="profile"] .interest-tag,
+  html[data-theme="dark"] .v2-page[data-page="profile"] .scale-5 label,
+  html[data-theme="dark"] .v2-page[data-page="profile"] .scale-circle,
+  html[data-theme="dark"] .v2-page[data-page="profile"] .lovetype-dimension-chip,
+  html[data-theme="dark"] .v2-page[data-page="profile"] .lovetype-type-pill {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  html[data-theme="dark"] .v2-page[data-page="profile"] .dual-range-track {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  html[data-theme="dark"] .v2-page[data-page="profile"] .lovetype-result-card,
+  html[data-theme="dark"] .v2-page[data-page="profile"] .lovetype-copy-block {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  @media (max-width: 960px) {
+    .v2-profile-layout > .page-side {
+      grid-template-columns: 1fr;
+    }
+  }
+
   @media (max-width: 768px) {
-    .v2-profile-shell {
+    .v2-profile-container.container {
       padding-inline: 0;
+    }
+
+    .v2-page[data-page="profile"] .page-intro__title {
+      max-width: none;
+      font-size: clamp(2rem, 9vw, 3rem);
+    }
+
+    .v2-profile-password-grid {
+      grid-template-columns: 1fr;
     }
   }
   </style>
@@ -413,13 +585,16 @@
   <% const isEditMode = typeof editMode !== 'undefined' ? editMode : false; %>
   <% const lovetypeQuestionList = typeof lovetypeQuestions !== 'undefined' ? lovetypeQuestions : []; %>
   <% const currentShowPassword = typeof showPassword !== 'undefined' && showPassword; %>
+  <% const selectedInterestCount = profile && profile.interests ? profile.interests.split(',').filter(t => t).length : 0; %>
+  <% const selectedMyTraitsCount = profile && profile.my_traits ? profile.my_traits.split(',').filter(t => t).length : 0; %>
+  <% const selectedPartnerTraitsCount = profile && profile.partner_traits ? profile.partner_traits.split(',').filter(t => t).length : 0; %>
   <%- include('partials/navbar', { pageKey, user, nickname, hasProfile }) %>
   <main class="app-main">
     <section class="page-intro reveal">
       <div>
-        <p class="page-intro__eyebrow">问卷入口</p>
-        <h1 class="page-intro__title"><%= currentLovetypeResult && !isEditMode ? '先看结果，再决定要不要继续修改问卷' : '把问卷也接进新版，让体验切换真正覆盖用户主流程' %></h1>
-        <p class="page-intro__text">这页继续复用现有问卷字段、LoveType16 结果和提交逻辑，新版先处理导航、层级、主题和基础壳层，不改你已经跑通的数据模型。</p>
+        <p class="page-intro__eyebrow">资料问卷</p>
+        <h1 class="page-intro__title"><%= currentLovetypeResult && !isEditMode ? '查看你的问卷资料与恋爱人格结果' : '填写问卷，完善你的匹配资料' %></h1>
+        <p class="page-intro__text">你的回答会用于生成 LoveType16 结果，并帮助系统理解你的基本信息、偏好与相处方式。填写完成后，你也可以随时回来修改。</p>
         <div class="v2-profile-status">
           <span class="pill"><%= profile ? '资料已存在' : '首次填写' %></span>
           <span class="pill"><%= currentLovetypeResult && !isEditMode ? '查看结果中' : '编辑问卷中' %></span>
@@ -427,15 +602,69 @@
         </div>
       </div>
       <div class="page-intro__meta">
-        <span class="pill">/profile</span>
-        <span class="pill"><%= lovetypeQuestionList.length %> 道 LoveType16</span>
+        <span class="pill">共 <%= lovetypeQuestionList.length %> 题</span>
+        <span class="pill"><%= currentLovetypeResult ? '已生成结果' : '填写后生成结果' %></span>
       </div>
     </section>
 
-<div class="container" style="max-width: 980px;">
-    <% if (typeof showPassword !== 'undefined' && showPassword) { %>
-    <div class="card" style="background: #f8f9fa; padding: 20px; margin-bottom: 20px;">
-      <h3 style="margin-bottom: 16px;">🔐 修改密码</h3>
+    <section class="page-frame page-frame--wide v2-profile-layout">
+      <aside class="page-side page-side--stacked">
+        <div class="surface surface--soft reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">问卷概览</h2>
+            <p class="surface__text">这里会集中展示你的填写状态、邮箱状态、恋爱人格结果，以及已选兴趣与特质。</p>
+          </div>
+          <div class="v2-profile-summary">
+            <div class="v2-profile-summary__row">
+              <span>资料状态</span>
+              <strong><%= profile ? '已填写' : '首次填写' %></strong>
+            </div>
+            <div class="v2-profile-summary__row">
+              <span>邮箱状态</span>
+              <strong><%= user && user.verified ? '已验证' : '待验证' %></strong>
+            </div>
+            <div class="v2-profile-summary__row">
+              <span>LoveType16</span>
+              <strong><%= currentLovetypeResult ? currentLovetypeResult.code + ' · ' + currentLovetypeResult.title : '尚未完成测试' %></strong>
+            </div>
+            <div class="v2-profile-summary__row">
+              <span>兴趣与特质</span>
+              <strong><%= selectedInterestCount %> 项兴趣 / <%= selectedMyTraitsCount %> 项自评 / <%= selectedPartnerTraitsCount %> 项偏好</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="surface reveal">
+          <div class="surface__head">
+            <h2 class="surface__title">填写前提醒</h2>
+            <p class="surface__text">问卷结果会影响匹配展示与恋爱人格分析，建议按真实情况填写。提交之后仍可随时回来更新。</p>
+          </div>
+          <ul class="side-list">
+            <li>
+              <strong>如实填写更有参考价值</strong>
+              <p>系统会结合你的资料、兴趣和偏好生成结果，答案越真实，后续展示越有意义。</p>
+            </li>
+            <li>
+              <strong>提交后仍可修改</strong>
+              <p>如果后续想更新偏好、兴趣或补充资料，可以重新回到这里继续编辑并保存。</p>
+            </li>
+            <li>
+              <strong>先完成基础信息再看结果</strong>
+              <p>完成问卷后，你可以回到这里查看 LoveType16 分析、已填状态以及后续匹配相关信息。</p>
+            </li>
+          </ul>
+          <div class="surface__actions">
+            <a class="button" href="/matches">查看本周匹配</a>
+            <a class="button button--ghost" href="/">返回首页</a>
+          </div>
+        </div>
+      </aside>
+
+      <div class="v2-profile-main reveal">
+<div class="container v2-profile-container">
+    <% if (currentShowPassword) { %>
+    <div class="card v2-profile-password-card">
+      <h3 class="v2-profile-subtitle">🔐 修改密码</h3>
 
       <% if (typeof passwordMessage !== 'undefined' && passwordMessage) { %>
         <div class="alert alert-<%= passwordMessageType || 'info' %>" style="margin-bottom: 16px;">
@@ -443,7 +672,7 @@
         </div>
       <% } %>
 
-      <form action="/profile/password" method="POST" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <form action="/profile/password" method="POST" class="v2-profile-password-grid">
         <div>
           <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">当前密码</label>
           <input type="password" name="currentPassword" placeholder="若未设置密码则留空" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
@@ -755,12 +984,12 @@
       <div class="form-group">
         <label>8. 我更看重伴侣的核心特质（可多选）：</label>
         <div class="interest-tags">
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="性格三观契合" ... onclick="updateCoreTraitsCounter()"> 性格三观契合</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="颜值气质" ... onclick="updateCoreTraitsCounter()"> 颜值气质</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="学历学识" ... onclick="updateCoreTraitsCounter()"> 学历学识</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="经济能力" ... onclick="updateCoreTraitsCounter()"> 经济能力</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="家庭背景" ... onclick="updateCoreTraitsCounter()"> 家庭背景</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="兴趣爱好相投" ... onclick="updateCoreTraitsCounter()"> 兴趣爱好相投</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="性格三观契合" <%= profile && profile.core_traits && profile.core_traits.includes('性格三观契合') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 性格三观契合</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="颜值气质" <%= profile && profile.core_traits && profile.core_traits.includes('颜值气质') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 颜值气质</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="学历学识" <%= profile && profile.core_traits && profile.core_traits.includes('学历学识') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 学历学识</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="经济能力" <%= profile && profile.core_traits && profile.core_traits.includes('经济能力') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 经济能力</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="家庭背景" <%= profile && profile.core_traits && profile.core_traits.includes('家庭背景') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 家庭背景</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="兴趣爱好相投" <%= profile && profile.core_traits && profile.core_traits.includes('兴趣爱好相投') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 兴趣爱好相投</label>
         </div>
         <p class="interest-counter" id="coreTraitsCounter">最多选 3 项，已选 0 项</p>  <!-- 移到这里 -->
       </div>
@@ -1478,21 +1707,22 @@
   </form>
   <% } %>
 </div>
-</div>
+      </div>
+    </section>
   </main>
   <%- include('partials/footer', { user }) %>
 
 <style>
 .lovetype-intro {
-  color: #666;
+  color: var(--ink-soft);
   margin-bottom: 16px;
 }
 .lovetype-question {
   padding: 16px;
   margin-bottom: 16px;
-  border: 1px solid #f0d5d0;
+  border: 1px solid var(--line);
   border-radius: 12px;
-  background: #fff8f6;
+  background: var(--surface-soft-bg);
 }
 .lovetype-question-head {
   margin-bottom: 12px;
@@ -1502,15 +1732,15 @@
   justify-content: space-between;
   gap: 12px;
   margin-top: 8px;
-  color: #666;
+  color: var(--ink-soft);
   font-size: 13px;
 }
 .lovetype-result-card {
   margin-bottom: 24px;
   padding: 20px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #fff4ef 0%, #fff 100%);
-  border: 1px solid #f3d2c8;
+  background: var(--surface-soft-bg);
+  border: 1px solid var(--line);
 }
 .lovetype-result-header {
   display: flex;
@@ -1523,7 +1753,7 @@
 }
 .lovetype-result-header p {
   margin: 0;
-  color: #666;
+  color: var(--ink-soft);
 }
 .lovetype-badge {
   display: inline-flex;
@@ -1549,11 +1779,16 @@
   gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: #fff;
-  border: 1px solid #f1d5cf;
+  background: var(--surface-bg);
+  border: 1px solid var(--line);
+  color: var(--ink);
 }
 .lovetype-copy-block {
   margin-top: 18px;
+  padding: 1rem 1.05rem;
+  border-radius: 16px;
+  background: rgba(16, 40, 86, 0.04);
+  border: 1px solid var(--line);
 }
 .lovetype-copy-block h4,
 .lovetype-copy-block h5 {
@@ -1561,7 +1796,7 @@
 }
 .lovetype-copy-block p {
   margin-bottom: 8px;
-  color: #444;
+  color: var(--ink-soft);
 }
 .lovetype-type-list {
   display: flex;
@@ -1574,10 +1809,23 @@
   align-items: center;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #fff;
-  border: 1px solid #f1d5cf;
+  background: var(--surface-bg);
+  border: 1px solid var(--line);
+  color: var(--ink);
   font-size: 13px;
   font-weight: 600;
+}
+
+html[data-theme="dark"] .lovetype-question,
+html[data-theme="dark"] .lovetype-result-card,
+html[data-theme="dark"] .lovetype-copy-block,
+html[data-theme="dark"] .lovetype-dimension-chip,
+html[data-theme="dark"] .lovetype-type-pill {
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .lovetype-copy-block {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 @media (max-width: 700px) {

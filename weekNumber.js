@@ -4,6 +4,11 @@ function getWeekNumber(date = new Date()) {
   return Math.floor(diff / 604800000);
 }
 
+function getYear(date = new Date()) {
+  return date.getFullYear();
+}
+
 module.exports = {
-  getWeekNumber
+  getWeekNumber,
+  getYear
 };

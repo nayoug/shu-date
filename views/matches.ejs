@@ -23,9 +23,11 @@
     <% } else if (!matches || matches.length === 0) { %>
     <div class="card" style="text-align: center;">
       <div style="font-size: 4rem; margin-bottom: 16px;">🤔</div>
-      <h2>本周暂无正式匹配结果</h2>
+      <h2><%= hasWeeklyRelease ? '本周暂未匹配成功' : '本周匹配尚未发布' %></h2>
       <p style="color: var(--muted-foreground); margin-bottom: 24px;">
-        本周匹配尚未发布，或你本周暂未匹配成功。
+        <%= hasWeeklyRelease
+          ? '本周正式匹配结果已经发布，但这周暂时还没有匹配到适合你的对象。'
+          : '本周正式匹配结果还没发布，等管理员执行本周匹配后再来看看。' %>
       </p>
     </div>
     <% } else { %>

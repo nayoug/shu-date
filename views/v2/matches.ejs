@@ -10,7 +10,7 @@
       <div>
         <p class="page-intro__eyebrow">正式匹配</p>
         <h1 class="page-intro__title"><%= !user.verified ? '先完成邮箱验证，再查看本周正式匹配结果' : (!weeklyMatch ? '本周正式匹配还没发布，或者你本周暂未匹配成功' : '本周正式匹配结果已经发布') %></h1>
-        <p class="page-intro__text">这页继续读取已经落库的正式匹配结果，不混用实时推荐。新版先把结果展示、空状态和说明文案接进统一壳层。</p>
+        <p class="page-intro__text">这里展示的是当前周已经发布的正式匹配结果，不会因为刷新页面而重新计算。</p>
       </div>
       <div class="page-intro__meta">
         <span class="pill">/matches</span>

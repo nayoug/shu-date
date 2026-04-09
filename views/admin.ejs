@@ -35,12 +35,47 @@
     <div class="card">
       <h2>👥 用户管理</h2>
 
-      <div style="margin-bottom: 20px;">
-        <form action="/admin/match" method="POST" style="display: inline;">
+      <div style="margin-bottom: 20px; padding: 15px; background: #fff3e0; border-radius: 8px; border-left: 4px solid #3498db;">
+        <h4 style="margin: 0 0 10px 0; color: #3498db;">🔄 手动触发本周匹配</h4>
+        <form action="/admin/match" method="POST" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
           <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
-          <button type="submit" class="btn">🔄 手动触发本周匹配</button>
+          <div>
+            <label style="font-size: 14px; color: #666;">确认密码：</label>
+            <input type="password" name="confirmPassword" placeholder="请输入您的密码" required
+                   style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 150px;">
+          </div>
+          <button type="submit" class="btn">🔄 执行匹配</button>
         </form>
-        <span style="margin-left: 15px; color: #666;">当前第 <%= weekNumber %> 周</span>
+        <span style="margin-left: 15px; color: #666; font-size: 12px;">当前第 <%= weekNumber %> 周</span>
+      </div>
+
+      <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #f39c12;">
+        <h4 style="margin: 0 0 10px 0; color: #f39c12;">🔧 补跑匹配</h4>
+        <form action="/admin/match/rerun" method="POST" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+          <div>
+            <label style="font-size: 14px; color: #666;">目标年份：</label>
+            <input type="number" name="targetYear" placeholder="留空=当前年" min="2020" max="2100"
+                   style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 100px;">
+          </div>
+          <div>
+            <label style="font-size: 14px; color: #666;">目标周数：</label>
+            <input type="number" name="targetWeek" placeholder="留空=当前周（0 起始）" min="0" max="53"
+                   style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 100px;">
+          </div>
+          <div>
+            <label style="font-size: 14px; color: #666;">确认密码：</label>
+            <input type="password" name="confirmPassword" placeholder="请输入密码确认" required
+                   style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 150px;">
+          </div>
+          <div>
+            <label style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
+              <input type="checkbox" name="force" value="true">
+              <span style="color: #e74c3c;">强制重跑 (删除已有记录)</span>
+            </label>
+          </div>
+          <button type="submit" class="btn" style="background: #f39c12;">▶️ 执行补跑</button>
+        </form>
       </div>
 
       <table>

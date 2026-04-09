@@ -2,6 +2,7 @@
   const currentNav = (pageKey || '').startsWith('settings') ? 'settings' : (pageKey || 'home');
   const hasHeaderOverlay = typeof headerOverlay !== 'undefined' && headerOverlay;
   const showAdmin = typeof isAdmin !== 'undefined' && isAdmin;
+  const currentClassicUrl = typeof switchToClassicUrl !== 'undefined' ? switchToClassicUrl : '/experience/classic';
   const displayName = nickname || user?.nickname || user?.name || (user ? user.email.split('@')[0] : '同学');
   const verificationText = user ? (user.verified ? '已验证' : '待验证') : '未登录';
   const navItems = [
@@ -27,7 +28,7 @@
       <span class="brandmark__symbol" aria-hidden="true"></span>
       <span class="brandmark__copy">
         <span class="brandmark__name">心有所SHU</span>
-        <span class="brandmark__tag">新版体验</span>
+        <span class="brandmark__tag">校园匹配</span>
       </span>
     </a>
     <nav class="site-nav" aria-label="主导航">
@@ -50,7 +51,7 @@
         <a class="button button--ghost button--sm desktop-only" href="/login?method=login">登录</a>
         <a class="button button--sm desktop-only" href="/login?method=register">注册</a>
       <% } %>
-      <a class="button button--ghost button--sm desktop-only" href="<%= switchToClassicUrl %>">返回经典版</a>
+      <a class="button button--ghost button--sm desktop-only" href="<%= currentClassicUrl %>">返回经典版</a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="v2-mobile-drawer" data-v2-drawer-toggle>
         <span class="menu-toggle__lines" aria-hidden="true">
           <span></span>
@@ -68,8 +69,8 @@
     <div class="drawer__head">
       <div>
         <p class="microcopy">当前模式</p>
-        <h2 class="drawer__title" id="v2-drawer-title">新版体验</h2>
-        <p class="drawer__subtitle"><%= user ? `${displayName} · ${verificationText}` : '未登录也可体验新版公开页面' %></p>
+        <h2 class="drawer__title" id="v2-drawer-title">导航菜单</h2>
+        <p class="drawer__subtitle"><%= user ? `${displayName} · ${verificationText}` : '未登录也可以浏览公开页面' %></p>
       </div>
       <button class="drawer__close" type="button" data-v2-drawer-close aria-label="关闭">
         <span></span>
@@ -91,7 +92,7 @@
         <button class="theme-switch__option" type="button" data-theme-option="light" aria-pressed="false">浅色</button>
         <button class="theme-switch__option" type="button" data-theme-option="dark" aria-pressed="false">深色</button>
       </div>
-      <a class="button button--ghost button--sm" href="<%= switchToClassicUrl %>">返回经典版</a>
+      <a class="button button--ghost button--sm" href="<%= currentClassicUrl %>">返回经典版</a>
     </div>
   </aside>
 </div>

@@ -6,15 +6,16 @@
 <body class="v2-page" data-page="<%= pageKey %>">
   <%- include('partials/navbar', { pageKey, user, nickname, hasProfile }) %>
   <main class="app-main">
+    <% const safeNotifications = Array.isArray(notifications) ? notifications : []; %>
     <section class="page-intro reveal">
       <div>
         <p class="page-intro__eyebrow">通知中心</p>
-        <h1 class="page-intro__title">通知页先统一到新版壳层，内容能力后续再加</h1>
-        <p class="page-intro__text">当前主线还没有真正的站内通知数据，这里先把空状态、入口层级和说明整理清楚。</p>
+        <h1 class="page-intro__title"><%= safeNotifications.length > 0 ? '查看最近的站内通知与提醒' : '当前还没有新的站内通知' %></h1>
+        <p class="page-intro__text">这里会展示与你的匹配、请求和系统提醒相关的通知内容。</p>
       </div>
       <div class="page-intro__meta">
         <span class="pill">/notifications</span>
-        <span class="pill pill--system">空状态</span>
+        <span class="pill pill--system"><%= safeNotifications.length %> 条通知</span>
       </div>
     </section>
 
@@ -22,29 +23,74 @@
       <aside class="page-side">
         <div class="surface surface--soft reveal">
           <div class="surface__head">
-            <h2 class="surface__title">你会在这里看到什么</h2>
+            <h2 class="surface__title">通知说明</h2>
           </div>
           <ul class="side-list">
-            <li><strong>系统公告</strong><p>后续如果接入站内公告，会直接出现在这里。</p></li>
-            <li><strong>匹配提醒</strong><p>自动匹配跑通后，这里可以承接每周结果相关提醒。</p></li>
-            <li><strong>未读状态</strong><p>这版先预留层级和样式，不提前假设后台已有完整通知系统。</p></li>
+            <li><strong>真实数据</strong><p>这页直接读取当前数据库里的通知，不再只显示占位空态。</p></li>
+            <li><strong>未读会自动清零</strong><p>沿用主线逻辑，进入页面后会把当前用户未读通知标记为已读。</p></li>
+            <li><strong>动作保持原样</strong><p>如果某条通知带操作入口，仍然继续走现有情侣匹配相关路由。</p></li>
           </ul>
         </div>
       </aside>
 
       <section class="surface reveal">
-        <div class="surface__head">
-          <h2 class="surface__title">现在还没有新通知</h2>
-          <p class="surface__text">当前页保持空状态，不伪造任何通知数据。</p>
-        </div>
-        <div class="empty-state v2-empty-state">
-          <h2>通知能力后续再接</h2>
-          <p>这版先把入口、空态和暗色模式统一好。真正的通知列表可以等后端能力准备好后再接。</p>
-          <div class="v2-inline-actions">
-            <a class="button" href="/settings">返回设置</a>
-            <a class="button button--ghost" href="/matches">去看匹配页</a>
+        <% if (typeof message !== 'undefined' && message) { %>
+          <div class="status-banner status-banner--<%= messageType === 'error' ? 'danger' : (messageType || 'info') %>">
+            <strong class="status-banner__title">系统提示</strong>
+            <p class="status-banner__body"><%- message %></p>
           </div>
-        </div>
+        <% } %>
+
+        <% if (safeNotifications.length > 0) { %>
+          <div class="surface__head">
+            <h2 class="surface__title">最近通知</h2>
+            <p class="surface__text">进入页面后，当前用户的未读通知会自动标记为已读。</p>
+          </div>
+          <div class="v2-notification-list">
+            <% safeNotifications.forEach(function(notification) { %>
+              <article class="surface surface--soft" style="padding: 1rem 1.125rem; margin-bottom: 1rem;">
+                <div class="surface__meta" style="justify-content: space-between; gap: 1rem;">
+                  <div class="v2-user-summary">
+                    <strong><%= notification.type || '系统通知' %></strong>
+                    <span><%= new Date(notification.created_at).toLocaleString('zh-CN') %></span>
+                  </div>
+                  <div class="v2-badge-row">
+                    <% if (!notification.is_read) { %>
+                      <span class="pill pill--match">未读</span>
+                    <% } else { %>
+                      <span class="pill">已读</span>
+                    <% } %>
+                  </div>
+                </div>
+                <p class="legacy-tip" style="margin-top: 0.875rem;"><%- notification.content %></p>
+
+                <% if (notification.type === 'match_request' && notification.status === 'pending') { %>
+                  <div class="v2-inline-actions" style="margin-top: 1rem;">
+                    <form method="POST" action="/couple-match/accept/<%= notification.related_request_id %>" style="display:inline;">
+                      <button type="submit" class="button">同意</button>
+                    </form>
+                    <form method="POST" action="/couple-match/reject/<%= notification.related_request_id %>" style="display:inline;">
+                      <button type="submit" class="button button--ghost">拒绝</button>
+                    </form>
+                  </div>
+                <% } else if (notification.type === 'match_accepted' && notification.related_request_id) { %>
+                  <div class="v2-inline-actions" style="margin-top: 1rem;">
+                    <a href="/couple-match/result/<%= notification.related_request_id %>" class="button button--ghost">查看结果</a>
+                  </div>
+                <% } %>
+              </article>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="empty-state v2-empty-state">
+            <h2>暂无通知</h2>
+            <p>当前没有新的站内通知。你可以稍后再回来，或先去看看匹配页和设置页。</p>
+            <div class="v2-inline-actions">
+              <a class="button" href="/settings">返回设置</a>
+              <a class="button button--ghost" href="/matches">去看匹配页</a>
+            </div>
+          </div>
+        <% } %>
       </section>
     </section>
   </main>

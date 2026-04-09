@@ -239,6 +239,200 @@ body.v2-page main {
   font-size: 0.92rem;
 }
 
+.v2-profile-layout {
+  align-items: start;
+}
+
+.v2-profile-main {
+  min-width: 0;
+}
+
+.v2-profile-container {
+  max-width: none !important;
+  margin: 0;
+  padding: 0;
+}
+
+.v2-profile-container > .card {
+  margin-bottom: 1rem;
+  padding: 1.5rem 1.6rem;
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 251, 255, 0.9)),
+    white;
+  border: 1px solid rgba(16, 40, 86, 0.08);
+  box-shadow: var(--shadow-soft);
+}
+
+.v2-profile-container > .card:last-child {
+  margin-bottom: 0;
+}
+
+.v2-profile-container .form-section {
+  margin-bottom: 0;
+  padding: 1.4rem 0 1.2rem;
+  border-bottom: 1px solid rgba(16, 40, 86, 0.08);
+}
+
+.v2-profile-container .form-section:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.v2-profile-container .form-group {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1.35rem;
+}
+
+.v2-profile-container .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.v2-profile-container .form-group > label {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.v2-profile-container .form-section > h3 {
+  margin: 0 0 1rem !important;
+  color: var(--accent-strong) !important;
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+
+.v2-profile-subtitle {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+
+.v2-profile-password-card {
+  background:
+    linear-gradient(180deg, rgba(238, 246, 255, 0.92), rgba(255, 255, 255, 0.88)),
+    white !important;
+}
+
+.v2-profile-password-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.v2-profile-summary {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.v2-profile-summary__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(16, 40, 86, 0.08);
+}
+
+.v2-profile-summary__row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.v2-profile-summary__row span {
+  color: var(--ink-soft);
+}
+
+.v2-profile-summary__row strong {
+  text-align: right;
+}
+
+.v2-page[data-page="profile"] .interest-tags {
+  gap: 0.65rem;
+}
+
+.v2-page[data-page="profile"] .interest-tag {
+  min-height: 42px;
+  padding-inline: 0.9rem;
+  border-radius: 999px;
+  background: rgba(16, 40, 86, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(16, 40, 86, 0.08);
+}
+
+.v2-page[data-page="profile"] .interest-counter,
+.v2-page[data-page="profile"] .trait-counter {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+.v2-page[data-page="profile"] .range-value,
+.v2-page[data-page="profile"] .dual-range-value {
+  font-size: 0.95rem;
+}
+
+.v2-page[data-page="profile"] .option-group label,
+.v2-page[data-page="profile"] .checkbox-group-grid label,
+.v2-page[data-page="profile"] .scale-option {
+  box-shadow: inset 0 0 0 1px rgba(16, 40, 86, 0.08);
+}
+
+.v2-page[data-page="profile"] .btn {
+  min-height: 46px;
+  padding: 0.8rem 1.3rem;
+  border-radius: 999px;
+}
+
+.v2-admin-metrics {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.v2-admin-metric {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  background: rgba(16, 40, 86, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(16, 40, 86, 0.08);
+}
+
+.v2-admin-metric span {
+  color: var(--ink-soft);
+}
+
+.v2-admin-metric strong {
+  font-size: 1.2rem;
+}
+
+html[data-theme="dark"] .v2-profile-container > .card {
+  background:
+    linear-gradient(180deg, rgba(12, 18, 33, 0.96), rgba(12, 18, 33, 0.9)),
+    rgba(12, 18, 33, 0.95);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .v2-profile-password-card {
+  background:
+    linear-gradient(180deg, rgba(14, 24, 44, 0.98), rgba(12, 18, 33, 0.92)),
+    rgba(12, 18, 33, 0.95) !important;
+}
+
+html[data-theme="dark"] .v2-profile-summary__row {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .v2-page[data-page="profile"] .form-section {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .v2-admin-metric {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
 @media (max-width: 960px) {
   .page-frame--wide {
     grid-template-columns: 1fr;
@@ -256,6 +450,10 @@ body.v2-page main {
   .v2-inline-actions .button,
   .v2-footer-actions .button {
     width: 100%;
+  }
+
+  .v2-profile-password-grid {
+    grid-template-columns: 1fr;
   }
 }
 

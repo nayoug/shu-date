@@ -15,15 +15,15 @@
             <% if (!user) { %>
               先用上大邮箱验证身份，再慢慢认识聊得来的人。
             <% } else if (!user.verified) { %>
-              你的账号已经创建，先完成邮箱验证，再继续使用新版入口。
+              你的账号已经创建，先完成邮箱验证，再继续填写资料和查看匹配。
             <% } else if (hasProfile) { %>
-              资料已经就绪，这一版把入口、说明和设置先整理得更清楚。
+              资料已经准备好，接下来可以直接查看匹配、通知和设置。
             <% } else { %>
-              先把资料填完整，新版首页会把下一步放到你眼前。
+              先把资料填完整，后续匹配与结果展示会更完整。
             <% } %>
           </p>
           <p class="hero__text">
-            这不是整站重做，而是先把首页、认证、设置、通知和说明页做成一套能共存的新版壳层。首页、认证、问卷、匹配、设置、通知与后台都已接入新版壳层，后续主要是继续打磨细节与交互。
+            用学校邮箱完成验证后，你可以填写问卷、查看恋爱人格结果、接收通知，并在设置页管理账号信息。这里会把最常用的入口放在最前面。
           </p>
           <% if (message) { %>
             <% const tone = messageType === 'error' ? 'danger' : (messageType || 'info'); %>
@@ -50,7 +50,7 @@
           <div class="hero__signals">
             <div class="signal-item">
               <span class="signal-item__label">当前模式</span>
-              <span class="signal-item__value">新版体验</span>
+              <span class="signal-item__value">当前界面</span>
             </div>
             <div class="signal-item">
               <span class="signal-item__label">账号状态</span>
@@ -64,9 +64,9 @@
         </div>
         <div class="hero__visual hero__visual--stack reveal">
           <article class="feature-card feature-card--primary">
-            <p class="feature-card__eyebrow">首批已接入</p>
-            <h2>首页、认证、问卷、匹配、设置、通知、后台和公开说明页</h2>
-            <p>先把用户主流程和管理员入口统一到一套新版壳层，再逐步打磨细节和交互。</p>
+            <p class="feature-card__eyebrow">主要入口</p>
+            <h2>首页、认证、问卷、匹配、设置、通知和说明页</h2>
+            <p>把最常访问的入口集中在同一套界面里，让注册、填写资料和查看结果更连贯。</p>
             <div class="feature-card__tags">
               <span class="pill">首页</span>
               <span class="pill">登录 / 注册</span>
@@ -75,11 +75,13 @@
             </div>
           </article>
           <article class="feature-card feature-card--secondary">
-            <p class="feature-card__eyebrow">暂时仍走经典版</p>
+            <p class="feature-card__eyebrow">你可以这样使用</p>
             <ul class="feature-card__list">
-              <li>后台治理页也已接入新版</li>`r`n              <li>旧版仅作为随时可切回的安全兜底</li>`r`n              <li>后续重点是打磨细节而不是继续铺壳层</li>
+              <li>先注册并完成邮箱验证</li>
+              <li>再填写资料、查看恋爱人格结果和本周匹配</li>
+              <li>需要时可在设置中管理密码、通知和账号</li>
             </ul>
-            <p class="feature-card__note">新版与经典版现在可以双向切换，后续会继续打磨这些页面内部细节。</p>
+            <p class="feature-card__note">如果你更习惯原来的页面布局，也可以随时切回经典界面。</p>
           </article>
         </div>
       </div>
@@ -88,18 +90,18 @@
     <section class="section section--flush">
       <div class="section__inner">
         <div class="section__head reveal">
-          <p class="section-kicker">体验切换</p>
-          <h2 class="section-title">先把切换和深浅色做成可见功能，而不是藏在角落里</h2>
-          <p class="section-text">如果你现在只是想感受新版方向，先看下面这组切换按钮。它们会直接把偏好存到本地，并只影响新版页面。</p>
+          <p class="section-kicker">界面偏好</p>
+          <h2 class="section-title">选择你习惯的界面与主题</h2>
+          <p class="section-text">你可以在这里切换两套界面，并自由选择跟随系统、浅色或深色主题。</p>
         </div>
         <div class="showcase-grid showcase-grid--dual">
           <article class="showcase-link reveal">
             <div class="showcase-link__meta">
-              <span class="pill pill--match">当前是新版</span>
+              <span class="pill pill--match">当前使用中</span>
               <span class="showcase-link__route">/experience/v2</span>
             </div>
-            <h3>新版入口</h3>
-            <p>适合体验新的首页、登录、设置、通知和公开说明页。</p>
+            <h3>当前界面</h3>
+            <p>适合直接体验首页、登录、问卷、设置、通知和公开说明页的全新布局。</p>
             <div class="v2-inline-actions">
               <a class="button" href="/experience/v2">保持新版</a>
               <a class="button button--ghost" href="/experience/classic">切回经典版</a>
@@ -126,20 +128,20 @@
     <section class="section">
       <div class="section__inner flow-layout">
         <div class="flow-visual reveal">
-          <img src="/v2/assets/match-atlas.svg" alt="从验证到匹配的新版流程示意图">
+          <img src="/v2/assets/match-atlas.svg" alt="从验证到匹配的页面流程示意图">
         </div>
         <div class="flow-steps">
           <article class="flow-step reveal">
             <h3>01 先注册并验证</h3>
-            <p>继续复用现有登录、注册、邮箱验证和重置密码逻辑，不新引入业务 API，也不改变验证链路。</p>
+            <p>用学校邮箱完成注册和验证，这是进入问卷、匹配和通知流程的前提。</p>
           </article>
           <article class="flow-step reveal">
-            <h3>02 再填写问卷与查看匹配</h3>
-            <p>现在新版已经覆盖用户主流程与后台，下一步重点会转向细节打磨，而不是继续扩页面壳层。</p>
+            <h3>02 再填写资料并查看结果</h3>
+            <p>完成问卷后，你可以查看 LoveType16 结果、本周匹配和相关说明。</p>
           </article>
           <article class="flow-step reveal">
-            <h3>03 用设置与通知承接后续功能</h3>
-            <p>先把账号管理、通知空态和说明页做扎实，新版才能从“壳子”变成真正可用的入口。</p>
+            <h3>03 用设置与通知完成后续管理</h3>
+            <p>通知中心、密码管理和账号设置会承接后续提醒与日常操作。</p>
           </article>
         </div>
       </div>

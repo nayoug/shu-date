@@ -25,9 +25,9 @@
             <h2 class="surface__title">阅读建议</h2>
           </div>
           <ul class="side-list">
-            <li><strong>这不是新文档体系</strong><p>内容仍然直接复用当前主线里的 <code>INFO_PAGES</code> 数据源。</p></li>
-            <li><strong>新版先只改壳层</strong><p>把公开说明页和认证/设置页统一起来，方便后面继续迁更多页面。</p></li>
-            <li><strong>有问题优先看最后一节</strong><p>联系方式、删除说明和边界提示都保留在当前数据里。</p></li>
+            <li><strong>先看与你最相关的部分</strong><p>如果你是首次使用，建议先阅读使用说明；如果关心数据处理方式，可以优先看隐私政策。</p></li>
+            <li><strong>遇到问题先看最后一节</strong><p>联系方式、删除说明和边界提示通常会放在靠后的部分。</p></li>
+            <li><strong>需要时可以随时返回</strong><p>你可以在首页、设置页或页脚里重新进入这些说明页面。</p></li>
           </ul>
         </div>
       </aside>
@@ -35,7 +35,7 @@
       <section class="surface reveal">
         <div class="surface__head">
           <h2 class="surface__title"><%= pageTitle %></h2>
-          <p class="surface__text">以下内容直接来源于当前主线后端定义的公开说明数据。</p>
+          <p class="surface__text">以下为当前版本公开展示的说明内容。</p>
         </div>
         <div class="info-stack">
           <% sections.forEach(function(section) { %>
