@@ -194,6 +194,8 @@ await pool.query(`
 // 迁移：为已存在的 couple_requests 表添加新字段
 await pool.query(`ALTER TABLE couple_requests ADD COLUMN IF NOT EXISTS match_score NUMERIC(5,2)`);
 await pool.query(`ALTER TABLE couple_requests ADD COLUMN IF NOT EXISTS match_comment TEXT`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_couple_requests_requester_id ON couple_requests (requester_id)`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_couple_requests_receiver_id ON couple_requests (receiver_id)`);
 
 // 通知表
 await pool.query(`
@@ -214,6 +216,7 @@ await pool.query(`
 
 await pool.query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications (user_id)`);
 await pool.query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications (user_id, is_read)`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_notifications_related_user_id ON notifications (related_user_id)`);
 
   isInitialized = true;
   console.log('✅ Supabase PostgreSQL 数据库初始化完成');
@@ -238,12 +241,37 @@ async function execute(sql, params = []) {
   return { changes: result.rowCount, lastInsertRowid: null };
 }
 
+async function getClient() {
+  return pool.connect();
+}
+
+async function withTransaction(callback) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await callback(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Transaction rollback failed:', rollbackError);
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   SESSION_TABLE_NAME,
   initDatabase,
   query,
   queryOne,
   execute,
+  getClient,
+  withTransaction,
   init: initDatabase,
   getPool: () => pool
 };

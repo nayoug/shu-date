@@ -438,15 +438,21 @@ function ensureCsrfToken(req) {
   return req.session.csrfToken;
 }
 
-function requireValidCsrf(req, res, next) {
-  // 兼容 _csrf（表单中常用） 和 csrfToken 两种字段名
-  const csrfToken = req.body?._csrf || req.body?.csrfToken;
-  if (csrfToken && req.session.csrfToken === csrfToken) {
-    return next();
-  }
+function createCsrfValidator(redirectTo = '/admin') {
+  return (req, res, next) => {
+    // 兼容 _csrf（表单中常用） 和 csrfToken 两种字段名
+    const csrfToken = req.body?._csrf || req.body?.csrfToken;
+    if (csrfToken && req.session.csrfToken === csrfToken) {
+      return next();
+    }
 
-  return res.redirect('/admin?msg=' + encodeURIComponent('请求无效，请刷新页面后重试') + '&type=error');
+    const separator = redirectTo.includes('?') ? '&' : '?';
+    return res.redirect(`${redirectTo}${separator}msg=${encodeURIComponent('请求无效，请刷新页面后重试')}&type=error`);
+  };
 }
+
+const requireValidCsrf = createCsrfValidator('/admin');
+const requireValidDeleteCsrf = createCsrfValidator('/settings/delete');
 
 function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面暂时不可用') {
   res.status(status).render(view, locals, (renderErr, html) => {
@@ -1309,20 +1315,24 @@ app.get('/settings/delete', isLoggedIn, wrapAsync(async (req, res) => {
     user: req.user,
     nickname: req.session.nickname,
     hasProfile: !!profile,
-    csrfToken: ensureCsrfToken(req)
+    csrfToken: ensureCsrfToken(req),
+    deleteMessage: req.query.msg || '',
+    deleteMessageType: req.query.type || ''
   });
 }));
 
 // 注销账号
-app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
+app.post('/settings/delete', isLoggedIn, requireValidDeleteCsrf, wrapAsync(async (req, res) => {
   const { email, password } = req.body;
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.session.userId]);
+  const csrfToken = ensureCsrfToken(req);
 
   if (!email || !password) {
     return res.render('delete-account', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
+      csrfToken,
       deleteMessage: '请填写邮箱和密码',
       deleteMessageType: 'error'
     });
@@ -1338,6 +1348,7 @@ app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req,
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
+      csrfToken,
       deleteMessage: '邮箱或密码错误',
       deleteMessageType: 'error'
     });
@@ -1351,34 +1362,33 @@ app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req,
         user: req.user,
         nickname: req.session.nickname,
         hasProfile: !!profile,
+        csrfToken,
         deleteMessage: '邮箱或密码错误',
         deleteMessageType: 'error'
       });
     }
   }
 
-  // 删除用户数据（使用事务确保原子性）
+  // 删除用户数据（使用同一个 PostgreSQL client 保证真正原子）
   const userId = req.session.userId;
 
   try {
-    await db.execute('BEGIN');
-
-    await db.execute('DELETE FROM profiles WHERE user_id = $1', [userId]);
-    await db.execute('DELETE FROM matches WHERE user_id_1 = $1 OR user_id_2 = $1', [userId]);
-    await db.execute('DELETE FROM users WHERE id = $1', [userId]);
-
-    await db.execute('COMMIT');
+    await db.withTransaction(async (client) => {
+      await client.query('DELETE FROM notifications WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM notifications WHERE related_user_id = $1', [userId]);
+      await client.query('DELETE FROM couple_requests WHERE requester_id = $1', [userId]);
+      await client.query('DELETE FROM couple_requests WHERE receiver_id = $1', [userId]);
+      await client.query('DELETE FROM profiles WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM matches WHERE user_id_1 = $1 OR user_id_2 = $1', [userId]);
+      await client.query('DELETE FROM users WHERE id = $1', [userId]);
+    });
   } catch (error) {
-    try {
-      await db.execute('ROLLBACK');
-    } catch (rollbackError) {
-      console.error('Error rolling back account deletion transaction:', rollbackError);
-    }
-
     console.error('Error deleting user account:', error);
     return res.render('delete-account', {
+      user: req.user,
       nickname: req.session.nickname,
-      hasProfile: true,
+      hasProfile: !!profile,
+      csrfToken,
       deleteMessage: '账号注销失败，请稍后重试',
       deleteMessageType: 'error'
     });
