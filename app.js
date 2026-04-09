@@ -414,13 +414,19 @@ function ensureCsrfToken(req) {
   return req.session.csrfToken;
 }
 
-function requireValidCsrf(req, res, next) {
-  if (req.body?.csrfToken && req.session.csrfToken === req.body.csrfToken) {
-    return next();
-  }
+function createCsrfValidator(redirectTo = '/admin') {
+  return (req, res, next) => {
+    if (req.body?.csrfToken && req.session.csrfToken === req.body.csrfToken) {
+      return next();
+    }
 
-  return res.redirect('/admin?msg=' + encodeURIComponent('请求无效，请刷新页面后重试') + '&type=error');
+    const separator = redirectTo.includes('?') ? '&' : '?';
+    return res.redirect(`${redirectTo}${separator}msg=${encodeURIComponent('请求无效，请刷新页面后重试')}&type=error`);
+  };
 }
+
+const requireValidCsrf = createCsrfValidator('/admin');
+const requireValidDeleteCsrf = createCsrfValidator('/settings/delete');
 
 function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面暂时不可用') {
   res.status(status).render(view, locals, (renderErr, html) => {
@@ -1278,12 +1284,14 @@ app.get('/settings/delete', isLoggedIn, wrapAsync(async (req, res) => {
     user: req.user,
     nickname: req.session.nickname,
     hasProfile: !!profile,
-    csrfToken: ensureCsrfToken(req)
+    csrfToken: ensureCsrfToken(req),
+    deleteMessage: req.query.msg || '',
+    deleteMessageType: req.query.type || ''
   });
 }));
 
 // 注销账号
-app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
+app.post('/settings/delete', isLoggedIn, requireValidDeleteCsrf, wrapAsync(async (req, res) => {
   const { email, password } = req.body;
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.session.userId]);
   const csrfToken = ensureCsrfToken(req);
