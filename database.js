@@ -233,12 +233,37 @@ async function execute(sql, params = []) {
   return { changes: result.rowCount, lastInsertRowid: null };
 }
 
+async function getClient() {
+  return pool.connect();
+}
+
+async function withTransaction(callback) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await callback(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Transaction rollback failed:', rollbackError);
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   SESSION_TABLE_NAME,
   initDatabase,
   query,
   queryOne,
   execute,
+  getClient,
+  withTransaction,
   init: initDatabase,
   getPool: () => pool
 };
