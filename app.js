@@ -1335,8 +1335,10 @@ app.post('/settings/delete', isLoggedIn, requireValidCsrf, wrapAsync(async (req,
 
   try {
     await db.withTransaction(async (client) => {
-      await client.query('DELETE FROM notifications WHERE user_id = $1 OR related_user_id = $1', [userId]);
-      await client.query('DELETE FROM couple_requests WHERE requester_id = $1 OR receiver_id = $1', [userId]);
+      await client.query('DELETE FROM notifications WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM notifications WHERE related_user_id = $1', [userId]);
+      await client.query('DELETE FROM couple_requests WHERE requester_id = $1', [userId]);
+      await client.query('DELETE FROM couple_requests WHERE receiver_id = $1', [userId]);
       await client.query('DELETE FROM profiles WHERE user_id = $1', [userId]);
       await client.query('DELETE FROM matches WHERE user_id_1 = $1 OR user_id_2 = $1', [userId]);
       await client.query('DELETE FROM users WHERE id = $1', [userId]);
