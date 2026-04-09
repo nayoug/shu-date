@@ -278,7 +278,7 @@ async function loadCurrentUserFromSession(req) {
   }
 
   const currentUser = await db.queryOne(`
-    SELECT id, email, nickname, name, verified, weekly_match_confirmed
+    SELECT id, email, nickname, name, verified, weekly_match_year, weekly_match_week
     FROM users
     WHERE id = $1
   `, [req.session.userId]);
@@ -295,6 +295,13 @@ async function loadCurrentUserFromSession(req) {
     [currentUser.id]
   );
 
+  // 检查是否确认了本周的匹配（year + week 与当前周一致）
+  const currentYear = getYear();
+  const currentWeek = getWeekNumber();
+  const weeklyMatchConfirmed = currentUser.weekly_match_year != null
+    && currentUser.weekly_match_year === currentYear
+    && currentUser.weekly_match_week === currentWeek;
+
   const user = {
     id: currentUser.id,
     email: currentUser.email,
@@ -302,7 +309,7 @@ async function loadCurrentUserFromSession(req) {
     name: currentUser.name,
     verified: currentUser.verified,
     hasProfile: !!profile,
-    weeklyMatchConfirmed: !!currentUser.weekly_match_confirmed,
+    weeklyMatchConfirmed,
     unreadNotifications: parseInt(unreadResult?.count || 0, 10)
   };
 
@@ -432,7 +439,9 @@ function ensureCsrfToken(req) {
 }
 
 function requireValidCsrf(req, res, next) {
-  if (req.body?.csrfToken && req.session.csrfToken === req.body.csrfToken) {
+  // 兼容 _csrf（表单中常用） 和 csrfToken 两种字段名
+  const csrfToken = req.body?._csrf || req.body?.csrfToken;
+  if (csrfToken && req.session.csrfToken === csrfToken) {
     return next();
   }
 
@@ -1400,17 +1409,19 @@ app.get('/confirm-match', isLoggedIn, wrapAsync(async (req, res) => {
 }));
 
 // 提交确认匹配
-app.post('/confirm-match', isLoggedIn, wrapAsync(async (req, res) => {
+app.post('/confirm-match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
   // 检查是否已有 profile
   const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
   if (!profile) {
     return res.redirect('/profile?msg=请先填写问卷&type=warning');
   }
 
-  // 更新确认状态
+  // 更新确认状态为当前 year + week
+  const currentYear = getYear();
+  const currentWeek = getWeekNumber();
   await db.execute(
-    'UPDATE users SET weekly_match_confirmed = 1 WHERE id = $1',
-    [req.user.id]
+    'UPDATE users SET weekly_match_year = $1, weekly_match_week = $2 WHERE id = $3',
+    [currentYear, currentWeek, req.user.id]
   );
 
   res.redirect('/?msg=已确认参与本周匹配&type=success');

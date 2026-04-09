@@ -176,7 +176,8 @@ shu-date/
 | verification_expire | TIMESTAMP | 注册验证 token 过期时间 |
 | reset_token | TEXT | 密码重置 token |
 | reset_token_expire | TIMESTAMP | 密码重置 token 过期时间 |
-| weekly_match_confirmed | INTEGER | 是否确认参与本周匹配（0/1） |
+| weekly_match_year | INTEGER | 确认匹配所在年份 |
+| weekly_match_week | INTEGER | 确认匹配所在周数 |
 | created_at | TIMESTAMP | 创建时间 |
 
 #### profiles 表

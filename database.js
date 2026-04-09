@@ -37,7 +37,10 @@ async function initDatabase() {
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_expire TIMESTAMP');
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT');
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expire TIMESTAMP');
-  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_match_confirmed INTEGER DEFAULT 0');
+  // 用 year + week 组合替代单布尔字段，按周记录确认状态
+  await pool.query('ALTER TABLE users DROP COLUMN IF EXISTS weekly_match_confirmed');
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_match_year INTEGER DEFAULT 0');
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_match_week INTEGER DEFAULT 0');
   
   // profiles 表
   await pool.query(`
