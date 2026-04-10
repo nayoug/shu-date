@@ -17,6 +17,8 @@ const BCRYPT_ROUNDS = 10;
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const SESSION_PRUNE_INTERVAL_SECONDS = 15 * 60;
 const SESSION_TABLE_NAME = dbModule.SESSION_TABLE_NAME;
+const ONE_DAY_SECONDS = 60 * 60 * 24;
+const SEVEN_DAYS_SECONDS = ONE_DAY_SECONDS * 7;
 
 // 密码哈希函数 - 使用 bcrypt
 async function hashPassword(password) {
@@ -210,7 +212,22 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // 支持 JSON body (cron 服务可能使用 application/json)
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: true,
+  lastModified: true,
+  setHeaders(res, filePath) {
+    const ext = path.extname(filePath).toLowerCase();
+
+    if (['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif', '.svg', '.ico'].includes(ext)) {
+      res.setHeader('Cache-Control', `public, max-age=${SEVEN_DAYS_SECONDS}`);
+      return;
+    }
+
+    if (['.css', '.js', '.woff', '.woff2', '.ttf', '.otf'].includes(ext)) {
+      res.setHeader('Cache-Control', `public, max-age=${ONE_DAY_SECONDS}`);
+    }
+  }
+}));
 app.use(session({
   store: new PgSession({
     pool: dbModule.getPool(),
