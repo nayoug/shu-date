@@ -3,3 +3,18 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#f06ea8">
+  <script>
+    (function() {
+      try {
+        var stored = localStorage.getItem('shu-theme');
+        var root = document.documentElement;
+        if (stored === 'light' || stored === 'dark') {
+          root.setAttribute('data-theme', stored);
+        } else {
+          root.removeAttribute('data-theme');
+        }
+      } catch (e) {
+        document.documentElement.removeAttribute('data-theme');
+      }
+    })();
+  </script>

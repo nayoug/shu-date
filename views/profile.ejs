@@ -18,17 +18,17 @@
       --profile-input: var(--input);
       --profile-text-muted: var(--muted-foreground);
       --profile-text-subtle: var(--muted-foreground);
-      --profile-step-completed: rgba(232, 90, 90, 0.18);
-      --profile-step-badge-bg: rgba(255, 255, 255, 0.3);
+      --profile-step-completed: var(--primary-light);
+      --profile-step-badge-bg: var(--surface-elevated);
       --profile-slider-track: var(--border);
       --profile-slider-thumb: var(--card);
-      --profile-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      --profile-shadow: var(--shadow-sm);
       --profile-love-bg: linear-gradient(135deg, var(--accent) 0%, var(--card) 100%);
-      --profile-love-border: rgba(232, 90, 90, 0.2);
+      --profile-love-border: var(--border);
       --profile-love-chip-bg: var(--card);
-      --profile-love-chip-border: rgba(232, 90, 90, 0.16);
+      --profile-love-chip-border: var(--border);
       --profile-love-question-bg: var(--primary-light);
-      --profile-love-question-border: rgba(232, 90, 90, 0.18);
+      --profile-love-question-border: var(--border);
     }
 
     .option-group {
@@ -1711,11 +1711,19 @@ function calcPercent(val, min, max) {
   return (val - min) / (max - min) * 100;
 }
 
-function setSliderBg(slider, percent) {
+const sliderTheme = {
+  active: '#3b82f6',
+  track: '#d1d5db'
+};
+
+function refreshSliderTheme() {
   const styles = getComputedStyle(document.body);
-  const active = styles.getPropertyValue('--info').trim() || '#3b82f6';
-  const track = styles.getPropertyValue('--input').trim() || '#d1d5db';
-  slider.style.background = `linear-gradient(to right, ${active} 0%, ${active} ${percent}%, ${track} ${percent}%, ${track} 100%)`;
+  sliderTheme.active = styles.getPropertyValue('--info').trim() || '#3b82f6';
+  sliderTheme.track = styles.getPropertyValue('--input').trim() || '#d1d5db';
+}
+
+function setSliderBg(slider, percent) {
+  slider.style.background = `linear-gradient(to right, ${sliderTheme.active} 0%, ${sliderTheme.active} ${percent}%, ${sliderTheme.track} ${percent}%, ${sliderTheme.track} 100%)`;
 }
 
 function updateMyAgeDisplay() {
@@ -1799,6 +1807,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const surveyForm = document.querySelector('form[action="/survey/submit"]');
   if (!surveyForm) return;
 
+  refreshSliderTheme();
   updateMyAgeDisplay();
   updateAgeRangeDisplay();
   updateMyHeightDisplay();
@@ -1908,6 +1917,40 @@ document.addEventListener('DOMContentLoaded', function() {
   const totalSteps = Math.min(steps.length, sections.length);
   let currentStep = 1;
   const hasPaginationControls = Boolean(prevBtn && nextBtn && submitBtn && totalSteps > 0);
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('[data-theme-option]')) return;
+    requestAnimationFrame(function() {
+      refreshSliderTheme();
+      updateMyAgeDisplay();
+      updateAgeRangeDisplay();
+      updateMyHeightDisplay();
+      updatePreferredHeightDisplay();
+    });
+  });
+
+  const themeMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  if (themeMedia && typeof themeMedia.addEventListener === 'function') {
+    themeMedia.addEventListener('change', function() {
+      if (!localStorage.getItem('shu-theme')) {
+        refreshSliderTheme();
+        updateMyAgeDisplay();
+        updateAgeRangeDisplay();
+        updateMyHeightDisplay();
+        updatePreferredHeightDisplay();
+      }
+    });
+  } else if (themeMedia && typeof themeMedia.addListener === 'function') {
+    themeMedia.addListener(function() {
+      if (!localStorage.getItem('shu-theme')) {
+        refreshSliderTheme();
+        updateMyAgeDisplay();
+        updateAgeRangeDisplay();
+        updateMyHeightDisplay();
+        updatePreferredHeightDisplay();
+      }
+    });
+  }
 
   function updatePagination() {
     if (!hasPaginationControls) return;
