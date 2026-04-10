@@ -17,8 +17,8 @@ const BCRYPT_ROUNDS = 10;
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const SESSION_PRUNE_INTERVAL_SECONDS = 15 * 60;
 const SESSION_TABLE_NAME = dbModule.SESSION_TABLE_NAME;
-const ONE_DAY_SECONDS = 60 * 60 * 24;
-const SEVEN_DAYS_SECONDS = ONE_DAY_SECONDS * 7;
+const TEN_MINUTES_SECONDS = 60 * 10;
+const ONE_HOUR_SECONDS = 60 * 60;
 
 // 密码哈希函数 - 使用 bcrypt
 async function hashPassword(password) {
@@ -219,12 +219,12 @@ app.use(express.static(path.join(__dirname, 'public'), {
     const ext = path.extname(filePath).toLowerCase();
 
     if (['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif', '.svg', '.ico'].includes(ext)) {
-      res.setHeader('Cache-Control', `public, max-age=${SEVEN_DAYS_SECONDS}`);
+      res.setHeader('Cache-Control', `public, max-age=${ONE_HOUR_SECONDS}`);
       return;
     }
 
     if (['.css', '.js', '.woff', '.woff2', '.ttf', '.otf'].includes(ext)) {
-      res.setHeader('Cache-Control', `public, max-age=${ONE_DAY_SECONDS}`);
+      res.setHeader('Cache-Control', `public, max-age=${TEN_MINUTES_SECONDS}`);
     }
   }
 }));
