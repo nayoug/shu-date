@@ -6,12 +6,16 @@
   --primary: #e85a5a;
   --primary-hover: #d44a4a;
   --primary-light: #fef2f2;
+  --accent: #fdf2f2;
+  --accent-foreground: #6b1f1f;
 
   /* 背景色 */
   --background: #fafafa;
   --foreground: #1a1a1a;
   --muted: #f5f5f5;
   --muted-foreground: #737373;
+  --surface-soft: #f8f9fa;
+  --surface-elevated: #ffffff;
 
   /* 卡片 */
   --card: #ffffff;
@@ -21,11 +25,34 @@
   --border: #e5e5e5;
   --input: #e5e5e5;
   --ring: #e85a5a;
+  --navbar-bg: rgba(255, 255, 255, 0.9);
 
   /* 功能色 */
   --success: #22c55e;
   --error: #ef4444;
   --info: #3b82f6;
+  --success-bg: #dcfce7;
+  --success-foreground: #166534;
+  --success-border: #86efac;
+  --error-bg: #fee2e2;
+  --error-foreground: #991b1b;
+  --error-border: #fca5a5;
+  --info-bg: #dbeafe;
+  --info-foreground: #1e40af;
+  --info-border: #93c5fd;
+  --warning: #f59e0b;
+  --warning-bg: #fff3cd;
+  --warning-foreground: #856404;
+  --warning-border: #ffc107;
+
+  /* 组件语义 */
+  --hero-button-bg: #ffffff;
+  --hero-button-foreground: var(--primary);
+  --hero-button-hover: #fafafa;
+  --match-card-bg: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  --match-info-bg: #ffffff;
+  --table-bg: #ffffff;
+  --table-row-hover: var(--muted);
 
   /* 圆角 */
   --radius: 12px;
@@ -36,6 +63,61 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #f16f6f;
+    --primary-hover: #ff8e8e;
+    --primary-light: rgba(241, 111, 111, 0.14);
+    --accent: rgba(241, 111, 111, 0.12);
+    --accent-foreground: #ffd8d8;
+
+    --background: #09111f;
+    --foreground: #eef3ff;
+    --muted: #121c2d;
+    --muted-foreground: #9fb0ca;
+    --surface-soft: #111a29;
+    --surface-elevated: #172236;
+
+    --card: #0f1728;
+    --card-foreground: #f5f8ff;
+
+    --border: #22324c;
+    --input: #31415d;
+    --ring: #f16f6f;
+    --navbar-bg: rgba(9, 17, 31, 0.84);
+
+    --success-bg: rgba(34, 197, 94, 0.16);
+    --success-foreground: #9df0b8;
+    --success-border: rgba(34, 197, 94, 0.28);
+    --error-bg: rgba(239, 68, 68, 0.16);
+    --error-foreground: #ffc2c2;
+    --error-border: rgba(239, 68, 68, 0.3);
+    --info-bg: rgba(59, 130, 246, 0.16);
+    --info-foreground: #b9d4ff;
+    --info-border: rgba(59, 130, 246, 0.28);
+    --warning: #f7b955;
+    --warning-bg: rgba(245, 158, 11, 0.16);
+    --warning-foreground: #ffd99a;
+    --warning-border: rgba(245, 158, 11, 0.3);
+
+    --hero-button-bg: #f4f6fb;
+    --hero-button-foreground: #12203a;
+    --hero-button-hover: #ffffff;
+    --match-card-bg: linear-gradient(135deg, rgba(241, 111, 111, 0.22) 0%, rgba(241, 111, 111, 0.1) 100%);
+    --match-info-bg: #111a29;
+    --table-bg: #0f1728;
+    --table-row-hover: rgba(255, 255, 255, 0.04);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+    --shadow-lg: 0 18px 36px rgba(0, 0, 0, 0.34);
+  }
+
+  body {
+    color-scheme: dark;
+  }
 }
 
 /* ===== 基础重置 ===== */
@@ -68,7 +150,7 @@ body {
   top: 0;
   z-index: 100;
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--navbar-bg);
 }
 
 .navbar .container {
@@ -275,21 +357,21 @@ body {
 }
 
 .alert-success {
-  background: #dcfce7;
-  color: #166534;
-  border-color: #86efac;
+  background: var(--success-bg);
+  color: var(--success-foreground);
+  border-color: var(--success-border);
 }
 
 .alert-error {
-  background: #fee2e2;
-  color: #991b1b;
-  border-color: #fca5a5;
+  background: var(--error-bg);
+  color: var(--error-foreground);
+  border-color: var(--error-border);
 }
 
 .alert-info {
-  background: #dbeafe;
-  color: #1e40af;
-  border-color: #93c5fd;
+  background: var(--info-bg);
+  color: var(--info-foreground);
+  border-color: var(--info-border);
 }
 
 /* ===== 首页 Hero ===== */
@@ -337,8 +419,8 @@ body {
 }
 
 .hero .btn {
-  background: white;
-  color: var(--primary);
+  background: var(--hero-button-bg);
+  color: var(--hero-button-foreground);
   font-weight: 600;
   margin-top: 16px;
   position: relative;
@@ -346,7 +428,7 @@ body {
 }
 
 .hero .btn:hover {
-  background: #fafafa;
+  background: var(--hero-button-hover);
   transform: translateY(-2px);
 }
 
@@ -551,7 +633,7 @@ body {
 
 /* ===== 匹配结果 ===== */
 .match-card {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  background: var(--match-card-bg);
   padding: 32px;
   border-radius: var(--radius-lg);
   text-align: center;
@@ -565,7 +647,7 @@ body {
 }
 
 .match-info {
-  background: white;
+  background: var(--match-info-bg);
   padding: 24px;
   border-radius: var(--radius);
   margin: 20px 0;
@@ -594,7 +676,7 @@ body {
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: var(--table-bg);
 }
 
 th, td {
@@ -617,7 +699,16 @@ tr:last-child td {
 }
 
 tr:hover td {
-  background: var(--muted);
+  background: var(--table-row-hover);
+}
+
+.btn-danger {
+  background: var(--error);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
 }
 
 /* ===== 页脚 ===== */

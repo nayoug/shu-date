@@ -10,6 +10,27 @@
   <link rel="stylesheet" href="/css/dev-tools.css">
   <% } %>
   <style>
+    body.profile-page {
+      --profile-surface: var(--card);
+      --profile-surface-soft: var(--surface-soft);
+      --profile-surface-tint: var(--primary-light);
+      --profile-border: var(--border);
+      --profile-input: var(--input);
+      --profile-text-muted: var(--muted-foreground);
+      --profile-text-subtle: var(--muted-foreground);
+      --profile-step-completed: rgba(232, 90, 90, 0.18);
+      --profile-step-badge-bg: rgba(255, 255, 255, 0.3);
+      --profile-slider-track: var(--border);
+      --profile-slider-thumb: var(--card);
+      --profile-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      --profile-love-bg: linear-gradient(135deg, var(--accent) 0%, var(--card) 100%);
+      --profile-love-border: rgba(232, 90, 90, 0.2);
+      --profile-love-chip-bg: var(--card);
+      --profile-love-chip-border: rgba(232, 90, 90, 0.16);
+      --profile-love-question-bg: var(--primary-light);
+      --profile-love-question-border: rgba(232, 90, 90, 0.18);
+    }
+
     .option-group {
       display: flex;
       flex-wrap: wrap;
@@ -21,18 +42,18 @@
       gap: 6px;
       padding: 10px 14px;
       border-radius: 8px;
-      border: 1px solid #e0e0e0;
-      background: #fff;
+      border: 1px solid var(--profile-border);
+      background: var(--profile-surface);
       cursor: pointer;
       transition: all 0.2s;
     }
     .option-group label:hover {
-      border-color: #e74c3c;
-      background: #fff8f6;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .option-group label.selected {
-      border-color: #e74c3c;
-      background: #fff0ed;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .option-group input[type="radio"] {
       width: auto;
@@ -51,12 +72,12 @@
       display: flex;
       justify-content: space-between;
       font-size: 12px;
-      color: #666;
+      color: var(--profile-text-muted);
     }
     .range-value {
       text-align: center;
       font-weight: 600;
-      color: #e74c3c;
+      color: var(--primary);
       margin-top: 8px;
     }
 
@@ -72,18 +93,18 @@
       gap: 6px;
       padding: 10px 12px;
       border-radius: 8px;
-      border: 1px solid #e0e0e0;
-      background: #fff;
+      border: 1px solid var(--profile-border);
+      background: var(--profile-surface);
       cursor: pointer;
       transition: all 0.2s;
     }
     .checkbox-group-grid label:hover {
-      border-color: #e74c3c;
-      background: #fff8f6;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .checkbox-group-grid label.checked {
-      border-color: #e74c3c;
-      background: #fff0ed;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .checkbox-group-grid input[type="checkbox"] {
       width: auto;
@@ -95,8 +116,10 @@
       width: 100%;
       padding: 10px;
       border-radius: 8px;
-      border: 1px solid #e0e0e0;
+      border: 1px solid var(--profile-input);
       font-size: 14px;
+      background: var(--profile-surface);
+      color: var(--foreground);
     }
 
     /* 5-point scale for new questions */
@@ -111,20 +134,20 @@
       align-items: center;
       padding: 12px 8px;
       border-radius: 10px;
-      border: 1px solid #e0e0e0;
-      background: #fff;
+      border: 1px solid var(--profile-border);
+      background: var(--profile-surface);
       cursor: pointer;
       text-align: center;
       font-size: 13px;
       transition: all 0.2s;
     }
     .scale-5 label:hover {
-      border-color: #e74c3c;
-      background: #fff8f6;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .scale-5 label.selected {
-      border-color: #e74c3c;
-      background: #fff0ed;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .scale-5 input[type="radio"] {
       width: auto;
@@ -134,7 +157,7 @@
       display: flex;
       justify-content: space-between;
       font-size: 12px;
-      color: #888;
+      color: var(--profile-text-subtle);
       margin-bottom: 8px;
     }
 
@@ -144,7 +167,7 @@
     }
     .interest-category-title {
       font-weight: 600;
-      color: #e74c3c;
+      color: var(--primary);
       margin-bottom: 10px;
       font-size: 14px;
     }
@@ -159,29 +182,29 @@
       gap: 6px;
       padding: 8px 12px;
       border-radius: 20px;
-      border: 1px solid #e0e0e0;
-      background: #fff;
+      border: 1px solid var(--profile-border);
+      background: var(--profile-surface);
       cursor: pointer;
       transition: all 0.2s;
     }
     .interest-tag:hover {
-      border-color: #e74c3c;
+      border-color: var(--primary);
     }
     .interest-tag.selected {
-      border-color: #e74c3c;
-      background: #fff0ed;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .interest-tag input {
       display: none;
     }
     .interest-counter {
       font-size: 13px;
-      color: #666;
+      color: var(--profile-text-muted);
       margin-bottom: 12px;
     }
 
     .form-section {
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--profile-border);
       padding-bottom: 10px;
       margin-bottom: 10px;
     }
@@ -191,17 +214,17 @@
       margin-bottom: 8px;
       cursor: pointer;
       padding: 6px 12px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--profile-border);
       border-radius: 6px;
       transition: all 0.2s;
     }
     .checkbox-group label:hover {
-      border-color: #e74c3c;
-      background: #fff8f6;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .checkbox-group label.checked {
-      border-color: #e74c3c;
-      background: #fff0ed;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .checkbox-group input[type="checkbox"] {
       width: auto;
@@ -218,7 +241,7 @@
     }
     .scale-label-text {
       font-size: 12px;
-      color: #888;
+      color: var(--profile-text-subtle);
       width: 200px;
       flex-shrink: 0;
       word-wrap: break-word;
@@ -258,23 +281,23 @@
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      border: 2px solid #e0e0e0;
-      background: #fff;
+      border: 2px solid var(--profile-border);
+      background: var(--profile-surface);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
       font-weight: 600;
-      color: #666;
+      color: var(--profile-text-muted);
       transition: all 0.2s;
     }
     .scale-option:hover .scale-circle {
-      border-color: #e74c3c;
-      color: #e74c3c;
+      border-color: var(--primary);
+      color: var(--primary);
     }
     .scale-option.selected .scale-circle {
-      border-color: #e74c3c;
-      background: #e74c3c;
+      border-color: var(--primary);
+      background: var(--primary);
       color: #fff;
     }
     .scale-option input[type="radio"] {
@@ -295,7 +318,7 @@
       left: 0;
       right: 0;
       height: 6px;
-      background: #e0e0e0;
+      background: var(--profile-slider-track);
       border-radius: 3px;
       transform: translateY(-50%);
     }
@@ -303,7 +326,7 @@
       position: absolute;
       top: 50%;
       height: 6px;
-      background: #e74c3c;
+      background: var(--primary);
       border-radius: 3px;
       transform: translateY(-50%);
     }
@@ -324,33 +347,33 @@
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: #fff;
-      border: 3px solid #e74c3c;
+      background: var(--profile-slider-thumb);
+      border: 3px solid var(--primary);
       cursor: pointer;
       pointer-events: auto;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      box-shadow: var(--profile-shadow);
     }
     .dual-range-input::-moz-range-thumb {
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: #fff;
-      border: 3px solid #e74c3c;
+      background: var(--profile-slider-thumb);
+      border: 3px solid var(--primary);
       cursor: pointer;
       pointer-events: auto;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      box-shadow: var(--profile-shadow);
     }
     .dual-range-labels {
       display: flex;
       justify-content: space-between;
       margin-top: 8px;
       font-size: 12px;
-      color: #888;
+      color: var(--profile-text-subtle);
     }
     .dual-range-value {
       text-align: center;
       font-weight: 600;
-      color: #e74c3c;
+      color: var(--primary);
       margin-top: 12px;
       font-size: 15px;
     }
@@ -372,24 +395,24 @@
       gap: 6px;
       padding: 8px 16px;
       border-radius: 20px;
-      background: #f0f0f0;
-      color: #666;
+      background: var(--profile-surface-soft);
+      color: var(--profile-text-muted);
       font-size: 13px;
       transition: all 0.3s;
     }
     .pagination-step.active {
-      background: #e74c3c;
+      background: var(--primary);
       color: #fff;
     }
     .pagination-step.completed {
-      background: #fadbd8;
-      color: #e74c3c;
+      background: var(--profile-step-completed);
+      color: var(--primary);
     }
     .pagination-step-number {
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.3);
+      background: var(--profile-step-badge-bg);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -409,7 +432,7 @@
       display: block;
     }
     .form-group--error {
-      border: 2px solid #e74c3c;
+      border: 2px solid var(--primary);
       border-radius: 10px;
       padding: 12px 14px;
       margin-left: -14px;
@@ -417,12 +440,12 @@
     }
   </style>
 </head>
-<body>
+<body class="profile-page">
   <%- include('partials/navbar') %>
 
   <div class="container" style="max-width: 800px;">
     <% if (typeof showPassword !== 'undefined' && showPassword) { %>
-    <div class="card" style="background: #f8f9fa; padding: 20px; margin-bottom: 20px;">
+    <div class="card" style="background: var(--surface-soft); padding: 20px; margin-bottom: 20px;">
       <h3 style="margin-bottom: 16px;">🔐 修改密码</h3>
 
       <% if (typeof passwordMessage !== 'undefined' && passwordMessage) { %>
@@ -433,17 +456,17 @@
 
       <form action="/profile/password" method="POST" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">当前密码</label>
-          <input type="password" name="currentPassword" placeholder="若未设置密码则留空" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">当前密码</label>
+          <input type="password" name="currentPassword" placeholder="若未设置密码则留空" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; background: var(--card); color: var(--foreground);">
         </div>
         <div></div>
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">新密码</label>
-          <input type="password" name="newPassword" placeholder="至少6位" minlength="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">新密码</label>
+          <input type="password" name="newPassword" placeholder="至少6位" minlength="6" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; background: var(--card); color: var(--foreground);">
         </div>
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">确认新密码</label>
-          <input type="password" name="confirmPassword" placeholder="再次输入新密码" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">确认新密码</label>
+          <input type="password" name="confirmPassword" placeholder="再次输入新密码" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; background: var(--card); color: var(--foreground);">
         </div>
         <div style="grid-column: 1 / -1;">
           <button type="submit" class="btn btn-secondary">修改密码</button>
@@ -1532,15 +1555,15 @@
 
 <style>
 .lovetype-intro {
-  color: #666;
+  color: var(--profile-text-muted);
   margin-bottom: 16px;
 }
 .lovetype-question {
   padding: 16px;
   margin-bottom: 16px;
-  border: 1px solid #f0d5d0;
+  border: 1px solid var(--profile-love-question-border);
   border-radius: 12px;
-  background: #fff8f6;
+  background: var(--profile-love-question-bg);
 }
 .lovetype-question-head {
   margin-bottom: 12px;
@@ -1550,15 +1573,15 @@
   justify-content: space-between;
   gap: 12px;
   margin-top: 8px;
-  color: #666;
+  color: var(--profile-text-muted);
   font-size: 13px;
 }
 .lovetype-result-card {
   margin-bottom: 24px;
   padding: 20px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #fff4ef 0%, #fff 100%);
-  border: 1px solid #f3d2c8;
+  background: var(--profile-love-bg);
+  border: 1px solid var(--profile-love-border);
 }
 .lovetype-result-header {
   display: flex;
@@ -1571,7 +1594,7 @@
 }
 .lovetype-result-header p {
   margin: 0;
-  color: #666;
+  color: var(--profile-text-muted);
 }
 .lovetype-badge {
   display: inline-flex;
@@ -1581,7 +1604,7 @@
   height: 42px;
   padding: 0 14px;
   border-radius: 999px;
-  background: #e74c3c;
+  background: var(--primary);
   color: #fff;
   font-weight: 700;
   letter-spacing: 1px;
@@ -1597,8 +1620,8 @@
   gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: #fff;
-  border: 1px solid #f1d5cf;
+  background: var(--profile-love-chip-bg);
+  border: 1px solid var(--profile-love-chip-border);
 }
 .lovetype-copy-block {
   margin-top: 18px;
@@ -1609,7 +1632,7 @@
 }
 .lovetype-copy-block p {
   margin-bottom: 8px;
-  color: #444;
+  color: var(--foreground);
 }
 .lovetype-type-list {
   display: flex;
@@ -1622,8 +1645,8 @@
   align-items: center;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #fff;
-  border: 1px solid #f1d5cf;
+  background: var(--profile-love-chip-bg);
+  border: 1px solid var(--profile-love-chip-border);
   font-size: 13px;
   font-weight: 600;
 }
@@ -1689,7 +1712,10 @@ function calcPercent(val, min, max) {
 }
 
 function setSliderBg(slider, percent) {
-  slider.style.background = `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${percent}%, #d1d5db ${percent}%, #d1d5db 100%)`;
+  const styles = getComputedStyle(document.body);
+  const active = styles.getPropertyValue('--info').trim() || '#3b82f6';
+  const track = styles.getPropertyValue('--input').trim() || '#d1d5db';
+  slider.style.background = `linear-gradient(to right, ${active} 0%, ${active} ${percent}%, ${track} ${percent}%, ${track} 100%)`;
 }
 
 function updateMyAgeDisplay() {

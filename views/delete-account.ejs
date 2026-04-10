@@ -11,11 +11,11 @@
   <%- include('partials/navbar') %>
 
   <div class="container" style="max-width: 600px; padding-top: 40px;">
-    <div class="card" style="background: #f8f9fa; padding: 20px;">
+    <div class="card" style="background: var(--surface-soft); padding: 20px;">
       <h2 style="margin-bottom: 20px;">🗑️ 注销账号确认</h2>
 
-      <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-        <p style="margin: 0; color: #856404; font-size: 0.9rem;">
+      <div style="background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+        <p style="margin: 0; color: var(--warning-foreground); font-size: 0.9rem;">
           <strong>⚠️ 注意：</strong>注销后，您的恋爱人格测试结果、匹配记录以及所有个人资料将被永久删除，无法恢复。
         </p>
       </div>
@@ -28,13 +28,13 @@
 
       <form action="/settings/delete" method="POST">
         <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">邮箱</label>
-          <input type="email" name="email" placeholder="请输入您的邮箱" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">邮箱</label>
+          <input type="email" name="email" placeholder="请输入您的邮箱" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; box-sizing: border-box; background: var(--card); color: var(--foreground);">
         </div>
 
         <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">密码</label>
-          <input type="password" name="password" placeholder="请输入您的密码" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">密码</label>
+          <input type="password" name="password" placeholder="请输入您的密码" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; box-sizing: border-box; background: var(--card); color: var(--foreground);">
         </div>
 
         <% if (typeof csrfToken !== 'undefined') { %>

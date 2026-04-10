@@ -68,7 +68,7 @@
                   <%= new Date(req.created_at).toLocaleString('zh-CN') %>
                 </p>
               </div>
-              <span style="padding: 4px 8px; font-size: 12px; border-radius: 4px; <% if (req.status === 'pending') { %>background: var(--accent);<% } else if (req.status === 'accepted') { %>background: #dcfce7; color: #166534;<% } else if (req.status === 'rejected') { %>background: #fee2e2; color: #991b1b;<% } %>">
+                <span style="padding: 4px 8px; font-size: 12px; border-radius: 4px; <% if (req.status === 'pending') { %>background: var(--accent); color: var(--accent-foreground);<% } else if (req.status === 'accepted') { %>background: var(--success-bg); color: var(--success-foreground); border: 1px solid var(--success-border);<% } else if (req.status === 'rejected') { %>background: var(--error-bg); color: var(--error-foreground); border: 1px solid var(--error-border);<% } %>">
                 <% if (req.status === 'pending') { %>待回复<% } else if (req.status === 'accepted') { %>已同意<% } else if (req.status === 'rejected') { %>已拒绝<% } %>
               </span>
             </div>
@@ -90,7 +90,7 @@
               <% if (req.status === 'pending') { %>
                 <span style="color: var(--muted-foreground); font-size: 12px;">请在通知中心处理</span>
               <% } else { %>
-                <span style="padding: 4px 8px; font-size: 12px; border-radius: 4px; <% if (req.status === 'accepted') { %>background: #dcfce7; color: #166534;<% } else if (req.status === 'rejected') { %>background: #fee2e2; color: #991b1b;<% } %>">
+                <span style="padding: 4px 8px; font-size: 12px; border-radius: 4px; <% if (req.status === 'accepted') { %>background: var(--success-bg); color: var(--success-foreground); border: 1px solid var(--success-border);<% } else if (req.status === 'rejected') { %>background: var(--error-bg); color: var(--error-foreground); border: 1px solid var(--error-border);<% } %>">
                   <% if (req.status === 'accepted') { %>已同意<% } else if (req.status === 'rejected') { %>已拒绝<% } %>
                 </span>
               <% } %>
