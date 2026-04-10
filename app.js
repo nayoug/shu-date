@@ -278,7 +278,7 @@ async function loadCurrentUserFromSession(req) {
   }
 
   const currentUser = await db.queryOne(`
-    SELECT id, email, nickname, name, verified
+    SELECT id, email, nickname, name, verified, weekly_match_year, weekly_match_week
     FROM users
     WHERE id = $1
   `, [req.session.userId]);
@@ -295,6 +295,13 @@ async function loadCurrentUserFromSession(req) {
     [currentUser.id]
   );
 
+  // 检查是否确认了本周的匹配（year + week 与当前周一致）
+  const currentYear = getYear();
+  const currentWeek = getWeekNumber();
+  const weeklyMatchConfirmed = currentUser.weekly_match_year != null
+    && currentUser.weekly_match_year === currentYear
+    && currentUser.weekly_match_week === currentWeek;
+
   const user = {
     id: currentUser.id,
     email: currentUser.email,
@@ -302,6 +309,7 @@ async function loadCurrentUserFromSession(req) {
     name: currentUser.name,
     verified: currentUser.verified,
     hasProfile: !!profile,
+    weeklyMatchConfirmed,
     unreadNotifications: parseInt(unreadResult?.count || 0, 10)
   };
 
@@ -432,7 +440,9 @@ function ensureCsrfToken(req) {
 
 function createCsrfValidator(redirectTo = '/admin') {
   return (req, res, next) => {
-    if (req.body?.csrfToken && req.session.csrfToken === req.body.csrfToken) {
+    // 兼容 _csrf（表单中常用） 和 csrfToken 两种字段名
+    const csrfToken = req.body?._csrf || req.body?.csrfToken;
+    if (csrfToken && req.session.csrfToken === csrfToken) {
       return next();
     }
 
@@ -1392,6 +1402,41 @@ app.post('/settings/delete', isLoggedIn, requireValidDeleteCsrf, wrapAsync(async
   });
 }));
 
+// 确认匹配页面
+app.get('/confirm-match', isLoggedIn, wrapAsync(async (req, res) => {
+  const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
+  if (!profile) {
+    return res.redirect('/profile?msg=请先填写问卷&type=warning');
+  }
+
+  res.render('confirm-match', {
+    user: req.user,
+    nickname: req.session.nickname,
+    csrfToken: ensureCsrfToken(req),
+    message: req.query.msg || '',
+    messageType: req.query.type || ''
+  });
+}));
+
+// 提交确认匹配
+app.post('/confirm-match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
+  // 检查是否已有 profile
+  const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
+  if (!profile) {
+    return res.redirect('/profile?msg=请先填写问卷&type=warning');
+  }
+
+  // 更新确认状态为当前 year + week
+  const currentYear = getYear();
+  const currentWeek = getWeekNumber();
+  await db.execute(
+    'UPDATE users SET weekly_match_year = $1, weekly_match_week = $2 WHERE id = $3',
+    [currentYear, currentWeek, req.user.id]
+  );
+
+  res.redirect('/?msg=已确认参与本周匹配&type=success');
+}));
+
 // 提交问卷
 app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
   const data = req.body;
@@ -1515,6 +1560,11 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     return res.redirect('/profile');
   }
 
+  // 检查是否确认参与匹配
+  if (!req.user.weeklyMatchConfirmed) {
+    return res.redirect('/confirm-match?msg=请先确认参与本周匹配&type=warning');
+  }
+
   const weekNumber = getWeekNumber();
   const matchYear = getYear();
   const weeklyRelease = await db.queryOne(
@@ -1553,6 +1603,7 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     weekNumber: weeklyMatches[0].week_number,
     score: weeklyMatches[0].score,
     matchedAt: weeklyMatches[0].matched_at,
+    matchId: weeklyMatches[0].id,
     partner: {
       id: weeklyMatches[0].partner_id,
       email: weeklyMatches[0].partner_email,
@@ -1561,7 +1612,8 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
       gender: weeklyMatches[0].partner_gender,
       campus: weeklyMatches[0].partner_campus,
       interests: weeklyMatches[0].partner_interests,
-      lovetype_code: weeklyMatches[0].partner_lovetype_code
+      lovetype_code: weeklyMatches[0].partner_lovetype_code,
+      score: weeklyMatches[0].score
     }
   } : null;
 
@@ -1573,6 +1625,7 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     showPassword: true,
     weeklyMatch: weeklyMatch,
     matches: weeklyMatch ? [weeklyMatch.partner] : [],
+    matchId: weeklyMatch ? weeklyMatch.matchId : null,
     isAdmin: req.isAdmin,
     matchSource: 'weekly',
     weekNumber,
@@ -1956,15 +2009,23 @@ app.get('/couple-match/result/:id', isLoggedIn, wrapAsync(async (req, res) => {
 
 // API: 获取实时推荐列表
 app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
+  // 检查是否确认参与匹配
+  if (!req.user.weeklyMatchConfirmed) {
+    return res.status(403).json({ success: false, error: '请先确认参与本周匹配' });
+  }
   const matchService = require('./matchService');
-  const matches = await matchService.findMatches(req.user.id);
+  const matches = await matchService.findMatches(req.user.id, getYear(), getWeekNumber());
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
 
 // API: 获取前5名实时推荐
 app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
+  // 检查是否确认参与匹配
+  if (!req.user.weeklyMatchConfirmed) {
+    return res.status(403).json({ success: false, error: '请先确认参与本周匹配' });
+  }
   const matchService = require('./matchService');
-  const matches = await matchService.getTopMatches(req.user.id, 5);
+  const matches = await matchService.getTopMatches(req.user.id, 5, getYear(), getWeekNumber());
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
 
@@ -2012,6 +2073,51 @@ app.get('/api/couple-match/comment/:id', isLoggedIn, wrapAsync(async (req, res) 
   await db.execute(`
     UPDATE couple_requests SET match_score = $1, match_comment = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3
   `, [matchResult.total, comment, requestId]);
+
+  res.json({ success: true, comment, score: matchResult.total });
+}));
+
+// API: 异步获取每周匹配评语
+app.get('/api/weekly-match/comment/:id', isLoggedIn, wrapAsync(async (req, res) => {
+  const matchId = parseInt(req.params.id, 10);
+
+  const match = await db.queryOne(`
+    SELECT m.*,
+      CASE WHEN m.user_id_1 = $1 THEN m.user_id_2 ELSE m.user_id_1 END as partner_id
+    FROM matches m
+    WHERE m.id = $2 AND (m.user_id_1 = $1 OR m.user_id_2 = $1)
+  `, [req.user.id, matchId]);
+
+  if (!match) {
+    return res.status(404).json({ success: false, error: '匹配结果不存在' });
+  }
+
+  // 如果已有保存的评语则直接返回
+  if (match.match_comment) {
+    return res.json({ success: true, comment: match.match_comment, score: match.score });
+  }
+
+  // 否则重新生成
+  const profileA = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
+  const profileB = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [match.partner_id]);
+
+  if (!profileA || !profileB) {
+    return res.json({ success: false, error: '无法获取用户资料' });
+  }
+
+  const matchService = require('./matchService');
+  const matchResult = await matchService.getCoupleMatch(req.user.id, match.partner_id);
+
+  if (!matchResult) {
+    return res.json({ success: false, error: '无法计算匹配得分' });
+  }
+
+  const comment = await generateMatchComment(profileA, profileB, matchResult.total);
+
+  // 保存到数据库
+  await db.execute(`
+    UPDATE matches SET match_comment = $1 WHERE id = $2
+  `, [comment, matchId]);
 
   res.json({ success: true, comment, score: matchResult.total });
 }));
