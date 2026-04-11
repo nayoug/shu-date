@@ -2,7 +2,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
-  <meta name="theme-color" content="#f06ea8">
+  <meta name="theme-color" content="#fafafa">
   <script>
     (function() {
       var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
@@ -33,7 +33,8 @@
 
       function syncThemeColor(theme) {
         if (!themeColorMeta) return;
-        themeColorMeta.setAttribute('content', getEffectiveTheme(theme) === 'dark' ? '#09111f' : '#fafafa');
+        var background = getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
+        themeColorMeta.setAttribute('content', background || (getEffectiveTheme(theme) === 'dark' ? '#09111f' : '#fafafa'));
       }
 
       function getCurrentThemeSelection() {
