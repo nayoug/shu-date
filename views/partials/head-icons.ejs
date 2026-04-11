@@ -6,6 +6,7 @@
   <script>
     (function() {
       var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+      var themeColorMeta = document.querySelector('meta[name="theme-color"]');
 
       function getStoredTheme() {
         try {
@@ -22,6 +23,18 @@
         }
       }
 
+      function getEffectiveTheme(theme) {
+        if (theme === 'light' || theme === 'dark') {
+          return theme;
+        }
+        return media && media.matches ? 'dark' : 'light';
+      }
+
+      function syncThemeColor(theme) {
+        if (!themeColorMeta) return;
+        themeColorMeta.setAttribute('content', getEffectiveTheme(theme) === 'dark' ? '#09111f' : '#fafafa');
+      }
+
       function applyTheme(theme) {
         var root = document.documentElement;
         if (theme === 'light' || theme === 'dark') {
@@ -29,6 +42,7 @@
         } else {
           root.removeAttribute('data-theme');
         }
+        syncThemeColor(theme);
       }
 
       function markThemeButtons() {

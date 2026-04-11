@@ -19,7 +19,7 @@
       <a href="/notifications" class="notification-link" style="position: relative;">
         通知
         <% if (notificationCount > 0) { %>
-          <span class="notification-badge" style="position: absolute; top: -2px; right: -8px; background: #ef4444; color: white; font-size: 10px; padding: 2px 5px; border-radius: 10px; min-width: 16px; text-align: center;"><%= notificationCount > 99 ? '99+' : notificationCount %></span>
+          <span class="notification-badge" style="position: absolute; top: -2px; right: -8px; background: var(--error); color: white; font-size: 10px; padding: 2px 5px; border-radius: 10px; min-width: 16px; text-align: center;"><%= notificationCount > 99 ? '99+' : notificationCount %></span>
         <% } %>
       </a>
       <div class="theme-switch" role="group" aria-label="主题切换">
