@@ -7,6 +7,7 @@
     (function() {
       var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
       var themeColorMeta = document.querySelector('meta[name="theme-color"]');
+      var currentThemeSelection = null;
 
       function getStoredTheme() {
         try {
@@ -35,6 +36,25 @@
         themeColorMeta.setAttribute('content', getEffectiveTheme(theme) === 'dark' ? '#09111f' : '#fafafa');
       }
 
+      function getCurrentThemeSelection() {
+        var storedTheme = getStoredTheme();
+        if (storedTheme) {
+          currentThemeSelection = storedTheme;
+          return storedTheme;
+        }
+
+        if (currentThemeSelection === 'light' || currentThemeSelection === 'dark' || currentThemeSelection === 'system') {
+          return currentThemeSelection;
+        }
+
+        var appliedTheme = document.documentElement.getAttribute('data-theme');
+        if (appliedTheme === 'light' || appliedTheme === 'dark') {
+          return appliedTheme;
+        }
+
+        return 'system';
+      }
+
       function applyTheme(theme) {
         var root = document.documentElement;
         if (theme === 'light' || theme === 'dark') {
@@ -46,7 +66,7 @@
       }
 
       function markThemeButtons() {
-        var current = getStoredTheme() || 'system';
+        var current = getCurrentThemeSelection();
         document.querySelectorAll('[data-theme-option]').forEach(function(button) {
           var isActive = button.getAttribute('data-theme-option') === current;
           button.classList.toggle('is-active', isActive);
@@ -58,6 +78,7 @@
         var button = target.closest('[data-theme-option]');
         if (!button) return false;
         var theme = button.getAttribute('data-theme-option');
+        currentThemeSelection = theme;
         try {
           if (theme === 'system') {
             localStorage.removeItem('shu-theme');
@@ -71,16 +92,18 @@
       }
 
       function handleSystemThemeChange() {
-        if (!getStoredTheme()) {
+        if (getCurrentThemeSelection() === 'system') {
           applyTheme('system');
           markThemeButtons();
         }
       }
 
       try {
-        applyTheme(getStoredTheme() || 'system');
+        currentThemeSelection = getCurrentThemeSelection();
+        applyTheme(currentThemeSelection);
       } catch (e) {
         document.documentElement.removeAttribute('data-theme');
+        currentThemeSelection = 'system';
       }
 
       document.addEventListener('click', function(e) {
