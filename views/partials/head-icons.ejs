@@ -5,16 +5,81 @@
   <meta name="theme-color" content="#f06ea8">
   <script>
     (function() {
-      try {
-        var stored = localStorage.getItem('shu-theme');
+      var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+      function getStoredTheme() {
+        try {
+          return localStorage.getItem('shu-theme');
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function applyTheme(theme) {
         var root = document.documentElement;
-        if (stored === 'light' || stored === 'dark') {
-          root.setAttribute('data-theme', stored);
+        if (theme === 'light' || theme === 'dark') {
+          root.setAttribute('data-theme', theme);
         } else {
           root.removeAttribute('data-theme');
         }
+      }
+
+      function markThemeButtons() {
+        var current = getStoredTheme() || 'system';
+        document.querySelectorAll('[data-theme-option]').forEach(function(button) {
+          var isActive = button.getAttribute('data-theme-option') === current;
+          button.classList.toggle('is-active', isActive);
+          button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+      }
+
+      function handleThemeButtonClick(target) {
+        var button = target.closest('[data-theme-option]');
+        if (!button) return false;
+        var theme = button.getAttribute('data-theme-option');
+        try {
+          if (theme === 'system') {
+            localStorage.removeItem('shu-theme');
+          } else {
+            localStorage.setItem('shu-theme', theme);
+          }
+        } catch (err) {}
+        applyTheme(theme);
+        markThemeButtons();
+        return true;
+      }
+
+      function handleSystemThemeChange() {
+        if (!getStoredTheme()) {
+          applyTheme('system');
+          markThemeButtons();
+        }
+      }
+
+      try {
+        applyTheme(getStoredTheme() || 'system');
       } catch (e) {
         document.documentElement.removeAttribute('data-theme');
       }
+
+      document.addEventListener('click', function(e) {
+        handleThemeButtonClick(e.target);
+      });
+
+      document.addEventListener('DOMContentLoaded', function() {
+        markThemeButtons();
+      });
+
+      if (media && typeof media.addEventListener === 'function') {
+        media.addEventListener('change', handleSystemThemeChange);
+      } else if (media && typeof media.addListener === 'function') {
+        media.addListener(handleSystemThemeChange);
+      }
+
+      window.__themeSwitch = {
+        getStoredTheme: getStoredTheme,
+        applyTheme: applyTheme,
+        markThemeButtons: markThemeButtons
+      };
     })();
   </script>

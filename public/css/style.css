@@ -37,6 +37,7 @@
   --error-bg: #fee2e2;
   --error-foreground: #991b1b;
   --error-border: #fca5a5;
+  --error-hover: #dc2626;
   --info-bg: #dbeafe;
   --info-foreground: #1e40af;
   --info-border: #93c5fd;
@@ -97,6 +98,7 @@
   --error-bg: rgba(239, 68, 68, 0.16);
   --error-foreground: #ffc2c2;
   --error-border: rgba(239, 68, 68, 0.3);
+  --error-hover: #f87171;
   --info-bg: rgba(59, 130, 246, 0.16);
   --info-foreground: #b9d4ff;
   --info-border: rgba(59, 130, 246, 0.28);
@@ -148,6 +150,7 @@
     --error-bg: rgba(239, 68, 68, 0.16);
     --error-foreground: #ffc2c2;
     --error-border: rgba(239, 68, 68, 0.3);
+    --error-hover: #f87171;
     --info-bg: rgba(59, 130, 246, 0.16);
     --info-foreground: #b9d4ff;
     --info-border: rgba(59, 130, 246, 0.28);
@@ -791,7 +794,7 @@ tr:hover td {
 }
 
 .btn-danger:hover {
-  background: #dc2626;
+  background: var(--error-hover);
 }
 
 /* ===== 页脚 ===== */

@@ -19,9 +19,9 @@
         <a href="/matches">匹配结果</a>
         <a href="/admin" style="color: var(--primary); font-weight: 600;">管理</a>
         <div class="theme-switch" role="group" aria-label="主题切换">
-          <button type="button" class="theme-switch__button" data-theme-option="system">系统</button>
-          <button type="button" class="theme-switch__button" data-theme-option="light">浅色</button>
-          <button type="button" class="theme-switch__button" data-theme-option="dark">深色</button>
+          <button type="button" class="theme-switch__button" data-theme-option="system" aria-pressed="false">系统</button>
+          <button type="button" class="theme-switch__button" data-theme-option="light" aria-pressed="false">浅色</button>
+          <button type="button" class="theme-switch__button" data-theme-option="dark" aria-pressed="false">深色</button>
         </div>
         <a href="/logout" class="btn">退出</a>
       </div>
@@ -115,67 +115,5 @@
   <% if (typeof isDev !== 'undefined' && isDev) { %>
   <%- include('partials/dev-tools') %>
   <% } %>
-  <script>
-  (function() {
-    var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-
-    function getStoredTheme() {
-      try {
-        return localStorage.getItem('shu-theme');
-      } catch (e) {
-        return null;
-      }
-    }
-
-    function applyTheme(theme) {
-      var root = document.documentElement;
-      if (theme === 'light' || theme === 'dark') {
-        root.setAttribute('data-theme', theme);
-      } else {
-        root.removeAttribute('data-theme');
-      }
-    }
-
-    function markThemeButtons() {
-      var current = getStoredTheme() || 'system';
-      document.querySelectorAll('[data-theme-option]').forEach(function(button) {
-        button.classList.toggle('is-active', button.getAttribute('data-theme-option') === current);
-      });
-    }
-
-    document.addEventListener('click', function(e) {
-      var button = e.target.closest('[data-theme-option]');
-      if (!button) return;
-      var theme = button.getAttribute('data-theme-option');
-      try {
-        if (theme === 'system') {
-          localStorage.removeItem('shu-theme');
-        } else {
-          localStorage.setItem('shu-theme', theme);
-        }
-      } catch (err) {}
-      applyTheme(theme);
-      markThemeButtons();
-    });
-
-    if (media && typeof media.addEventListener === 'function') {
-      media.addEventListener('change', function() {
-        if (!getStoredTheme()) {
-          applyTheme('system');
-          markThemeButtons();
-        }
-      });
-    } else if (media && typeof media.addListener === 'function') {
-      media.addListener(function() {
-        if (!getStoredTheme()) {
-          applyTheme('system');
-          markThemeButtons();
-        }
-      });
-    }
-
-    markThemeButtons();
-  })();
-  </script>
 </body>
 </html>

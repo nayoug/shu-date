@@ -1930,9 +1930,19 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   const themeMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function getStoredThemeSafe() {
+    if (window.__themeSwitch && typeof window.__themeSwitch.getStoredTheme === 'function') {
+      return window.__themeSwitch.getStoredTheme();
+    }
+    try {
+      return localStorage.getItem('shu-theme');
+    } catch (e) {
+      return null;
+    }
+  }
   if (themeMedia && typeof themeMedia.addEventListener === 'function') {
     themeMedia.addEventListener('change', function() {
-      if (!localStorage.getItem('shu-theme')) {
+      if (!getStoredThemeSafe()) {
         refreshSliderTheme();
         updateMyAgeDisplay();
         updateAgeRangeDisplay();
@@ -1942,7 +1952,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   } else if (themeMedia && typeof themeMedia.addListener === 'function') {
     themeMedia.addListener(function() {
-      if (!localStorage.getItem('shu-theme')) {
+      if (!getStoredThemeSafe()) {
         refreshSliderTheme();
         updateMyAgeDisplay();
         updateAgeRangeDisplay();
