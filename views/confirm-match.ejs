@@ -25,9 +25,15 @@
 
       <% if (user.weeklyMatchConfirmed) { %>
         <p style="color: var(--muted-foreground); margin-bottom: 24px;">
-          你已确认参与本周匹配，无需重复确认。
+          你已确认参与本周匹配。
         </p>
-        <a href="/" class="btn btn-secondary">返回首页</a>
+        <form method="POST" action="/confirm-match/cancel" style="margin-bottom: 12px;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-secondary" style="width: 100%;">
+            取消本周匹配
+          </button>
+        </form>
+        <a href="/" class="btn" style="width: 100%; text-align: center;">返回首页</a>
       <% } else { %>
         <p style="color: var(--muted-foreground); margin-bottom: 24px;">
           点击下方按钮确认，你确定要参与本周匹配吗？确认后系统才会将你纳入本周的匹配候选池。

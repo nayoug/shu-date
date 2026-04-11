@@ -1454,6 +1454,17 @@ app.post('/confirm-match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, r
   res.redirect('/?msg=已确认参与本周匹配&type=success');
 }));
 
+// 取消本周匹配
+app.post('/confirm-match/cancel', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
+  // 将 year 和 week 设为 0，表示取消
+  await db.execute(
+    'UPDATE users SET weekly_match_year = 0, weekly_match_week = 0 WHERE id = $1',
+    [req.user.id]
+  );
+
+  res.redirect('/confirm-match?msg=已取消本周匹配&type=success');
+}));
+
 // 提交问卷
 app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
   const data = req.body;
