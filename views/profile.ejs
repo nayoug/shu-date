@@ -10,6 +10,44 @@
   <link rel="stylesheet" href="/css/dev-tools.css">
   <% } %>
   <style>
+    body.profile-page {
+      --profile-surface: var(--card);
+      --profile-surface-soft: var(--surface-soft);
+      --profile-surface-tint: var(--primary-light);
+      --profile-border: var(--border);
+      --profile-input: var(--input);
+      --profile-text-muted: var(--muted-foreground);
+      --profile-text-subtle: var(--muted-foreground);
+      --profile-step-completed: var(--primary-light);
+      --profile-step-badge-bg: var(--surface-elevated);
+      --profile-slider-track: var(--border);
+      --profile-slider-thumb: var(--card);
+      --profile-shadow: var(--shadow-sm);
+      --profile-love-bg: linear-gradient(135deg, var(--accent) 0%, var(--card) 100%);
+      --profile-love-border: var(--border);
+      --profile-love-chip-bg: var(--card);
+      --profile-love-chip-border: var(--border);
+      --profile-love-question-bg: var(--primary-light);
+      --profile-love-question-border: var(--border);
+      --profile-step-bg: var(--profile-surface-soft);
+      --profile-step-text: var(--profile-text-muted);
+      --profile-step-border: var(--profile-border);
+      --profile-step-active-bg: var(--primary);
+      --profile-step-active-text: #fff;
+      --profile-step-active-border: var(--primary);
+      --profile-step-active-badge-bg: var(--profile-surface);
+      --profile-step-active-badge-text: var(--primary);
+      --profile-step-active-badge-border: var(--profile-surface);
+      --profile-step-completed-bg: var(--profile-step-completed);
+      --profile-step-completed-text: var(--primary);
+      --profile-step-completed-border: var(--profile-step-completed);
+      --profile-step-completed-badge-bg: var(--profile-surface);
+      --profile-step-completed-badge-text: var(--primary);
+      --profile-step-completed-badge-border: var(--profile-step-completed);
+      --profile-step-badge-text: var(--foreground);
+      --profile-step-badge-border: var(--profile-border);
+    }
+
     .option-group {
       display: flex;
       flex-wrap: wrap;
@@ -21,18 +59,18 @@
       gap: 6px;
       padding: 10px 14px;
       border-radius: 8px;
-      border: 1px solid #e0e0e0;
-      background: #fff;
+      border: 1px solid var(--profile-border);
+      background: var(--profile-surface);
       cursor: pointer;
       transition: all 0.2s;
     }
     .option-group label:hover {
-      border-color: #e74c3c;
-      background: #fff8f6;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .option-group label.selected {
-      border-color: #e74c3c;
-      background: #fff0ed;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .option-group input[type="radio"] {
       width: auto;
@@ -51,12 +89,12 @@
       display: flex;
       justify-content: space-between;
       font-size: 12px;
-      color: #666;
+      color: var(--profile-text-muted);
     }
     .range-value {
       text-align: center;
       font-weight: 600;
-      color: #e74c3c;
+      color: var(--primary);
       margin-top: 8px;
     }
 
@@ -72,18 +110,18 @@
       gap: 6px;
       padding: 10px 12px;
       border-radius: 8px;
-      border: 1px solid #e0e0e0;
-      background: #fff;
+      border: 1px solid var(--profile-border);
+      background: var(--profile-surface);
       cursor: pointer;
       transition: all 0.2s;
     }
     .checkbox-group-grid label:hover {
-      border-color: #e74c3c;
-      background: #fff8f6;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .checkbox-group-grid label.checked {
-      border-color: #e74c3c;
-      background: #fff0ed;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .checkbox-group-grid input[type="checkbox"] {
       width: auto;
@@ -95,8 +133,10 @@
       width: 100%;
       padding: 10px;
       border-radius: 8px;
-      border: 1px solid #e0e0e0;
+      border: 1px solid var(--profile-input);
       font-size: 14px;
+      background: var(--profile-surface);
+      color: var(--foreground);
     }
 
     /* 5-point scale for new questions */
@@ -111,20 +151,20 @@
       align-items: center;
       padding: 12px 8px;
       border-radius: 10px;
-      border: 1px solid #e0e0e0;
-      background: #fff;
+      border: 1px solid var(--profile-border);
+      background: var(--profile-surface);
       cursor: pointer;
       text-align: center;
       font-size: 13px;
       transition: all 0.2s;
     }
     .scale-5 label:hover {
-      border-color: #e74c3c;
-      background: #fff8f6;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .scale-5 label.selected {
-      border-color: #e74c3c;
-      background: #fff0ed;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .scale-5 input[type="radio"] {
       width: auto;
@@ -134,7 +174,7 @@
       display: flex;
       justify-content: space-between;
       font-size: 12px;
-      color: #888;
+      color: var(--profile-text-subtle);
       margin-bottom: 8px;
     }
 
@@ -144,7 +184,7 @@
     }
     .interest-category-title {
       font-weight: 600;
-      color: #e74c3c;
+      color: var(--primary);
       margin-bottom: 10px;
       font-size: 14px;
     }
@@ -159,29 +199,29 @@
       gap: 6px;
       padding: 8px 12px;
       border-radius: 20px;
-      border: 1px solid #e0e0e0;
-      background: #fff;
+      border: 1px solid var(--profile-border);
+      background: var(--profile-surface);
       cursor: pointer;
       transition: all 0.2s;
     }
     .interest-tag:hover {
-      border-color: #e74c3c;
+      border-color: var(--primary);
     }
     .interest-tag.selected {
-      border-color: #e74c3c;
-      background: #fff0ed;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .interest-tag input {
       display: none;
     }
     .interest-counter {
       font-size: 13px;
-      color: #666;
+      color: var(--profile-text-muted);
       margin-bottom: 12px;
     }
 
     .form-section {
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--profile-border);
       padding-bottom: 10px;
       margin-bottom: 10px;
     }
@@ -191,17 +231,17 @@
       margin-bottom: 8px;
       cursor: pointer;
       padding: 6px 12px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--profile-border);
       border-radius: 6px;
       transition: all 0.2s;
     }
     .checkbox-group label:hover {
-      border-color: #e74c3c;
-      background: #fff8f6;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .checkbox-group label.checked {
-      border-color: #e74c3c;
-      background: #fff0ed;
+      border-color: var(--primary);
+      background: var(--profile-surface-tint);
     }
     .checkbox-group input[type="checkbox"] {
       width: auto;
@@ -218,7 +258,7 @@
     }
     .scale-label-text {
       font-size: 12px;
-      color: #888;
+      color: var(--profile-text-subtle);
       width: 200px;
       flex-shrink: 0;
       word-wrap: break-word;
@@ -258,23 +298,23 @@
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      border: 2px solid #e0e0e0;
-      background: #fff;
+      border: 2px solid var(--profile-border);
+      background: var(--profile-surface);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
       font-weight: 600;
-      color: #666;
+      color: var(--profile-text-muted);
       transition: all 0.2s;
     }
     .scale-option:hover .scale-circle {
-      border-color: #e74c3c;
-      color: #e74c3c;
+      border-color: var(--primary);
+      color: var(--primary);
     }
     .scale-option.selected .scale-circle {
-      border-color: #e74c3c;
-      background: #e74c3c;
+      border-color: var(--primary);
+      background: var(--primary);
       color: #fff;
     }
     .scale-option input[type="radio"] {
@@ -295,7 +335,7 @@
       left: 0;
       right: 0;
       height: 6px;
-      background: #e0e0e0;
+      background: var(--profile-slider-track);
       border-radius: 3px;
       transform: translateY(-50%);
     }
@@ -303,7 +343,7 @@
       position: absolute;
       top: 50%;
       height: 6px;
-      background: #e74c3c;
+      background: var(--primary);
       border-radius: 3px;
       transform: translateY(-50%);
     }
@@ -324,33 +364,33 @@
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: #fff;
-      border: 3px solid #e74c3c;
+      background: var(--profile-slider-thumb);
+      border: 3px solid var(--primary);
       cursor: pointer;
       pointer-events: auto;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      box-shadow: var(--profile-shadow);
     }
     .dual-range-input::-moz-range-thumb {
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: #fff;
-      border: 3px solid #e74c3c;
+      background: var(--profile-slider-thumb);
+      border: 3px solid var(--primary);
       cursor: pointer;
       pointer-events: auto;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      box-shadow: var(--profile-shadow);
     }
     .dual-range-labels {
       display: flex;
       justify-content: space-between;
       margin-top: 8px;
       font-size: 12px;
-      color: #888;
+      color: var(--profile-text-subtle);
     }
     .dual-range-value {
       text-align: center;
       font-weight: 600;
-      color: #e74c3c;
+      color: var(--primary);
       margin-top: 12px;
       font-size: 15px;
     }
@@ -372,29 +412,45 @@
       gap: 6px;
       padding: 8px 16px;
       border-radius: 20px;
-      background: #f0f0f0;
-      color: #666;
+      background: var(--profile-step-bg);
+      color: var(--profile-step-text);
+      border: 1px solid var(--profile-step-border);
       font-size: 13px;
+      font-weight: 500;
       transition: all 0.3s;
     }
     .pagination-step.active {
-      background: #e74c3c;
-      color: #fff;
+      background: var(--profile-step-active-bg);
+      color: var(--profile-step-active-text);
+      border-color: var(--profile-step-active-border);
     }
     .pagination-step.completed {
-      background: #fadbd8;
-      color: #e74c3c;
+      background: var(--profile-step-completed-bg);
+      color: var(--profile-step-completed-text);
+      border-color: var(--profile-step-completed-border);
     }
     .pagination-step-number {
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.3);
+      background: var(--profile-step-badge-bg);
+      border: 1px solid var(--profile-step-badge-border);
+      color: var(--profile-step-badge-text);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
       font-weight: 600;
+    }
+    .pagination-step.active .pagination-step-number {
+      background: var(--profile-step-active-badge-bg);
+      border-color: var(--profile-step-active-badge-border);
+      color: var(--profile-step-active-badge-text);
+    }
+    .pagination-step.completed .pagination-step-number {
+      background: var(--profile-step-completed-badge-bg);
+      border-color: var(--profile-step-completed-badge-border);
+      color: var(--profile-step-completed-badge-text);
     }
     .pagination-buttons {
       display: flex;
@@ -409,7 +465,7 @@
       display: block;
     }
     .form-group--error {
-      border: 2px solid #e74c3c;
+      border: 2px solid var(--primary);
       border-radius: 10px;
       padding: 12px 14px;
       margin-left: -14px;
@@ -417,12 +473,12 @@
     }
   </style>
 </head>
-<body>
+<body class="profile-page">
   <%- include('partials/navbar') %>
 
   <div class="container" style="max-width: 800px;">
     <% if (typeof showPassword !== 'undefined' && showPassword) { %>
-    <div class="card" style="background: #f8f9fa; padding: 20px; margin-bottom: 20px;">
+    <div class="card" style="background: var(--surface-soft); padding: 20px; margin-bottom: 20px;">
       <h3 style="margin-bottom: 16px;">🔐 修改密码</h3>
 
       <% if (typeof passwordMessage !== 'undefined' && passwordMessage) { %>
@@ -433,17 +489,17 @@
 
       <form action="/profile/password" method="POST" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">当前密码</label>
-          <input type="password" name="currentPassword" placeholder="若未设置密码则留空" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">当前密码</label>
+          <input type="password" name="currentPassword" placeholder="若未设置密码则留空" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; background: var(--card); color: var(--foreground);">
         </div>
         <div></div>
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">新密码</label>
-          <input type="password" name="newPassword" placeholder="至少6位" minlength="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">新密码</label>
+          <input type="password" name="newPassword" placeholder="至少6位" minlength="6" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; background: var(--card); color: var(--foreground);">
         </div>
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem;">确认新密码</label>
-          <input type="password" name="confirmPassword" placeholder="再次输入新密码" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">确认新密码</label>
+          <input type="password" name="confirmPassword" placeholder="再次输入新密码" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; background: var(--card); color: var(--foreground);">
         </div>
         <div style="grid-column: 1 / -1;">
           <button type="submit" class="btn btn-secondary">修改密码</button>
@@ -579,7 +635,7 @@
 
     <!-- 一、基础信息 -->
     <div class="form-section form-section-pagination active" data-step="1">
-      <h3 style="color: #e74c3c; margin: 20px 0 15px;">一、基础信息</h3>
+      <h3 style="color: var(--primary); margin: 20px 0 15px;">一、基础信息</h3>
 
       <div class="form-group">
         <label>1(a). 我的性别是：</label>
@@ -633,7 +689,7 @@
       <div class="form-group">
         <label>(b). 我希望匹配到的对象年龄范围：</label>
         <div class="range-container">
-          <input type="range" class="range-slider" name="age_min" id="ageMin" min="16" max="30" value="<%= profile && profile.age_min ? profile.age_min : 18 %>" oninput="updateAgeRangeDisplay()">
+          <input type="range" class="range-slider" name="age_min" id="ageMin" min="16" max="30" value="<%= profile && profile.age_min ? profile.age_min : 18 %>" oninput="updateAgeRangeDisplay(this)">
           <div class="range-labels">
             <span>16岁</span>
             <span>23岁</span>
@@ -641,7 +697,7 @@
           </div>
           <div class="range-value" id="ageMinValue">最小 <%= profile && profile.age_min ? profile.age_min : 18 %> 岁</div>
 
-          <input type="range" class="range-slider" name="age_max" id="ageMax" min="16" max="30" value="<%= profile && profile.age_max ? profile.age_max : 28 %>" oninput="updateAgeRangeDisplay()">
+          <input type="range" class="range-slider" name="age_max" id="ageMax" min="16" max="30" value="<%= profile && profile.age_max ? profile.age_max : 28 %>" oninput="updateAgeRangeDisplay(this)">
           <div class="range-labels">
             <span>16岁</span>
             <span>23岁</span>
@@ -725,7 +781,7 @@
       <div class="form-group">
         <label>(b). 我对匹配对象的身高偏好（cm）：</label>
         <div class="range-container">
-          <input type="range" class="range-slider" name="preferred_height_min" id="preferredHeightMin" min="140" max="210" value="<%= profile && profile.preferred_height_min ? profile.preferred_height_min : 160 %>" oninput="updatePreferredHeightDisplay()">
+          <input type="range" class="range-slider" name="preferred_height_min" id="preferredHeightMin" min="140" max="210" value="<%= profile && profile.preferred_height_min ? profile.preferred_height_min : 160 %>" oninput="updatePreferredHeightDisplay(this)">
           <div class="range-labels">
             <span>140cm</span>
             <span>175cm</span>
@@ -733,7 +789,7 @@
           </div>
           <div class="range-value" id="preferredHeightMinValue">最低 <%= profile && profile.preferred_height_min ? profile.preferred_height_min : 160 %> cm</div>
 
-          <input type="range" class="range-slider" name="preferred_height_max" id="preferredHeightMax" min="140" max="210" value="<%= profile && profile.preferred_height_max ? profile.preferred_height_max : 180 %>" oninput="updatePreferredHeightDisplay()">
+          <input type="range" class="range-slider" name="preferred_height_max" id="preferredHeightMax" min="140" max="210" value="<%= profile && profile.preferred_height_max ? profile.preferred_height_max : 180 %>" oninput="updatePreferredHeightDisplay(this)">
           <div class="range-labels">
             <span>140cm</span>
             <span>175cm</span>
@@ -810,7 +866,7 @@
 
     <!-- 二、恋爱观念 -->
     <div class="form-section form-section-pagination" data-step="2">
-      <h3 style="color: #e74c3c; margin: 20px 0 15px;">二、恋爱观念</h3>
+      <h3 style="color: var(--primary); margin: 20px 0 15px;">二、恋爱观念</h3>
 
       <div class="form-group">
         <label>9. 恋爱里我更倾向的相处节奏：</label>
@@ -1296,7 +1352,7 @@
 
     <!-- 三、个人特征与匹配偏好 -->
     <div class="form-section form-section-pagination" data-step="3">
-      <h3 style="color: #e74c3c; margin: 20px 0 15px;">三、个人特征与匹配偏好</h3>
+      <h3 style="color: var(--primary); margin: 20px 0 15px;">三、个人特征与匹配偏好</h3>
 
       <div class="form-group">
         <label>23(a). 整体而言，我本人展现出的自身特质通常被认为是（最多选5项）：</label>
@@ -1479,7 +1535,7 @@
 
 <!-- 四、Love Type16 恋爱类型测试 -->
 <div class="form-section form-section-pagination" data-step="4">
-  <h3 style="color: #e74c3c; margin: 20px 0 15px;"> 四、Love Type16 恋爱类型测试 </h3>
+  <h3 style="color: var(--primary); margin: 20px 0 15px;"> 四、Love Type16 恋爱类型测试 </h3>
   <% lovetypeQuestions.forEach(function(question) { %>
     <div class="form-group">
       <label>
@@ -1532,15 +1588,15 @@
 
 <style>
 .lovetype-intro {
-  color: #666;
+  color: var(--profile-text-muted);
   margin-bottom: 16px;
 }
 .lovetype-question {
   padding: 16px;
   margin-bottom: 16px;
-  border: 1px solid #f0d5d0;
+  border: 1px solid var(--profile-love-question-border);
   border-radius: 12px;
-  background: #fff8f6;
+  background: var(--profile-love-question-bg);
 }
 .lovetype-question-head {
   margin-bottom: 12px;
@@ -1550,15 +1606,15 @@
   justify-content: space-between;
   gap: 12px;
   margin-top: 8px;
-  color: #666;
+  color: var(--profile-text-muted);
   font-size: 13px;
 }
 .lovetype-result-card {
   margin-bottom: 24px;
   padding: 20px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #fff4ef 0%, #fff 100%);
-  border: 1px solid #f3d2c8;
+  background: var(--profile-love-bg);
+  border: 1px solid var(--profile-love-border);
 }
 .lovetype-result-header {
   display: flex;
@@ -1571,7 +1627,7 @@
 }
 .lovetype-result-header p {
   margin: 0;
-  color: #666;
+  color: var(--profile-text-muted);
 }
 .lovetype-badge {
   display: inline-flex;
@@ -1581,7 +1637,7 @@
   height: 42px;
   padding: 0 14px;
   border-radius: 999px;
-  background: #e74c3c;
+  background: var(--primary);
   color: #fff;
   font-weight: 700;
   letter-spacing: 1px;
@@ -1597,8 +1653,8 @@
   gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: #fff;
-  border: 1px solid #f1d5cf;
+  background: var(--profile-love-chip-bg);
+  border: 1px solid var(--profile-love-chip-border);
 }
 .lovetype-copy-block {
   margin-top: 18px;
@@ -1609,7 +1665,7 @@
 }
 .lovetype-copy-block p {
   margin-bottom: 8px;
-  color: #444;
+  color: var(--foreground);
 }
 .lovetype-type-list {
   display: flex;
@@ -1622,8 +1678,8 @@
   align-items: center;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #fff;
-  border: 1px solid #f1d5cf;
+  background: var(--profile-love-chip-bg);
+  border: 1px solid var(--profile-love-chip-border);
   font-size: 13px;
   font-weight: 600;
 }
@@ -1688,8 +1744,22 @@ function calcPercent(val, min, max) {
   return (val - min) / (max - min) * 100;
 }
 
+const sliderTheme = {
+  active: '#3b82f6',
+  track: '#d1d5db'
+};
+
+function refreshSliderTheme() {
+  const styles = getComputedStyle(document.body);
+  sliderTheme.active = styles.getPropertyValue('--info').trim() || '#3b82f6';
+  sliderTheme.track =
+    styles.getPropertyValue('--profile-slider-track').trim() ||
+    styles.getPropertyValue('--input').trim() ||
+    '#d1d5db';
+}
+
 function setSliderBg(slider, percent) {
-  slider.style.background = `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${percent}%, #d1d5db ${percent}%, #d1d5db 100%)`;
+  slider.style.background = `linear-gradient(to right, ${sliderTheme.active} 0%, ${sliderTheme.active} ${percent}%, ${sliderTheme.track} ${percent}%, ${sliderTheme.track} 100%)`;
 }
 
 function updateMyAgeDisplay() {
@@ -1698,11 +1768,20 @@ function updateMyAgeDisplay() {
   document.getElementById('myAgeValue').textContent = s.value + ' 岁';
 }
 
-function updateAgeRangeDisplay() {
+function updateAgeRangeDisplay(changedSlider) {
   const minS = document.getElementById('ageMin');
   const maxS = document.getElementById('ageMax');
   let minVal = +minS.value, maxVal = +maxS.value;
-  if (minVal > maxVal) { minS.value = maxVal; minVal = maxVal; }
+  const activeSlider = changedSlider || document.activeElement;
+  if (minVal > maxVal) {
+    if (activeSlider === maxS) {
+      minS.value = maxVal;
+      minVal = maxVal;
+    } else {
+      maxS.value = minVal;
+      maxVal = minVal;
+    }
+  }
   setSliderBg(minS, calcPercent(minVal, 16, 30));
   setSliderBg(maxS, calcPercent(maxVal, 16, 30));
   document.getElementById('ageMinValue').textContent = '最小 ' + minVal + ' 岁';
@@ -1715,21 +1794,28 @@ function updateMyHeightDisplay() {
   document.getElementById('myHeightValue').textContent = s.value + ' cm';
 }
 
-function updatePreferredHeightDisplay() {
+function updatePreferredHeightDisplay(changedSlider) {
   const minSlider = document.getElementById('preferredHeightMin');
   const maxSlider = document.getElementById('preferredHeightMax');
-  const minVal = parseInt(minSlider.value);
-  const maxVal = parseInt(maxSlider.value);
+  let minVal = parseInt(minSlider.value);
+  let maxVal = parseInt(maxSlider.value);
+  const activeSlider = changedSlider || document.activeElement;
 
   if (minVal > maxVal) {
-    minSlider.value = maxVal;
+    if (activeSlider === maxSlider) {
+      minSlider.value = maxVal;
+      minVal = maxVal;
+    } else {
+      maxSlider.value = minVal;
+      maxVal = minVal;
+    }
   }
 
-  setSliderBg(minSlider, calcPercent(minSlider.value, 140, 210));
-  setSliderBg(maxSlider, calcPercent(maxSlider.value, 140, 210));
+  setSliderBg(minSlider, calcPercent(minVal, 140, 210));
+  setSliderBg(maxSlider, calcPercent(maxVal, 140, 210));
 
-  document.getElementById('preferredHeightMinValue').textContent = '最低 ' + minSlider.value + ' cm';
-  document.getElementById('preferredHeightMaxValue').textContent = '最高 ' + maxSlider.value + ' cm';
+  document.getElementById('preferredHeightMinValue').textContent = '最低 ' + minVal + ' cm';
+  document.getElementById('preferredHeightMaxValue').textContent = '最高 ' + maxVal + ' cm';
 }
 
 function updateTagCounter(name, counterId, max = 5) {
@@ -1773,6 +1859,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const surveyForm = document.querySelector('form[action="/survey/submit"]');
   if (!surveyForm) return;
 
+  refreshSliderTheme();
   updateMyAgeDisplay();
   updateAgeRangeDisplay();
   updateMyHeightDisplay();
@@ -1882,6 +1969,50 @@ document.addEventListener('DOMContentLoaded', function() {
   const totalSteps = Math.min(steps.length, sections.length);
   let currentStep = 1;
   const hasPaginationControls = Boolean(prevBtn && nextBtn && submitBtn && totalSteps > 0);
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('[data-theme-option]')) return;
+    requestAnimationFrame(function() {
+      refreshSliderTheme();
+      updateMyAgeDisplay();
+      updateAgeRangeDisplay();
+      updateMyHeightDisplay();
+      updatePreferredHeightDisplay();
+    });
+  });
+
+  const themeMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function getStoredThemeSafe() {
+    if (window.__themeSwitch && typeof window.__themeSwitch.getStoredTheme === 'function') {
+      return window.__themeSwitch.getStoredTheme();
+    }
+    try {
+      return localStorage.getItem('shu-theme');
+    } catch (e) {
+      return null;
+    }
+  }
+  if (themeMedia && typeof themeMedia.addEventListener === 'function') {
+    themeMedia.addEventListener('change', function() {
+      if (!getStoredThemeSafe()) {
+        refreshSliderTheme();
+        updateMyAgeDisplay();
+        updateAgeRangeDisplay();
+        updateMyHeightDisplay();
+        updatePreferredHeightDisplay();
+      }
+    });
+  } else if (themeMedia && typeof themeMedia.addListener === 'function') {
+    themeMedia.addListener(function() {
+      if (!getStoredThemeSafe()) {
+        refreshSliderTheme();
+        updateMyAgeDisplay();
+        updateAgeRangeDisplay();
+        updateMyHeightDisplay();
+        updatePreferredHeightDisplay();
+      }
+    });
+  }
 
   function updatePagination() {
     if (!hasPaginationControls) return;
