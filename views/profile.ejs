@@ -656,7 +656,7 @@
       <div class="form-group">
         <label>(b). 我希望匹配到的对象年龄范围：</label>
         <div class="range-container">
-          <input type="range" class="range-slider" name="age_min" id="ageMin" min="16" max="30" value="<%= profile && profile.age_min ? profile.age_min : 18 %>" oninput="updateAgeRangeDisplay()">
+          <input type="range" class="range-slider" name="age_min" id="ageMin" min="16" max="30" value="<%= profile && profile.age_min ? profile.age_min : 18 %>" oninput="updateAgeRangeDisplay(this)">
           <div class="range-labels">
             <span>16岁</span>
             <span>23岁</span>
@@ -664,7 +664,7 @@
           </div>
           <div class="range-value" id="ageMinValue">最小 <%= profile && profile.age_min ? profile.age_min : 18 %> 岁</div>
 
-          <input type="range" class="range-slider" name="age_max" id="ageMax" min="16" max="30" value="<%= profile && profile.age_max ? profile.age_max : 28 %>" oninput="updateAgeRangeDisplay()">
+          <input type="range" class="range-slider" name="age_max" id="ageMax" min="16" max="30" value="<%= profile && profile.age_max ? profile.age_max : 28 %>" oninput="updateAgeRangeDisplay(this)">
           <div class="range-labels">
             <span>16岁</span>
             <span>23岁</span>
@@ -748,7 +748,7 @@
       <div class="form-group">
         <label>(b). 我对匹配对象的身高偏好（cm）：</label>
         <div class="range-container">
-          <input type="range" class="range-slider" name="preferred_height_min" id="preferredHeightMin" min="140" max="210" value="<%= profile && profile.preferred_height_min ? profile.preferred_height_min : 160 %>" oninput="updatePreferredHeightDisplay()">
+          <input type="range" class="range-slider" name="preferred_height_min" id="preferredHeightMin" min="140" max="210" value="<%= profile && profile.preferred_height_min ? profile.preferred_height_min : 160 %>" oninput="updatePreferredHeightDisplay(this)">
           <div class="range-labels">
             <span>140cm</span>
             <span>175cm</span>
@@ -756,7 +756,7 @@
           </div>
           <div class="range-value" id="preferredHeightMinValue">最低 <%= profile && profile.preferred_height_min ? profile.preferred_height_min : 160 %> cm</div>
 
-          <input type="range" class="range-slider" name="preferred_height_max" id="preferredHeightMax" min="140" max="210" value="<%= profile && profile.preferred_height_max ? profile.preferred_height_max : 180 %>" oninput="updatePreferredHeightDisplay()">
+          <input type="range" class="range-slider" name="preferred_height_max" id="preferredHeightMax" min="140" max="210" value="<%= profile && profile.preferred_height_max ? profile.preferred_height_max : 180 %>" oninput="updatePreferredHeightDisplay(this)">
           <div class="range-labels">
             <span>140cm</span>
             <span>175cm</span>
@@ -1732,11 +1732,20 @@ function updateMyAgeDisplay() {
   document.getElementById('myAgeValue').textContent = s.value + ' 岁';
 }
 
-function updateAgeRangeDisplay() {
+function updateAgeRangeDisplay(changedSlider) {
   const minS = document.getElementById('ageMin');
   const maxS = document.getElementById('ageMax');
   let minVal = +minS.value, maxVal = +maxS.value;
-  if (minVal > maxVal) { minS.value = maxVal; minVal = maxVal; }
+  const activeSlider = changedSlider || document.activeElement;
+  if (minVal > maxVal) {
+    if (activeSlider === maxS) {
+      minS.value = maxVal;
+      minVal = maxVal;
+    } else {
+      maxS.value = minVal;
+      maxVal = minVal;
+    }
+  }
   setSliderBg(minS, calcPercent(minVal, 16, 30));
   setSliderBg(maxS, calcPercent(maxVal, 16, 30));
   document.getElementById('ageMinValue').textContent = '最小 ' + minVal + ' 岁';
@@ -1749,21 +1758,28 @@ function updateMyHeightDisplay() {
   document.getElementById('myHeightValue').textContent = s.value + ' cm';
 }
 
-function updatePreferredHeightDisplay() {
+function updatePreferredHeightDisplay(changedSlider) {
   const minSlider = document.getElementById('preferredHeightMin');
   const maxSlider = document.getElementById('preferredHeightMax');
-  const minVal = parseInt(minSlider.value);
-  const maxVal = parseInt(maxSlider.value);
+  let minVal = parseInt(minSlider.value);
+  let maxVal = parseInt(maxSlider.value);
+  const activeSlider = changedSlider || document.activeElement;
 
   if (minVal > maxVal) {
-    minSlider.value = maxVal;
+    if (activeSlider === maxSlider) {
+      minSlider.value = maxVal;
+      minVal = maxVal;
+    } else {
+      maxSlider.value = minVal;
+      maxVal = minVal;
+    }
   }
 
-  setSliderBg(minSlider, calcPercent(minSlider.value, 140, 210));
-  setSliderBg(maxSlider, calcPercent(maxSlider.value, 140, 210));
+  setSliderBg(minSlider, calcPercent(minVal, 140, 210));
+  setSliderBg(maxSlider, calcPercent(maxVal, 140, 210));
 
-  document.getElementById('preferredHeightMinValue').textContent = '最低 ' + minSlider.value + ' cm';
-  document.getElementById('preferredHeightMaxValue').textContent = '最高 ' + maxSlider.value + ' cm';
+  document.getElementById('preferredHeightMinValue').textContent = '最低 ' + minVal + ' cm';
+  document.getElementById('preferredHeightMaxValue').textContent = '最高 ' + maxVal + ' cm';
 }
 
 function updateTagCounter(name, counterId, max = 5) {
