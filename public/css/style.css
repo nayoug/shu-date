@@ -517,6 +517,43 @@ body {
   transform: translateY(-2px);
 }
 
+/* ===== 倒计时 ===== */
+.countdown {
+  margin-top: 20px;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius);
+  backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 1;
+}
+
+.countdown__label {
+  display: block;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 4px;
+}
+
+.countdown__time {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.countdown--active {
+  background: rgba(34, 197, 94, 0.25);
+}
+
+.countdown--active .countdown__label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.countdown--active .countdown__time {
+  color: var(--success);
+}
+
 /* ===== 功能卡片 ===== */
 .features {
   display: grid;

@@ -692,6 +692,33 @@ async function renderInfoPage(req, res, pageKey) {
 app.get('/', wrapAsync(async (req, res) => {
   const user = await loadCurrentUserFromSession(req);
 
+  // 计算匹配倒计时 - 使用北京时间
+  const now = new Date();
+  const SHANGHAI_TZ = 8 * 60 * 60 * 1000; // UTC+8
+
+  // 获取本周二19:00北京时间的时间戳
+  const getThisWeekTuesday19 = () => {
+    const nowInShanghai = new Date(now.getTime() + SHANGHAI_TZ);
+    const dayOfWeek = nowInShanghai.getDay();
+    const daysToTuesday = dayOfWeek <= 2 ? 2 - dayOfWeek : 9 - dayOfWeek;
+
+    // 从周一开始，加daysToTuesday天
+    const base = new Date(nowInShanghai);
+    base.setDate(base.getDate() + daysToTuesday);
+    base.setHours(19, 0, 0, 0);
+    return base.getTime() - SHANGHAI_TZ;
+  };
+
+  const matchOpenStart = getThisWeekTuesday19();
+  const matchOpenEnd = matchOpenStart + 24 * 60 * 60 * 1000;
+  const nowTime = now.getTime();
+  const isMatchOpen = nowTime >= matchOpenStart && nowTime < matchOpenEnd;
+
+  // 下次匹配时间: 如果当前在开启窗口内，指向下周二
+  const nextMatchTime = isMatchOpen
+    ? matchOpenStart + 7 * 24 * 60 * 60 * 1000
+    : matchOpenStart;
+
   res.render('index', {
     title: '首页',
     user,
@@ -699,7 +726,10 @@ app.get('/', wrapAsync(async (req, res) => {
     hasProfile: !!user?.hasProfile,
     showPassword: true,
     message: req.query.msg,
-    messageType: req.query.type
+    messageType: req.query.type,
+    nextMatchTime,
+    now: now.getTime(),
+    isMatchOpen
   });
 }));
 
