@@ -9,7 +9,14 @@
 
       function getStoredTheme() {
         try {
-          return localStorage.getItem('shu-theme');
+          var stored = localStorage.getItem('shu-theme');
+          if (stored === 'light' || stored === 'dark') {
+            return stored;
+          }
+          if (stored !== null) {
+            localStorage.removeItem('shu-theme');
+          }
+          return null;
         } catch (e) {
           return null;
         }
