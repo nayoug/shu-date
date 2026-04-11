@@ -396,8 +396,9 @@
       padding: 8px 16px;
       border-radius: 20px;
       background: var(--profile-surface-soft);
-      color: var(--profile-text-muted);
+      color: var(--foreground);
       font-size: 13px;
+      font-weight: 500;
       transition: all 0.3s;
     }
     .pagination-step.active {
@@ -413,11 +414,58 @@
       height: 22px;
       border-radius: 50%;
       background: var(--profile-step-badge-bg);
+      border: 1px solid var(--profile-border);
+      color: var(--foreground);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
       font-weight: 600;
+    }
+    .pagination-step.active .pagination-step-number {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: transparent;
+      color: #fff;
+    }
+    .pagination-step.completed .pagination-step-number {
+      background: rgba(255, 255, 255, 0.82);
+      border-color: rgba(232, 90, 90, 0.18);
+      color: var(--primary);
+    }
+    html[data-theme="dark"] body.profile-page {
+      --profile-step-completed: rgba(232, 90, 90, 0.10);
+      --profile-step-badge-bg: rgba(255, 255, 255, 0.07);
+    }
+    html[data-theme="dark"] .pagination-step {
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: rgba(255, 255, 255, 0.7);
+    }
+    html[data-theme="dark"] .pagination-step.active {
+      background: rgba(232, 90, 90, 0.24);
+      border-color: rgba(232, 90, 90, 0.28);
+      box-shadow: inset 0 0 0 1px rgba(232, 90, 90, 0.18);
+      color: #fff;
+    }
+    html[data-theme="dark"] .pagination-step.completed {
+      background: rgba(232, 90, 90, 0.10);
+      border-color: rgba(232, 90, 90, 0.16);
+      color: #ffc0b6;
+    }
+    html[data-theme="dark"] .pagination-step-number {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.86);
+    }
+    html[data-theme="dark"] .pagination-step.active .pagination-step-number {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+    html[data-theme="dark"] .pagination-step.completed .pagination-step-number {
+      background: rgba(232, 90, 90, 0.14);
+      border-color: rgba(232, 90, 90, 0.2);
+      color: #ffe3de;
     }
     .pagination-buttons {
       display: flex;
