@@ -198,7 +198,6 @@ body {
 
 /* ===== 导航栏 ===== */
 .navbar {
-  background: var(--card);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
