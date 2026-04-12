@@ -6,6 +6,17 @@
   </div>
   <div class="dev-modal-body">
     <div class="dev-section">
+      <div class="dev-section-title">快速登录</div>
+      <input
+        type="text"
+        id="devEmailInput"
+        class="dev-input"
+        placeholder="邮箱前缀（如 test、admin）"
+        onkeydown="if (event.key === 'Enter') { event.preventDefault(); devLogin(); }"
+      >
+      <button type="button" class="dev-btn primary" onclick="devLogin()">🚀 一键登录</button>
+    </div>
+    <div class="dev-section">
       <div class="dev-section-title">环境信息</div>
       <div class="dev-info"><strong>环境:</strong> <%= isProduction ? 'production' : 'development' %></div>
     </div>
@@ -21,6 +32,19 @@
     const modal = document.getElementById('devModal');
     modal.classList.toggle('show');
   }
+
+  function devLogin() {
+    const input = document.getElementById('devEmailInput');
+    const rawValue = input ? input.value.trim() : '';
+    if (!rawValue) {
+      alert('请输入邮箱前缀');
+      return;
+    }
+
+    const value = rawValue.replace(/@shu\.edu\.cn$/i, '');
+    window.location.href = '/dev/login/' + encodeURIComponent(value);
+  }
+
   document.addEventListener('click', function(e) {
     const modal = document.getElementById('devModal');
     const btn = document.querySelector('.dev-tool-btn');

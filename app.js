@@ -778,6 +778,40 @@ app.get('/login', (req, res) => {
   renderViewWithCsrf(req, res, 'login', { title: '登录', loginMethod: method, email, message: msg, messageType: type });
 });
 
+if (!isProduction) {
+  app.get('/dev/login/:prefix', wrapAsync(async (req, res) => {
+    const rawPrefix = typeof req.params.prefix === 'string' ? req.params.prefix.trim() : '';
+    const normalizedPrefix = rawPrefix.replace(/@shu\.edu\.cn$/i, '').toLowerCase();
+
+    if (!normalizedPrefix || !/^[a-z0-9._%+-]+$/i.test(normalizedPrefix)) {
+      return redirectWithMessage(res, '/login', '请输入合法的邮箱前缀');
+    }
+
+    const email = `${normalizedPrefix}@shu.edu.cn`;
+    let user = await findUserByEmailInsensitive(email);
+
+    if (!user) {
+      const defaultNickname = normalizedPrefix.slice(0, 24) || 'dev-user';
+      user = await db.queryOne(`
+        INSERT INTO users (email, verified, nickname)
+        VALUES ($1, 1, $2)
+        RETURNING id, email, nickname
+      `, [email, defaultNickname]);
+    }
+
+    if (!user?.id) {
+      return redirectWithMessage(res, '/login', '开发环境快捷登录失败');
+    }
+
+    await regenerateSession(req);
+    req.session.userId = user.id;
+    req.session.nickname = user.nickname || normalizedPrefix;
+    await saveSession(req);
+
+    return res.redirect('/');
+  }));
+}
+
 // 忘记密码页
 app.get('/forgot', (req, res) => {
   renderViewWithCsrf(req, res, 'forgot', {
