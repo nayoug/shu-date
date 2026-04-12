@@ -2,11 +2,28 @@
 <nav class="navbar">
   <div class="container">
     <a href="/" class="logo">心有所<span>SHU</span></a>
+    
+    <button class="mobile-menu-toggle" aria-label="打开菜单" aria-expanded="false" style="display: none; background: none; border: none; color: var(--foreground); cursor: pointer; padding: 4px;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <div class="nav-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; opacity: 0; transition: opacity 0.3s;"></div>
+
     <div class="nav-links">
+      <button class="mobile-menu-close" aria-label="关闭菜单" style="display: none; background: none; border: none; color: var(--foreground); cursor: pointer; padding: 16px; align-self: flex-end;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
       <a href="/">主页</a>
       <!-- 匹配下拉菜单 -->
       <div class="dropdown">
-        <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" style="background: none; border: none; cursor: pointer; padding: 6px 12px; font-size: 0.9rem; color: var(--foreground); display: flex; align-items: center; gap: 4px;">
+        <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" style="background: none; border: none; cursor: pointer; padding: 6px 12px; font-size: 0.9rem; color: var(--foreground); display: flex; align-items: center; justify-content: space-between; gap: 4px; width: 100%;">
           匹配
           <span style="font-size: 10px;">▼</span>
         </button>
@@ -30,7 +47,7 @@
       <% if (typeof user !== 'undefined' && user) { %>
         <!-- 昵称下拉菜单 -->
         <div class="dropdown">
-          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" style="background: none; border: none; cursor: pointer; padding: 6px 12px; font-size: 0.9rem; color: var(--foreground); display: flex; align-items: center; gap: 4px;">
+          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" style="background: none; border: none; cursor: pointer; padding: 6px 12px; font-size: 0.9rem; color: var(--foreground); display: flex; align-items: center; justify-content: space-between; gap: 4px; width: 100%;">
             <%= typeof nickname !== 'undefined' && nickname ? nickname : (user.name || user.email.split('@')[0]) %>
             <span style="font-size: 10px;">▼</span>
           </button>
@@ -83,9 +100,7 @@
   document.addEventListener('click', function(e) {
     var toggle = e.target.closest('.dropdown-toggle');
     if (toggle) {
-      if (!isTouchDropdownMode()) {
-        return;
-      }
+      if (!isTouchDropdownMode()) return;
       e.preventDefault();
       e.stopPropagation();
       var dropdown = toggle.closest('.dropdown');
@@ -102,6 +117,37 @@
       closeOpenMenus();
     }
   });
-})();
 
+  // 移动端菜单抽屉逻辑
+  var mobileToggle = document.querySelector('.mobile-menu-toggle');
+  var mobileClose = document.querySelector('.mobile-menu-close');
+  var navLinks = document.querySelector('.nav-links');
+  var navOverlay = document.querySelector('.nav-overlay');
+
+  function openMenu() {
+    navLinks.classList.add('open');
+    navOverlay.style.display = 'block';
+    setTimeout(() => navOverlay.style.opacity = '1', 10);
+    mobileToggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMenu() {
+    navLinks.classList.remove('open');
+    navOverlay.style.opacity = '0';
+    setTimeout(() => navOverlay.style.display = 'none', 300);
+    mobileToggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  if (mobileToggle) {
+    mobileToggle.addEventListener('click', openMenu);
+  }
+  if (mobileClose) {
+    mobileClose.addEventListener('click', closeMenu);
+  }
+  if (navOverlay) {
+    navOverlay.addEventListener('click', closeMenu);
+  }
+})();
 </script>
