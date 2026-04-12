@@ -610,6 +610,7 @@
 
   <% if (!showPassword && (!lovetypeResult || (typeof editMode !== 'undefined' && editMode))) { %>
   <form action="/survey/submit" method="POST">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
     <!-- 分页进度指示器 -->
     <div class="pagination-container">
