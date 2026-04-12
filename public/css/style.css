@@ -888,6 +888,11 @@ tr:hover td {
     padding: 16px;
   }
 
+  .navbar {
+    backdrop-filter: none;
+    background: var(--card);
+  }
+
   .navbar .container {
     padding: 12px 16px;
   }
