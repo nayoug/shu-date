@@ -149,5 +149,19 @@
   if (navOverlay) {
     navOverlay.addEventListener('click', closeMenu);
   }
+
+  // 响应 Esc 键关闭抽屉菜单 (a11y)
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && navLinks && navLinks.classList.contains('open')) {
+      closeMenu();
+    }
+  });
+
+  // 窗口切回大屏时强制关闭菜单，防止遗留 overflow: hidden
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 768 && navLinks && navLinks.classList.contains('open')) {
+      closeMenu();
+    }
+  });
 })();
 </script>
