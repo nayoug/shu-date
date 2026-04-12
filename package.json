@@ -8,7 +8,9 @@
   },
   "scripts": {
     "start": "node app.js",
-    "dev": "node app.js"
+    "dev": "node app.js",
+    "build": "node build.js",
+    "build:reset": "node build.js --reset"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

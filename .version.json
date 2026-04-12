@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "generatedAt": "2026-04-12T18:29:35.515Z",
+  "resources": {
+    "css/dev-tools.css": {
+      "hash": "3d04e83c",
+      "version": "0.2.0-3d04e83c"
+    },
+    "css/style.css": {
+      "hash": "b693f4d1",
+      "version": "0.2.0-b693f4d1"
+    },
+    "favicon.ico": {
+      "hash": "5ecd6c3b",
+      "version": "0.2.0-5ecd6c3b"
+    },
+    "icons/apple-touch-icon.png": {
+      "hash": "fa071360",
+      "version": "0.2.0-fa071360"
+    },
+    "icons/favicon-32.png": {
+      "hash": "3987af55",
+      "version": "0.2.0-3987af55"
+    },
+    "icons/icon-192.png": {
+      "hash": "be12afc9",
+      "version": "0.2.0-be12afc9"
+    },
+    "icons/icon-512.png": {
+      "hash": "5262abcf",
+      "version": "0.2.0-5262abcf"
+    },
+    "images/campus.jpg": {
+      "hash": "63b62764",
+      "version": "0.2.0-63b62764"
+    }
+  }
+}
