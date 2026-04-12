@@ -9,69 +9,6 @@
   <% if (typeof isDev !== 'undefined' && isDev) { %>
   <link rel="stylesheet" href="/css/dev-tools.css">
   <% } %>
-  <style>
-    .match-list {
-      display: grid;
-      gap: 16px;
-    }
-    .match-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 20px;
-      padding: 20px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: var(--surface-soft);
-    }
-    .match-rank {
-      min-width: 50px;
-      font-size: 2rem;
-      font-weight: 700;
-      line-height: 1;
-      color: var(--primary);
-    }
-    .match-summary {
-      flex: 1;
-      min-width: 0;
-    }
-    .match-meta {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-    .match-interest {
-      color: var(--muted-foreground);
-      font-size: 0.9rem;
-      overflow-wrap: anywhere;
-    }
-    .match-score {
-      align-self: center;
-      padding: 10px 14px;
-      border-radius: 999px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    @media (max-width: 700px) {
-      .match-card {
-        flex-direction: column;
-        gap: 14px;
-      }
-      .match-rank {
-        min-width: 0;
-        font-size: 1.5rem;
-      }
-      .match-meta {
-        gap: 10px 12px;
-      }
-      .match-meta span {
-        min-width: calc(50% - 6px);
-      }
-      .match-score {
-        align-self: flex-start;
-      }
-    }
-  </style>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -102,20 +39,20 @@
         这是本周已经发布并落库的正式匹配结果：
       </p>
 
-      <div class="match-list">
+      <div style="display: grid; gap: 16px;">
         <% matches.forEach(function(m, index) { %>
-        <div class="match-card">
-          <div class="match-rank">
+        <div class="match-card" style="display: flex; align-items: center; gap: 20px; padding: 20px;">
+          <div style="font-size: 2rem; font-weight: 700; color: var(--primary); min-width: 50px;">
             #<%= index + 1 %>
           </div>
-          <div class="match-summary">
-            <div class="match-meta">
+          <div style="flex: 1;">
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px;">
               <span><strong>年级:</strong> <%= m.my_grade || '-' %></span>
               <span><strong>性别:</strong> <%= m.gender || '-' %></span>
               <span><strong>校区:</strong> <%= m.campus || '-' %></span>
               <span><strong>LoveType:</strong> <%= m.lovetype_code || '-' %></span>
             </div>
-            <div class="match-interest">
+            <div style="color: var(--muted-foreground); font-size: 0.9rem;">
               <strong>兴趣爱好:</strong> <%= m.interests || '-' %>
             </div>
           </div>

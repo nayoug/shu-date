@@ -84,48 +84,6 @@
     .range-slider {
       width: 100%;
       margin: 10px 0;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 6px;
-      border-radius: 999px;
-      background: var(--profile-slider-track);
-      outline: 2px solid transparent;
-      outline-offset: 4px;
-    }
-    .range-slider:focus-visible {
-      outline-color: var(--primary);
-      box-shadow: 0 0 0 4px var(--profile-surface-tint);
-    }
-    .range-slider::-webkit-slider-runnable-track {
-      height: 6px;
-      border-radius: 999px;
-      background: transparent;
-    }
-    .range-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 24px;
-      height: 24px;
-      margin-top: -9px;
-      border-radius: 50%;
-      background: var(--profile-slider-thumb);
-      border: 3px solid var(--primary);
-      box-shadow: var(--profile-shadow);
-      cursor: pointer;
-    }
-    .range-slider::-moz-range-track {
-      height: 6px;
-      border-radius: 999px;
-      background: transparent;
-    }
-    .range-slider::-moz-range-thumb {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: var(--profile-slider-thumb);
-      border: 3px solid var(--primary);
-      box-shadow: var(--profile-shadow);
-      cursor: pointer;
     }
     .range-labels {
       display: flex;
@@ -1737,51 +1695,45 @@
   .checkbox-group-grid {
     grid-template-columns: 1fr;
   }
-  .range-container {
-    padding: 14px 0 6px;
-  }
-  .range-slider {
-    margin: 14px 0 10px;
-  }
-  .range-labels {
-    font-size: 11px;
-  }
   .scale-horizontal {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 4px;
+    align-items: end; 
   }
   .scale-label-left_text {
+    grid-column: 1;
+    grid-row: 1;
     text-align: left;
     width: auto;
     padding: 0;
   }
   .scale-label-right_text {
+    grid-column: 2;
+    grid-row: 1;
     text-align: right;
-    align-self: flex-end;
     width: auto;
     padding: 0;
   }
   .scale-options-row {
+    grid-column: 1 / 3;
+    grid-row: 2;
     width: 100%;
     min-width: 0;
     max-width: 100%;
-    justify-content: space-between;
-    gap: 6px;
   }
   .scale-option {
     max-width: none;
-    min-height: 48px;
+    min-height: 44px;
     justify-content: center;
-    padding: 8px 0;
+    padding: 6px 0;
   }
   .scale-option .scale-circle,
   .scale-circle {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    font-size: 13px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    font-size: 11px;
   }
 }
 </style>
