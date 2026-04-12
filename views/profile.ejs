@@ -89,7 +89,12 @@
       height: 6px;
       border-radius: 999px;
       background: var(--profile-slider-track);
-      outline: none;
+      outline: 2px solid transparent;
+      outline-offset: 4px;
+    }
+    .range-slider:focus-visible {
+      outline-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--profile-surface-tint);
     }
     .range-slider::-webkit-slider-runnable-track {
       height: 6px;
