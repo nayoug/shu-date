@@ -955,12 +955,14 @@ tr:hover td {
   }
 
   .theme-switch {
-    padding: 3px;
+    margin: 12px 24px;
+    padding: 4px;
+    align-self: flex-start;
   }
 
   .theme-switch__button {
-    padding: 6px 10px;
-    font-size: 0.76rem;
+    padding: 8px 16px;
+    font-size: 0.9rem;
   }
 
   :root .dropdown {
