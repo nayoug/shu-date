@@ -28,6 +28,7 @@
       <% } %>
 
       <form action="/reset/<%= code %>" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
           <input type="password" name="password" placeholder="新密码（至少6位）" autocomplete="new-password" aria-label="新密码" required minlength="6" style="text-align: center; font-size: 16px;">
         </div>

@@ -455,6 +455,17 @@ function ensureCsrfToken(req) {
   return req.session.csrfToken;
 }
 
+function withCsrfToken(req, model = {}) {
+  return {
+    ...model,
+    csrfToken: ensureCsrfToken(req)
+  };
+}
+
+function renderViewWithCsrf(req, res, view, model = {}) {
+  return res.render(view, withCsrfToken(req, model));
+}
+
 function createCsrfValidator(redirectTo = '/admin') {
   return (req, res, next) => {
     // 兼容 _csrf（表单中常用） 和 csrfToken 两种字段名
@@ -463,13 +474,22 @@ function createCsrfValidator(redirectTo = '/admin') {
       return next();
     }
 
-    const separator = redirectTo.includes('?') ? '&' : '?';
-    return res.redirect(`${redirectTo}${separator}msg=${encodeURIComponent('请求无效，请刷新页面后重试')}&type=error`);
+    const target = typeof redirectTo === 'function' ? redirectTo(req) : redirectTo;
+    const separator = target.includes('?') ? '&' : '?';
+    return res.redirect(`${target}${separator}msg=${encodeURIComponent('请求无效，请刷新页面后重试')}&type=error`);
   };
 }
 
 const requireValidCsrf = createCsrfValidator('/admin');
 const requireValidDeleteCsrf = createCsrfValidator('/settings/delete');
+const requireValidRegisterCsrf = createCsrfValidator('/login?method=register');
+const requireValidLoginCsrf = createCsrfValidator('/login?method=login');
+const requireValidForgotCsrf = createCsrfValidator('/forgot');
+const requireValidResetCsrf = createCsrfValidator(req => `/reset/${encodeURIComponent(req.params.code)}`);
+const requireValidSettingsPasswordCsrf = createCsrfValidator('/settings/password');
+const requireValidSurveyCsrf = createCsrfValidator('/profile');
+const requireValidCoupleMatchCsrf = createCsrfValidator('/couple-match');
+const requireValidNotificationsCsrf = createCsrfValidator('/notifications');
 
 function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面暂时不可用') {
   res.status(status).render(view, locals, (renderErr, html) => {
@@ -556,6 +576,7 @@ function buildProfilePageModel(req, profile) {
     isAdmin: req.isAdmin,
     isDev: !isProduction,
     isProduction,
+    csrfToken: ensureCsrfToken(req),
     message: req.query.msg,
     messageType: req.query.type,
     editMode: req.query.edit === '1'
@@ -754,12 +775,12 @@ app.get('/login', (req, res) => {
   // 如果是重定向过来的，显示提示信息
   const msg = req.query.msg;
   const type = req.query.type;
-  res.render('login', { title: '登录', loginMethod: method, email, message: msg, messageType: type });
+  renderViewWithCsrf(req, res, 'login', { title: '登录', loginMethod: method, email, message: msg, messageType: type });
 });
 
 // 忘记密码页
 app.get('/forgot', (req, res) => {
-  res.render('forgot', {
+  renderViewWithCsrf(req, res, 'forgot', {
     title: '忘记密码',
     message: req.query.msg,
     messageType: req.query.type,
@@ -768,14 +789,14 @@ app.get('/forgot', (req, res) => {
 });
 
 // 发送密码重置邮件
-app.post('/forgot', forgotRateLimiter, wrapAsync(async (req, res) => {
+app.post('/forgot', requireValidForgotCsrf, forgotRateLimiter, wrapAsync(async (req, res) => {
   const { email } = req.body;
   const lowerEmail = normalizeEmail(email);
 
   // 验证邮箱格式
   const emailPattern = /^[a-z0-9._%+-]+@shu\.edu\.cn$/;
   if (!emailPattern.test(lowerEmail)) {
-    return res.render('forgot', {
+    return renderViewWithCsrf(req, res, 'forgot', {
       title: '忘记密码',
       message: '请输入 @shu.edu.cn 结尾的学校邮箱',
       messageType: 'error',
@@ -787,7 +808,7 @@ app.post('/forgot', forgotRateLimiter, wrapAsync(async (req, res) => {
   const user = await findUserByEmailInsensitive(lowerEmail);
 
   if (!user) {
-    return res.render('forgot', {
+    return renderViewWithCsrf(req, res, 'forgot', {
       title: '忘记密码',
       message: '该邮箱未注册，请先注册',
       messageType: 'error',
@@ -809,7 +830,7 @@ app.post('/forgot', forgotRateLimiter, wrapAsync(async (req, res) => {
   const result = await sendPasswordResetEmail(lowerEmail, resetCode);
 
   if (result.success || (result.simulated && !isProduction)) {
-    res.render('forgot', {
+    renderViewWithCsrf(req, res, 'forgot', {
       title: '忘记密码',
       message: '重置链接已发送到你的邮箱，请查收',
       messageType: 'success',
@@ -817,7 +838,7 @@ app.post('/forgot', forgotRateLimiter, wrapAsync(async (req, res) => {
       email: lowerEmail
     });
   } else {
-    res.render('forgot', {
+    renderViewWithCsrf(req, res, 'forgot', {
       title: '忘记密码',
       message: '邮件发送失败，请稍后重试',
       messageType: 'error',
@@ -836,7 +857,7 @@ app.get('/reset/:code', wrapAsync(async (req, res) => {
   );
 
   if (!user) {
-    return res.render('login', {
+    return renderViewWithCsrf(req, res, 'login', {
       title: '登录',
       message: '重置链接已过期，请重新发起',
       messageType: 'error',
@@ -844,7 +865,7 @@ app.get('/reset/:code', wrapAsync(async (req, res) => {
     });
   }
 
-  res.render('reset', {
+  renderViewWithCsrf(req, res, 'reset', {
     title: '重置密码',
     code: resetCode,
     message: req.query.msg,
@@ -853,12 +874,12 @@ app.get('/reset/:code', wrapAsync(async (req, res) => {
 }));
 
 // 处理密码重置
-app.post('/reset/:code', resetRateLimiter, wrapAsync(async (req, res) => {
+app.post('/reset/:code', requireValidResetCsrf, resetRateLimiter, wrapAsync(async (req, res) => {
   const { code } = req.params;
   const { password, confirmPassword } = req.body;
 
   if (!password || password.length < 6) {
-    return res.render('reset', {
+    return renderViewWithCsrf(req, res, 'reset', {
       title: '重置密码',
       message: '密码长度至少6位',
       messageType: 'error',
@@ -867,7 +888,7 @@ app.post('/reset/:code', resetRateLimiter, wrapAsync(async (req, res) => {
   }
 
   if (password !== confirmPassword) {
-    return res.render('reset', {
+    return renderViewWithCsrf(req, res, 'reset', {
       title: '重置密码',
       message: '两次输入的密码不一致',
       messageType: 'error',
@@ -881,7 +902,7 @@ app.post('/reset/:code', resetRateLimiter, wrapAsync(async (req, res) => {
   );
 
   if (!user) {
-    return res.render('login', {
+    return renderViewWithCsrf(req, res, 'login', {
       title: '登录',
       message: '重置链接已过期，请重新发起',
       messageType: 'error',
@@ -909,13 +930,13 @@ app.post('/reset/:code', resetRateLimiter, wrapAsync(async (req, res) => {
 }));
 
 // 注册
-app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
+app.post('/register', requireValidRegisterCsrf, registerRateLimiter, wrapAsync(async (req, res) => {
   const { email, password, confirmPassword, nickname } = req.body;
   const lowerEmail = normalizeEmail(email);
   const trimmedNickname = typeof nickname === 'string' ? nickname.trim() : '';
 
   function renderRegisterError(message) {
-    return res.render('login', {
+    return renderViewWithCsrf(req, res, 'login', {
       title: '登录',
       message,
       messageType: 'error',
@@ -969,7 +990,7 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
     if (verifyResult && verifyResult.simulated) {
       messageHtml = buildDevLinkMessage('打开验证链接', verifyResult.url);
     }
-    return res.render('login', {
+    return renderViewWithCsrf(req, res, 'login', {
       title: '登录',
       message,
       messageHtml,
@@ -1006,7 +1027,7 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
     messageType = 'warning';
   }
 
-  return res.render('login', {
+  return renderViewWithCsrf(req, res, 'login', {
     title: '登录',
     message,
     messageHtml,
@@ -1016,14 +1037,14 @@ app.post('/register', registerRateLimiter, wrapAsync(async (req, res) => {
 }));
 
 // 登录
-app.post('/login', loginRateLimiter, wrapAsync(async (req, res) => {
+app.post('/login', requireValidLoginCsrf, loginRateLimiter, wrapAsync(async (req, res) => {
   const { email, password } = req.body;
   const lowerEmail = normalizeEmail(email);
 
   // 验证邮箱格式
   const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailPattern.test(lowerEmail)) {
-    return res.render('login', {
+    return renderViewWithCsrf(req, res, 'login', {
       title: '登录',
       message: '请输入有效的邮箱地址',
       messageType: 'error',
@@ -1047,7 +1068,7 @@ app.post('/login', loginRateLimiter, wrapAsync(async (req, res) => {
   // 验证密码
   const passwordValid = await verifyPassword(password, user.password_hash, db, user.id);
   if (!passwordValid) {
-    return res.render('login', {
+    return renderViewWithCsrf(req, res, 'login', {
       title: '登录',
       message: '密码错误，请重试',
       messageType: 'error',
@@ -1058,7 +1079,7 @@ app.post('/login', loginRateLimiter, wrapAsync(async (req, res) => {
 
   // 检查邮箱是否已验证
   if (!user.verified) {
-    return res.render('login', {
+    return renderViewWithCsrf(req, res, 'login', {
       title: '登录',
       message: '邮箱还未验证，请先查收验证邮件完成验证',
       messageType: 'error',
@@ -1075,7 +1096,7 @@ app.post('/login', loginRateLimiter, wrapAsync(async (req, res) => {
     await saveSession(req);
   } catch (error) {
     console.error('建立登录会话失败:', error);
-    return res.render('login', {
+    return renderViewWithCsrf(req, res, 'login', {
       title: '登录',
       message: '登录失败，请重试',
       messageType: 'error',
@@ -1114,7 +1135,7 @@ app.get('/register/verify/:token', wrapAsync(async (req, res) => {
     );
 
     if (!user) {
-      return res.render('login', {
+      return renderViewWithCsrf(req, res, 'login', {
         title: '登录',
         message: '验证链接无效',
         messageType: 'error',
@@ -1124,7 +1145,7 @@ app.get('/register/verify/:token', wrapAsync(async (req, res) => {
 
     // 检查token是否过期
     if (!user.verification_expire || new Date(user.verification_expire) < new Date()) {
-      return res.render('login', {
+      return renderViewWithCsrf(req, res, 'login', {
         title: '登录',
         message: '验证链接已过期，请重新注册',
         messageType: 'error',
@@ -1133,7 +1154,7 @@ app.get('/register/verify/:token', wrapAsync(async (req, res) => {
     }
 
     if (user.verified) {
-      return res.render('login', {
+      return renderViewWithCsrf(req, res, 'login', {
         title: '登录',
         message: '邮箱已验证，请直接登录',
         messageType: 'success',
@@ -1148,14 +1169,14 @@ app.get('/register/verify/:token', wrapAsync(async (req, res) => {
     );
 
     if (result && result.changes === 1) {
-      return res.render('login', {
+      return renderViewWithCsrf(req, res, 'login', {
         title: '登录',
         message: '邮箱验证成功！请登录',
         messageType: 'success',
         loginMethod: 'login'
       });
     } else {
-      return res.render('login', {
+      return renderViewWithCsrf(req, res, 'login', {
         title: '登录',
         message: '验证失败，请稍后重试',
         messageType: 'error',
@@ -1164,7 +1185,7 @@ app.get('/register/verify/:token', wrapAsync(async (req, res) => {
     }
   } catch (error) {
     console.error('验证邮箱失败:', error);
-    return res.render('login', {
+    return renderViewWithCsrf(req, res, 'login', {
       title: '登录',
       message: '验证链接无效',
       messageType: 'error',
@@ -1214,7 +1235,7 @@ app.get('/notifications', isLoggedIn, wrapAsync(async (req, res) => {
     await db.execute('UPDATE notifications SET is_read = 1 WHERE user_id = $1 AND is_read = 0', [req.user.id]);
   }
 
-  res.render('notifications', {
+  renderViewWithCsrf(req, res, 'notifications', {
     user: req.user,
     nickname: req.session.nickname,
     hasProfile: req.user.hasProfile,
@@ -1227,7 +1248,7 @@ app.get('/notifications', isLoggedIn, wrapAsync(async (req, res) => {
 // 修改密码页面
 app.get('/settings/password', isLoggedIn, wrapAsync(async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
-  res.render('password', {
+  renderViewWithCsrf(req, res, 'password', {
     user: req.user,
     nickname: req.session.nickname,
     hasProfile: !!profile,
@@ -1255,12 +1276,12 @@ function passwordChangeRateLimiterForSettings(req, res, next) {
 }
 
 // 修改密码
-app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings, wrapAsync(async (req, res) => {
+app.post('/settings/password', isLoggedIn, requireValidSettingsPasswordCsrf, passwordChangeRateLimiterForSettings, wrapAsync(async (req, res) => {
   const { currentPassword, newPassword, confirmPassword } = req.body;
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.session.userId]);
 
   if (!currentPassword || !newPassword || !confirmPassword) {
-    return res.render('password', {
+    return renderViewWithCsrf(req, res, 'password', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
@@ -1270,7 +1291,7 @@ app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings,
   }
 
   if (newPassword.length < 6) {
-    return res.render('password', {
+    return renderViewWithCsrf(req, res, 'password', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
@@ -1280,7 +1301,7 @@ app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings,
   }
 
   if (newPassword !== confirmPassword) {
-    return res.render('password', {
+    return renderViewWithCsrf(req, res, 'password', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
@@ -1296,7 +1317,7 @@ app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings,
   if (user.password_hash) {
     const currentPasswordValid = await verifyPassword(currentPassword, user.password_hash, db, req.session.userId);
     if (!currentPasswordValid) {
-      return res.render('password', {
+      return renderViewWithCsrf(req, res, 'password', {
         user: req.user,
         nickname: req.session.nickname,
         hasProfile: !!profile,
@@ -1315,7 +1336,7 @@ app.post('/settings/password', isLoggedIn, passwordChangeRateLimiterForSettings,
 
   if (result && result.changes === 1) {
     return res.redirect('/settings/password?msg=密码修改成功&type=success');  } else {
-    return res.render('password', {
+    return renderViewWithCsrf(req, res, 'password', {
       user: req.user,
       nickname: req.session.nickname,
       hasProfile: !!profile,
@@ -1455,7 +1476,7 @@ app.post('/confirm-match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, r
 }));
 
 // 提交问卷
-app.post('/survey/submit', isLoggedIn, wrapAsync(async (req, res) => {
+app.post('/survey/submit', isLoggedIn, requireValidSurveyCsrf, wrapAsync(async (req, res) => {
   const data = req.body;
 
   const lovetypeAnswerMap = {};
@@ -1700,7 +1721,7 @@ app.get('/couple-match', isLoggedIn, wrapAsync(async (req, res) => {
     ORDER BY cr.updated_at DESC
   `, [req.user.id]);
 
-  res.render('couple-match', {
+  renderViewWithCsrf(req, res, 'couple-match', {
     title: '情侣匹配度测试',
     user: req.user,
     nickname: req.session.nickname,
@@ -1714,7 +1735,7 @@ app.get('/couple-match', isLoggedIn, wrapAsync(async (req, res) => {
 }));
 
 // 发送情侣匹配度测试申请
-app.post('/couple-match/request', isLoggedIn, wrapAsync(async (req, res) => {
+app.post('/couple-match/request', isLoggedIn, requireValidCoupleMatchCsrf, wrapAsync(async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
@@ -1790,7 +1811,7 @@ app.post('/couple-match/request', isLoggedIn, wrapAsync(async (req, res) => {
 }));
 
 // 同意情侣匹配度测试申请
-app.post('/couple-match/accept/:id', isLoggedIn, wrapAsync(async (req, res) => {
+app.post('/couple-match/accept/:id', isLoggedIn, requireValidNotificationsCsrf, wrapAsync(async (req, res) => {
   const requestId = parseInt(req.params.id, 10);
 
   // 查找请求
@@ -1826,7 +1847,7 @@ app.post('/couple-match/accept/:id', isLoggedIn, wrapAsync(async (req, res) => {
 }));
 
 // 拒绝情侣匹配度测试申请
-app.post('/couple-match/reject/:id', isLoggedIn, wrapAsync(async (req, res) => {
+app.post('/couple-match/reject/:id', isLoggedIn, requireValidNotificationsCsrf, wrapAsync(async (req, res) => {
   const requestId = parseInt(req.params.id, 10);
 
   const coupleRequest = await db.queryOne(`

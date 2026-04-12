@@ -37,9 +37,11 @@
                 <% if (notification.type === 'match_request' && notification.status === 'pending') { %>
                   <div style="display: flex; gap: 8px; margin-left: 16px;">
                     <form method="POST" action="/couple-match/accept/<%= notification.related_request_id %>" style="display: inline;">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                       <button type="submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 14px;">同意</button>
                     </form>
                     <form method="POST" action="/couple-match/reject/<%= notification.related_request_id %>" style="display: inline;">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                       <button type="submit" class="btn btn-secondary" style="padding: 6px 12px; font-size: 14px;">拒绝</button>
                     </form>
                   </div>

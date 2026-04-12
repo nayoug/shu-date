@@ -85,6 +85,7 @@
 
       <!-- 注册表单 -->
       <form action="/register" method="POST" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
           <input type="text" name="nickname" placeholder="昵称" value="<%= typeof nickname !== 'undefined' ? nickname : '' %>" autocomplete="nickname" aria-label="昵称" required style="text-align: center; font-size: 16px;">
         </div>
@@ -102,6 +103,7 @@
 
       <!-- 登录表单 -->
       <form action="/login" method="POST" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
           <input type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="登录邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required style="text-align: center; font-size: 16px;">
         </div>
