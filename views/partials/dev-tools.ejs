@@ -7,14 +7,29 @@
   <div class="dev-modal-body">
     <div class="dev-section">
       <div class="dev-section-title">快速登录</div>
-      <input
-        type="text"
-        id="devEmailInput"
-        class="dev-input"
-        placeholder="邮箱前缀（如 test、admin）"
-        onkeydown="if (event.key === 'Enter') { event.preventDefault(); devLogin(); }"
-      >
-      <button type="button" class="dev-btn primary" onclick="devLogin()">🚀 一键登录</button>
+      <% if (devLoginEnabled) { %>
+      <form method="post" action="/dev/login" class="dev-login-form">
+        <label for="devEmailInput" class="dev-input-label">学校邮箱前缀</label>
+        <input
+          type="hidden"
+          name="_csrf"
+          value="<%= devLoginCsrfToken %>"
+        >
+        <input
+          type="text"
+          id="devEmailInput"
+          name="emailPrefix"
+          class="dev-input"
+          placeholder="如 test、admin"
+          autocomplete="off"
+          autocapitalize="none"
+          spellcheck="false"
+        >
+        <button type="submit" class="dev-btn primary">🚀 一键登录</button>
+      </form>
+      <% } else { %>
+      <div class="dev-info">快捷登录已关闭。需要设置 <code>ENABLE_DEV_LOGIN=true</code>；如需通过内网访问，还需额外设置 <code>DEV_LOGIN_ALLOW_PRIVATE_NETWORK=true</code>。</div>
+      <% } %>
     </div>
     <div class="dev-section">
       <div class="dev-section-title">环境信息</div>
@@ -31,18 +46,6 @@
   function toggleDevModal() {
     const modal = document.getElementById('devModal');
     modal.classList.toggle('show');
-  }
-
-  function devLogin() {
-    const input = document.getElementById('devEmailInput');
-    const rawValue = input ? input.value.trim() : '';
-    if (!rawValue) {
-      alert('请输入邮箱前缀');
-      return;
-    }
-
-    const value = rawValue.replace(/@shu\.edu\.cn$/i, '');
-    window.location.href = '/dev/login/' + encodeURIComponent(value);
   }
 
   document.addEventListener('click', function(e) {
