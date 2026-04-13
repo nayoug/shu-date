@@ -22,6 +22,25 @@
       <h1>心有所SHU</h1>
       <p class="subtitle">上大同学之间的互相认识，从这里开始</p>
       <p style="opacity: 0.7; font-size: 0.9rem;">小范围内测中</p>
+      <% if (typeof isMatchOpen !== 'undefined') { %>
+        <% if (isMatchOpen) { %>
+        <div class="countdown countdown--active">
+          <span class="countdown__label">匹配已开启</span>
+          <span class="countdown__time">快去确认匹配吧</span>
+        </div>
+        <% } else if (typeof nextMatchTime !== 'undefined' && typeof now !== 'undefined') { %>
+        <% const timeLeft = nextMatchTime - now; %>
+        <% const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24)); %>
+        <% const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); %>
+        <% const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)); %>
+        <div class="countdown">
+          <span class="countdown__label">每周二 19:00 开启匹配</span>
+          <span class="countdown__time">
+            <% if (days > 0) { %><%= days %>天 <% } %><%= hours %>小时 <%= minutes %>分钟
+          </span>
+        </div>
+        <% } %>
+      <% } %>
       <% if (typeof user === 'undefined' || !user) { %>
         <a href="/login" class="btn btn-large" style="margin-top: 20px;">开始</a>
       <% } %>
@@ -66,6 +85,7 @@
           <div class="home-status__actions">
             <% if (user.weeklyMatchConfirmed) { %>
             <a href="/matches" class="btn">看看匹配</a>
+            <a href="/confirm-match" class="btn btn-secondary">取消确认</a>
             <% } else { %>
             <a href="/confirm-match" class="btn">确认匹配</a>
             <% } %>
