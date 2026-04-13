@@ -75,6 +75,37 @@ function redirectWithMessage(res, path, message, type = 'error') {
   return res.redirect(303, `${path}${separator}msg=${encodeURIComponent(message)}&type=${encodeURIComponent(type)}`);
 }
 
+function normalizeClientIpAddress(ip) {
+  if (typeof ip !== 'string') {
+    return '';
+  }
+
+  const trimmed = ip.trim().toLowerCase();
+  return trimmed.startsWith('::ffff:') ? trimmed.slice(7) : trimmed;
+}
+
+function isTrustedDevLoginIp(ip) {
+  if (!ip) {
+    return false;
+  }
+
+  return (
+    ip === '127.0.0.1' ||
+    ip === '::1' ||
+    ip === 'localhost' ||
+    /^10\./.test(ip) ||
+    /^192\.168\./.test(ip) ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip) ||
+    ip.startsWith('fc') ||
+    ip.startsWith('fd') ||
+    ip.startsWith('fe80:')
+  );
+}
+
+function isTrustedDevLoginRequest(req) {
+  return isTrustedDevLoginIp(normalizeClientIpAddress(req.ip || ''));
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -185,6 +216,7 @@ function resolveDeployTime() {
 let db = dbModule;
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
+const devLoginEnabled = !isProduction && process.env.ENABLE_DEV_LOGIN === 'true';
 const sessionSecret = process.env.SESSION_SECRET;
 const appVersion = process.env.APP_VERSION || packageJson.version;
 const fullCommitSha = process.env.GIT_COMMIT || process.env.RENDER_GIT_COMMIT || null;
@@ -254,6 +286,8 @@ app.use(session({
 app.use((req, res, next) => {
   res.locals.isDev = !isProduction;
   res.locals.isProduction = isProduction;
+  res.locals.devLoginEnabled = devLoginEnabled && isTrustedDevLoginRequest(req);
+  res.locals.devLoginCsrfToken = res.locals.devLoginEnabled ? ensureCsrfToken(req) : null;
   next();
 });
 
@@ -490,6 +524,7 @@ const requireValidSettingsPasswordCsrf = createCsrfValidator('/settings/password
 const requireValidSurveyCsrf = createCsrfValidator('/profile');
 const requireValidCoupleMatchCsrf = createCsrfValidator('/couple-match');
 const requireValidNotificationsCsrf = createCsrfValidator('/notifications');
+const requireValidDevLoginCsrf = createCsrfValidator('/login?method=login');
 
 function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面暂时不可用') {
   res.status(status).render(view, locals, (renderErr, html) => {
@@ -778,9 +813,13 @@ app.get('/login', (req, res) => {
   renderViewWithCsrf(req, res, 'login', { title: '登录', loginMethod: method, email, message: msg, messageType: type });
 });
 
-if (!isProduction) {
-  app.get('/dev/login/:prefix', wrapAsync(async (req, res) => {
-    const rawPrefix = typeof req.params.prefix === 'string' ? req.params.prefix.trim() : '';
+if (devLoginEnabled) {
+  app.post('/dev/login', requireValidDevLoginCsrf, wrapAsync(async (req, res) => {
+    if (!isTrustedDevLoginRequest(req)) {
+      return res.status(404).send('Not Found');
+    }
+
+    const rawPrefix = typeof req.body?.emailPrefix === 'string' ? req.body.emailPrefix.trim() : '';
     const normalizedPrefix = rawPrefix.replace(/@shu\.edu\.cn$/i, '').toLowerCase();
 
     if (!normalizedPrefix || !/^[a-z0-9._%+-]+$/i.test(normalizedPrefix)) {
