@@ -89,7 +89,7 @@ function isTrustedDevLoginIp(ip) {
     return false;
   }
 
-  if (ip === '127.0.0.1' || ip === '::1' || ip === 'localhost') {
+  if (/^127\./.test(ip) || ip === '::1' || ip === 'localhost') {
     return true;
   }
 
@@ -109,6 +109,33 @@ function isTrustedDevLoginIp(ip) {
 
 function isTrustedDevLoginRequest(req) {
   return isTrustedDevLoginIp(normalizeClientIpAddress(req.ip || ''));
+}
+
+function requireTrustedDevLoginSource(req, res, next) {
+  if (!isTrustedDevLoginRequest(req)) {
+    return res.status(404).send('Not Found');
+  }
+
+  return next();
+}
+
+function getSafeRefererPath(req, fallback = '/') {
+  const referer = req.get('referer');
+  if (!referer) {
+    return fallback;
+  }
+
+  try {
+    const refererUrl = new URL(referer);
+    const host = req.get('host');
+    if (!host || refererUrl.host !== host) {
+      return fallback;
+    }
+
+    return `${refererUrl.pathname}${refererUrl.search}`;
+  } catch {
+    return fallback;
+  }
 }
 
 function escapeHtml(value) {
@@ -819,16 +846,13 @@ app.get('/login', (req, res) => {
 });
 
 if (devLoginEnabled) {
-  app.post('/dev/login', requireValidDevLoginCsrf, wrapAsync(async (req, res) => {
-    if (!isTrustedDevLoginRequest(req)) {
-      return res.status(404).send('Not Found');
-    }
-
+  app.post('/dev/login', requireTrustedDevLoginSource, requireValidDevLoginCsrf, wrapAsync(async (req, res) => {
     const rawPrefix = typeof req.body?.emailPrefix === 'string' ? req.body.emailPrefix.trim() : '';
     const normalizedPrefix = rawPrefix.replace(/@shu\.edu\.cn$/i, '').toLowerCase();
+    const redirectPath = getSafeRefererPath(req, '/');
 
     if (!normalizedPrefix || !/^[a-z0-9._%+-]+$/i.test(normalizedPrefix)) {
-      return redirectWithMessage(res, '/login', '请输入合法的邮箱前缀');
+      return redirectWithMessage(res, redirectPath, '请输入合法的邮箱前缀');
     }
 
     const email = `${normalizedPrefix}@shu.edu.cn`;
@@ -844,7 +868,7 @@ if (devLoginEnabled) {
     }
 
     if (!user?.id) {
-      return redirectWithMessage(res, '/login', '开发环境快捷登录失败');
+      return redirectWithMessage(res, redirectPath, '开发环境快捷登录失败');
     }
 
     await regenerateSession(req);
