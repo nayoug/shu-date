@@ -89,10 +89,15 @@ function isTrustedDevLoginIp(ip) {
     return false;
   }
 
+  if (ip === '127.0.0.1' || ip === '::1' || ip === 'localhost') {
+    return true;
+  }
+
+  if (process.env.DEV_LOGIN_ALLOW_PRIVATE_NETWORK !== 'true') {
+    return false;
+  }
+
   return (
-    ip === '127.0.0.1' ||
-    ip === '::1' ||
-    ip === 'localhost' ||
     /^10\./.test(ip) ||
     /^192\.168\./.test(ip) ||
     /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip) ||
@@ -524,7 +529,7 @@ const requireValidSettingsPasswordCsrf = createCsrfValidator('/settings/password
 const requireValidSurveyCsrf = createCsrfValidator('/profile');
 const requireValidCoupleMatchCsrf = createCsrfValidator('/couple-match');
 const requireValidNotificationsCsrf = createCsrfValidator('/notifications');
-const requireValidDevLoginCsrf = createCsrfValidator('/login?method=login');
+const requireValidDevLoginCsrf = createCsrfValidator('/');
 
 function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面暂时不可用') {
   res.status(status).render(view, locals, (renderErr, html) => {
