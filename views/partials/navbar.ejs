@@ -74,7 +74,7 @@
             <a href="/profile?edit=1" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">修改问卷</span></a>
             <a href="/profile" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">查看恋爱人格</span></a>
           <% } else { %>
-            <a href="/profile" class="submenu-item" style="text-decoration: none; color: var(--brand);"><span class="submenu-item-left">填写问卷</span></a>
+            <a href="/profile" class="submenu-item" style="text-decoration: none; color: var(--primary, currentColor);"><span class="submenu-item-left">填写问卷</span></a>
           <% } %>
           <a href="/settings" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">设置</span></a>
           <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>

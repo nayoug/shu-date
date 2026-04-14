@@ -9,10 +9,10 @@
     const backdrop = document.getElementById("backdrop");
     const openDrawerBtn = document.getElementById("openDrawer");
     const closeDrawerBtn = document.getElementById("closeDrawer");
-    const desktopMedia = window.matchMedia("(min-width: 900px)");
+    const desktopMedia = window.matchMedia ? window.matchMedia("(min-width: 900px)") : null;
 
     function isDesktop() {
-      return desktopMedia.matches;
+      return desktopMedia && desktopMedia.matches;
     }
 
     function openDrawer() {
@@ -46,9 +46,17 @@
       if (e.key === "Escape") closeDrawer();
     });
 
-    desktopMedia.addEventListener("change", () => {
+    function handleDesktopMediaChange() {
       document.body.style.overflow = "";
-    });
+    }
+
+    if (desktopMedia) {
+      if (typeof desktopMedia.addEventListener === "function") {
+        desktopMedia.addEventListener("change", handleDesktopMediaChange);
+      } else if (typeof desktopMedia.addListener === "function") {
+        desktopMedia.addListener(handleDesktopMediaChange);
+      }
+    }
 
     document.querySelectorAll(".expandable").forEach((btn) => {
       btn.addEventListener("click", () => {
