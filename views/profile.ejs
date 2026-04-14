@@ -84,10 +84,48 @@
     .range-slider {
       width: 100%;
       margin: 10px 0;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      background: var(--profile-slider-track);
+      border-radius: 3px;
+      cursor: pointer;
+      outline: none;
     }
     .range-slider:focus-visible {
       outline: 2px solid var(--primary);
-      outline-offset: 2px;
+      outline-offset: 4px;
+    }
+    .range-slider::-webkit-slider-runnable-track {
+      height: 6px;
+      background: var(--profile-slider-track);
+      border-radius: 3px;
+    }
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      margin-top: -8px;
+      border-radius: 50%;
+      background: var(--profile-slider-thumb);
+      border: 3px solid var(--primary);
+      cursor: pointer;
+      box-shadow: var(--profile-shadow);
+    }
+    .range-slider::-moz-range-track {
+      height: 6px;
+      background: var(--profile-slider-track);
+      border-radius: 3px;
+    }
+    .range-slider::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--profile-slider-thumb);
+      border: 3px solid var(--primary);
+      cursor: pointer;
+      box-shadow: var(--profile-shadow);
     }
     .range-labels {
       display: flex;
