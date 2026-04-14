@@ -1,3 +1,67 @@
+    </main> <!-- end of .page -->
+  </div> <!-- end of .main-wrap -->
+</div> <!-- end of .app -->
+
+<script>
+  (function() {
+    const app = document.getElementById("app");
+    const drawer = document.getElementById("drawer");
+    const backdrop = document.getElementById("backdrop");
+    const openDrawerBtn = document.getElementById("openDrawer");
+    const closeDrawerBtn = document.getElementById("closeDrawer");
+    const desktopMedia = window.matchMedia("(min-width: 900px)");
+
+    function isDesktop() {
+      return desktopMedia.matches;
+    }
+
+    function openDrawer() {
+      if(app) app.classList.add("drawer-open");
+      if(drawer) drawer.setAttribute("aria-hidden", "false");
+
+      if (!isDesktop()) {
+        document.body.style.overflow = "hidden";
+      }
+    }
+
+    function closeDrawer() {
+      if(app) app.classList.remove("drawer-open");
+      if(drawer) drawer.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    function toggleDrawer() {
+      if(app && app.classList.contains("drawer-open")) {
+        closeDrawer();
+      } else {
+        openDrawer();
+      }
+    }
+
+    if(openDrawerBtn) openDrawerBtn.addEventListener("click", toggleDrawer);
+    if(closeDrawerBtn) closeDrawerBtn.addEventListener("click", closeDrawer);
+    if(backdrop) backdrop.addEventListener("click", closeDrawer);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeDrawer();
+    });
+
+    desktopMedia.addEventListener("change", () => {
+      document.body.style.overflow = "";
+    });
+
+    document.querySelectorAll(".expandable").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = document.getElementById(btn.dataset.target);
+        if(!target) return;
+        const isOpen = btn.getAttribute("aria-expanded") === "true";
+        btn.setAttribute("aria-expanded", String(!isOpen));
+        target.classList.toggle("show", !isOpen);
+      });
+    });
+  })();
+</script>
+
 <footer class="footer">
   <p>© 2026 心有所SHU</p>
   <div class="footer-links">

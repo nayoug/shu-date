@@ -1,170 +1,118 @@
-<!-- 导航栏 -->
-<nav class="navbar">
-  <div class="container">
-    <a href="/" class="logo">心有所<span>SHU</span></a>
-    
-    <button class="mobile-menu-toggle" aria-label="打开菜单" aria-expanded="false" style="display: none; background: none; border: none; color: var(--foreground); cursor: pointer; padding: 4px;">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="3" y1="12" x2="21" y2="12"></line>
-        <line x1="3" y1="6" x2="21" y2="6"></line>
-        <line x1="3" y1="18" x2="21" y2="18"></line>
-      </svg>
-    </button>
-    <div class="nav-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; opacity: 0; transition: opacity 0.3s;"></div>
-
-    <div class="nav-links">
-      <button class="mobile-menu-close" aria-label="关闭菜单" style="display: none; background: none; border: none; color: var(--foreground); cursor: pointer; padding: 16px; align-self: flex-end;">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-
-      <a href="/">主页</a>
-      <!-- 匹配下拉菜单 -->
-      <div class="dropdown">
-        <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" style="background: none; border: none; cursor: pointer; padding: 6px 12px; font-size: 0.9rem; color: var(--foreground); display: flex; align-items: center; justify-content: space-between; gap: 4px; width: 100%;">
-          匹配
-          <span style="font-size: 10px;">▼</span>
-        </button>
-        <div class="dropdown-menu">
-          <a href="/matches">每周推荐</a>
-          <a href="/couple-match">情侣匹配</a>
-        </div>
+<!-- 导航栏和侧边栏 -->
+<div class="app" id="app">
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-header">
+      <div class="drawer-brand">
+        <span class="brand-red">心有所</span>SHU
       </div>
-      <% const notificationCount = typeof user !== 'undefined' && user ? (user.unreadNotifications || 0) : (typeof unreadNotifications !== 'undefined' ? unreadNotifications : 0); %>
-      <a href="/notifications" class="notification-link" style="position: relative;">
-        通知
-        <% if (notificationCount > 0) { %>
-          <span class="notification-badge" style="position: absolute; top: -2px; right: -8px; background: var(--error); color: white; font-size: 10px; padding: 2px 5px; border-radius: 10px; min-width: 16px; text-align: center;"><%= notificationCount > 99 ? '99+' : notificationCount %></span>
-        <% } %>
-      </a>
-      <% if (typeof user !== 'undefined' && user) { %>
-        <!-- 昵称下拉菜单 -->
-        <div class="dropdown">
-          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" style="background: none; border: none; cursor: pointer; padding: 6px 12px; font-size: 0.9rem; color: var(--foreground); display: flex; align-items: center; justify-content: space-between; gap: 4px; width: 100%;">
-            <%= typeof nickname !== 'undefined' && nickname ? nickname : (user.name || user.email.split('@')[0]) %>
-            <span style="font-size: 10px;">▼</span>
-          </button>
-          <div class="dropdown-menu">
-            <div style="padding: 10px 16px; border-bottom: 1px solid var(--border);">
-              <div style="font-size: 0.85rem; color: var(--muted-foreground);">个人信息</div>
-              <div style="font-size: 0.9rem; margin-top: 4px;"><%= typeof nickname !== 'undefined' && nickname ? nickname : '未设置' %></div>
-              <div style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 2px;"><%= user.email %></div>
-            </div>
-            <% if (typeof hasProfile !== 'undefined' && hasProfile) { %>
-              <a href="/profile?edit=1">✏️ 修改问卷</a>
-              <a href="/profile">💕 查看恋爱人格</a>
-            <% } else { %>
-              <a href="/profile" style="color: var(--error);">📝 填写问卷</a>
-              <div style="padding: 8px 16px; font-size: 0.8rem; color: var(--muted-foreground);">
-                提示：请先完成问卷
-              </div>
-            <% } %>
-            <a href="/settings">⚙️ 设置</a>
-            <a href="/logout">🚪 退出登录</a>
-          </div>
-        </div>
-      <% } else { %>
-        <a href="/login" class="btn" style="padding: 6px 14px; font-size: 0.85rem;">登录</a>
-      <% } %>
-      <div class="theme-switch" role="group" aria-label="主题切换">
-        <button type="button" class="theme-switch__button" data-theme-option="light" aria-pressed="false">浅色</button>
-        <button type="button" class="theme-switch__button" data-theme-option="system" aria-pressed="false">系统</button>
-        <button type="button" class="theme-switch__button" data-theme-option="dark" aria-pressed="false">深色</button>
+      <button class="icon-btn" id="closeDrawer" aria-label="关闭菜单">✕</button>
+    </div>
+
+    <% if (typeof user !== 'undefined' && user) { %>
+    <div class="profile">
+      <div class="avatar"></div>
+      <div>
+        <div class="profile-name"><%= typeof nickname !== 'undefined' && nickname ? nickname : (user.name || user.email.split('@')[0]) %></div>
+        <div class="profile-sub"><%= user.email %></div>
       </div>
     </div>
-  </div>
-</nav>
+    <% } %>
 
-<script>
-(function() {
-  if (window.__dropdownInitialized) return;
-  window.__dropdownInitialized = true;
+    <div class="menu-scroll">
+      <div class="section-title">主导航</div>
+      <div class="menu-group">
+        <a href="/" class="menu-item" style="text-decoration: none;">
+          <span class="menu-item-left">
+            <span class="menu-icon">⌂</span>
+            <span>主页</span>
+          </span>
+        </a>
 
-  function isTouchDropdownMode() {
-    return window.matchMedia('(hover: none), (pointer: coarse)').matches || window.innerWidth <= 768;
-  }
+        <button class="menu-item expandable" aria-expanded="false" data-target="matchMenu">
+          <span class="menu-item-left">
+            <span class="menu-icon">♡</span>
+            <span>匹配</span>
+          </span>
+          <span class="menu-right">
+            <span class="chevron">›</span>
+          </span>
+        </button>
+        <div class="submenu" id="matchMenu">
+          <a href="/matches" class="submenu-item" style="text-decoration: none;">
+            <span class="submenu-item-left">每周推荐</span>
+          </a>
+          <a href="/couple-match" class="submenu-item" style="text-decoration: none;">
+            <span class="submenu-item-left">情侣匹配</span>
+          </a>
+        </div>
 
-  function closeOpenMenus() {
-    document.querySelectorAll('.dropdown-menu.show').forEach(function(menu) {
-      menu.classList.remove('show');
-      var dropdown = menu.closest('.dropdown');
-      var toggle = dropdown ? dropdown.querySelector('.dropdown-toggle') : null;
-      if (toggle) {
-        toggle.setAttribute('aria-expanded', 'false');
-      }
-    });
-  }
+        <% const notificationCount = typeof user !== 'undefined' && user ? (user.unreadNotifications || 0) : (typeof unreadNotifications !== 'undefined' ? unreadNotifications : 0); %>
+        <a href="/notifications" class="menu-item" style="text-decoration: none;">
+          <span class="menu-item-left">
+            <span class="menu-icon">🔔</span>
+            <span>通知</span>
+          </span>
+          <% if (notificationCount > 0) { %>
+          <span class="menu-right">
+            <span class="badge"><%= notificationCount > 99 ? '99+' : notificationCount %></span>
+          </span>
+          <% } %>
+        </a>
 
-  document.addEventListener('click', function(e) {
-    var toggle = e.target.closest('.dropdown-toggle');
-    if (toggle) {
-      if (!isTouchDropdownMode()) return;
-      e.preventDefault();
-      e.stopPropagation();
-      var dropdown = toggle.closest('.dropdown');
-      var menu = dropdown ? dropdown.querySelector('.dropdown-menu') : null;
-      if (menu) {
-        var willOpen = !menu.classList.contains('show');
-        closeOpenMenus();
-        if (willOpen) {
-          menu.classList.add('show');
-          toggle.setAttribute('aria-expanded', 'true');
-        }
-      }
-    } else if (!e.target.closest('.dropdown-menu')) {
-      closeOpenMenus();
-    }
-  });
+        <% if (typeof user !== 'undefined' && user) { %>
+        <button class="menu-item expandable" aria-expanded="false" data-target="userMenu">
+          <span class="menu-item-left">
+            <span class="menu-icon">👤</span>
+            <span>个人中心</span>
+          </span>
+          <span class="menu-right">
+            <span class="chevron">›</span>
+          </span>
+        </button>
+        <div class="submenu" id="userMenu">
+          <% if (typeof hasProfile !== 'undefined' && hasProfile) { %>
+            <a href="/profile?edit=1" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">修改问卷</span></a>
+            <a href="/profile" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">查看恋爱人格</span></a>
+          <% } else { %>
+            <a href="/profile" class="submenu-item" style="text-decoration: none; color: var(--brand);"><span class="submenu-item-left">填写问卷</span></a>
+          <% } %>
+          <a href="/settings" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">设置</span></a>
+          <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+            <a href="/admin" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">管理后台</span></a>
+          <% } %>
+          <a href="/logout" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">退出登录</span></a>
+        </div>
+        <% } else { %>
+        <a href="/login" class="menu-item" style="text-decoration: none;">
+          <span class="menu-item-left">
+            <span class="menu-icon">👤</span>
+            <span>登录</span>
+          </span>
+        </a>
+        <% } %>
+      </div>
 
-  // 移动端菜单抽屉逻辑
-  var mobileToggle = document.querySelector('.mobile-menu-toggle');
-  var mobileClose = document.querySelector('.mobile-menu-close');
-  var navLinks = document.querySelector('.nav-links');
-  var navOverlay = document.querySelector('.nav-overlay');
-  var overlayOpenTimeout, overlayCloseTimeout;
+      <div class="section-title">偏好设置</div>
+      <div class="theme-card">
+        <div class="theme-title">外观模式</div>
+        <div class="segmented" id="themeSwitch" role="group" aria-label="主题切换">
+          <button class="theme-switch__button" data-theme-option="light">浅色</button>
+          <button class="theme-switch__button" data-theme-option="system">系统</button>
+          <button class="theme-switch__button" data-theme-option="dark">深色</button>
+        </div>
+        <div class="footer-note">桌面端打开菜单时，主内容会被整体推开。</div>
+      </div>
+    </div>
+  </aside>
 
-  function openMenu() {
-    clearTimeout(overlayCloseTimeout);
-    navLinks.classList.add('open');
-    navOverlay.style.display = 'block';
-    overlayOpenTimeout = setTimeout(() => navOverlay.style.opacity = '1', 10);
-    mobileToggle.setAttribute('aria-expanded', 'true');
-    document.body.style.overflow = 'hidden';
-  }
+  <div class="backdrop" id="backdrop"></div>
 
-  function closeMenu() {
-    clearTimeout(overlayOpenTimeout);
-    navLinks.classList.remove('open');
-    navOverlay.style.opacity = '0';
-    overlayCloseTimeout = setTimeout(() => navOverlay.style.display = 'none', 300);
-    mobileToggle.setAttribute('aria-expanded', 'false');
-    document.body.style.overflow = '';
-  }
+  <div class="main-wrap" id="mainWrap">
+    <header class="topbar">
+      <button class="icon-btn" id="openDrawer" aria-label="打开菜单">☰</button>
+      <a href="/" class="brand" style="text-decoration: none; color: var(--foreground);">
+        <span class="brand-red">心有所</span>SHU
+      </a>
+    </header>
 
-  if (mobileToggle) {
-    mobileToggle.addEventListener('click', openMenu);
-  }
-  if (mobileClose) {
-    mobileClose.addEventListener('click', closeMenu);
-  }
-  if (navOverlay) {
-    navOverlay.addEventListener('click', closeMenu);
-  }
-
-  // 响应 Esc 键关闭抽屉菜单 (a11y)
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && navLinks && navLinks.classList.contains('open')) {
-      closeMenu();
-    }
-  });
-
-  // 窗口切回大屏时强制关闭菜单，防止遗留 overflow: hidden
-  window.addEventListener('resize', function() {
-    if (window.innerWidth > 768 && navLinks && navLinks.classList.contains('open')) {
-      closeMenu();
-    }
-  });
-})();
-</script>
+    <main class="page">
