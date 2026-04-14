@@ -79,7 +79,8 @@
         var button = target.closest('[data-theme-option]');
         if (!button) return false;
         var theme = button.getAttribute('data-theme-option');
-        currentThemeSelection = theme;
+        if (theme === getCurrentThemeSelection()) return true;
+
         try {
           if (theme === 'system') {
             localStorage.removeItem('shu-theme');
@@ -87,8 +88,18 @@
             localStorage.setItem('shu-theme', theme);
           }
         } catch (err) {}
-        applyTheme(theme);
-        markThemeButtons();
+        
+        var mask = document.createElement('div');
+        mask.className = 'theme-transition-mask';
+        document.body.appendChild(mask);
+        
+        void mask.offsetWidth; // 触发回流确保过渡动画生效
+        mask.classList.add('show');
+        
+        setTimeout(function() {
+          location.reload();
+        }, 180);
+        
         return true;
       }
 
