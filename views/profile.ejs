@@ -96,6 +96,13 @@
       outline: 2px solid var(--primary);
       outline-offset: 4px;
     }
+    .range-slider:focus {
+      outline: 2px solid var(--primary);
+      outline-offset: 4px;
+    }
+    .range-slider:focus:not(:focus-visible) {
+      outline: none;
+    }
     .range-slider::-webkit-slider-runnable-track {
       height: 6px;
       background: var(--profile-slider-track);
@@ -126,6 +133,11 @@
       border: 3px solid var(--primary);
       cursor: pointer;
       box-shadow: var(--profile-shadow);
+    }
+    .range-slider::-moz-range-progress {
+      height: 6px;
+      background: var(--profile-slider-track);
+      border-radius: 3px;
     }
     .range-labels {
       display: flex;
