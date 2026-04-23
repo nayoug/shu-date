@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-23T03:36:44.386Z",
+  "generatedAt": "2026-04-23T04:39:34.775Z",
   "resources": {
     "css/account-pages.css": {
       "hash": "1b1d17ce",
@@ -39,8 +39,8 @@
       "version": "0.2.0-63b62764"
     },
     "js/login-tabs.js": {
-      "hash": "6805f480",
-      "version": "0.2.0-6805f480"
+      "hash": "0ce13845",
+      "version": "0.2.0-0ce13845"
     },
     "js/theme.js": {
       "hash": "c1b29b66",

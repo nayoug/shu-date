@@ -35,22 +35,28 @@
       <div class="login-tabs" role="tablist" aria-label="登录方式">
         <button
           type="button"
+          id="login-tab-register"
           class="login-tab <%= (loginMethod === 'register') ? 'active' : '' %>"
           data-login-method-target="register"
           role="tab"
+          aria-controls="login-panel-register"
           aria-selected="<%= (loginMethod === 'register') ? 'true' : 'false' %>"
+          tabindex="<%= (loginMethod === 'register') ? '0' : '-1' %>"
         >注册</button>
         <button
           type="button"
+          id="login-tab-login"
           class="login-tab <%= (loginMethod === 'login') ? 'active' : '' %>"
           data-login-method-target="login"
           role="tab"
+          aria-controls="login-panel-login"
           aria-selected="<%= (loginMethod === 'login') ? 'true' : 'false' %>"
+          tabindex="<%= (loginMethod === 'login') ? '0' : '-1' %>"
         >登录</button>
       </div>
 
       <!-- 注册表单 -->
-      <form action="/register" method="POST" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>" data-login-method-panel="register">
+      <form action="/register" method="POST" id="login-panel-register" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>" data-login-method-panel="register" role="tabpanel" aria-labelledby="login-tab-register" aria-hidden="<%= (loginMethod === 'register') ? 'false' : 'true' %>" <%= (loginMethod === 'register') ? '' : 'hidden' %>>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
           <input class="form-control-center" type="text" name="nickname" placeholder="昵称" value="<%= typeof nickname !== 'undefined' ? nickname : '' %>" autocomplete="nickname" aria-label="昵称" required>
@@ -68,7 +74,7 @@
       </form>
 
       <!-- 登录表单 -->
-      <form action="/login" method="POST" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>" data-login-method-panel="login">
+      <form action="/login" method="POST" id="login-panel-login" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>" data-login-method-panel="login" role="tabpanel" aria-labelledby="login-tab-login" aria-hidden="<%= (loginMethod === 'login') ? 'false' : 'true' %>" <%= (loginMethod === 'login') ? '' : 'hidden' %>>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
           <input class="form-control-center" type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="登录邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required>
