@@ -1,57 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录 - 心有所SHU</title>
-  <link rel="stylesheet" href="/css/style.css?v=0.2.0">
-  <%- include('partials/head-icons') %>
-  <style>
-    .login-tabs {
-      display: flex;
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-    }
-    .login-tab {
-      flex: 1;
-      padding: 12px;
-      text-align: center;
-      cursor: pointer;
-      color: var(--muted-foreground);
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s;
-    }
-    .login-tab.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-      font-weight: 500;
-    }
-    .login-form {
-      display: none;
-    }
-    .login-form.active {
-      display: block;
-    }
-    .forgot-password {
-      display: block;
-      text-align: center;
-      margin-top: 12px;
-      color: var(--muted-foreground);
-      font-size: 0.85rem;
-      text-decoration: none;
-    }
-    .forgot-password:hover {
-      color: var(--primary);
-    }
-  </style>
+  <%- include('partials/document-head', {
+    pageTitle: '登录',
+    accountPage: true,
+    loginTabsScript: true
+  }) %>
 </head>
 <body>
   <%- include('partials/navbar') %>
 
-  <div class="container" style="max-width: 400px; padding-top: 80px;">
+  <div class="container auth-container">
     <div class="card">
-      <h2 style="text-align: center; margin-bottom: 6px;">嘿，同学</h2>
-      <p style="text-align: center; color: var(--muted-foreground); font-size: 0.9rem; margin-bottom: 28px;">
+      <h2 class="auth-title">嘿，同学</h2>
+      <p class="auth-lede">
         用学校邮箱登录就好
       </p>
 
@@ -62,85 +24,68 @@
         <div class="alert alert-<%= messageType || 'info' %>">
           <%= message %>
           <% if (typeof messageHtml !== 'undefined' && messageHtml) { %>
-            <div style="margin-top: 10px;">
+            <div class="message-extra">
               <%- messageHtml %>
             </div>
           <% } %>
         </div>
       <% } %>
 
-      <% if (typeof debugLoginUrl !== 'undefined' && debugLoginUrl) { %>
-        <div style="margin-top: 16px; text-align: center;">
-          <a href="<%= debugLoginUrl %>" class="btn" style="background: var(--primary); color: white;">
-            🔧 开发模式：点击直接登录
-          </a>
-        </div>
-      <% } %>
-
       <!-- 登录方式切换 -->
-      <div class="login-tabs">
-        <div class="login-tab <%= (loginMethod === 'register') ? 'active' : '' %>" onclick="switchLoginMethod('register')">注册</div>
-        <div class="login-tab <%= (loginMethod === 'login') ? 'active' : '' %>" onclick="switchLoginMethod('login')">登录</div>
+      <div class="login-tabs" role="tablist" aria-label="登录方式">
+        <button
+          type="button"
+          class="login-tab <%= (loginMethod === 'register') ? 'active' : '' %>"
+          data-login-method-target="register"
+          role="tab"
+          aria-selected="<%= (loginMethod === 'register') ? 'true' : 'false' %>"
+        >注册</button>
+        <button
+          type="button"
+          class="login-tab <%= (loginMethod === 'login') ? 'active' : '' %>"
+          data-login-method-target="login"
+          role="tab"
+          aria-selected="<%= (loginMethod === 'login') ? 'true' : 'false' %>"
+        >登录</button>
       </div>
 
       <!-- 注册表单 -->
-      <form action="/register" method="POST" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>">
+      <form action="/register" method="POST" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>" data-login-method-panel="register">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
-          <input type="text" name="nickname" placeholder="昵称" value="<%= typeof nickname !== 'undefined' ? nickname : '' %>" autocomplete="nickname" aria-label="昵称" required style="text-align: center; font-size: 16px;">
+          <input class="form-control-center" type="text" name="nickname" placeholder="昵称" value="<%= typeof nickname !== 'undefined' ? nickname : '' %>" autocomplete="nickname" aria-label="昵称" required>
         </div>
         <div class="form-group">
-          <input type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="email" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required style="text-align: center; font-size: 16px;">
+          <input class="form-control-center" type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="email" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required>
         </div>
         <div class="form-group">
-          <input type="password" name="password" placeholder="设置密码（至少6位）" autocomplete="new-password" aria-label="设置密码" required minlength="6" style="text-align: center; font-size: 16px;">
+          <input class="form-control-center" type="password" name="password" placeholder="设置密码（至少6位）" autocomplete="new-password" aria-label="设置密码" required minlength="6">
         </div>
         <div class="form-group">
-          <input type="password" name="confirmPassword" placeholder="再次输入密码确认" autocomplete="new-password" aria-label="确认密码" required minlength="6" style="text-align: center; font-size: 16px;">
+          <input class="form-control-center" type="password" name="confirmPassword" placeholder="再次输入密码确认" autocomplete="new-password" aria-label="确认密码" required minlength="6">
         </div>
-        <button type="submit" class="btn" style="width: 100%;">注册</button>
+        <button type="submit" class="btn btn-full">注册</button>
       </form>
 
       <!-- 登录表单 -->
-      <form action="/login" method="POST" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>">
+      <form action="/login" method="POST" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>" data-login-method-panel="login">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
-          <input type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="登录邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required style="text-align: center; font-size: 16px;">
+          <input class="form-control-center" type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="登录邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required>
         </div>
         <div class="form-group">
-          <input type="password" name="password" placeholder="登录密码" autocomplete="current-password" aria-label="登录密码" required style="text-align: center; font-size: 16px;">
+          <input class="form-control-center" type="password" name="password" placeholder="登录密码" autocomplete="current-password" aria-label="登录密码" required>
         </div>
-        <button type="submit" class="btn" style="width: 100%;">登录</button>
+        <button type="submit" class="btn btn-full">登录</button>
         <a href="/forgot" class="forgot-password">忘记密码？</a>
       </form>
 
-      <p style="text-align: center; color: var(--muted-foreground); font-size: 0.8rem; margin-top: 24px;">
+      <p class="auth-note">
         仅支持 @shu.edu.cn 邮箱
       </p>
     </div>
   </div>
 
   <%- include('partials/site-footer') %>
-
-  <script>
-    function switchLoginMethod(method) {
-      // 更新 tab 状态
-      document.querySelectorAll('.login-tab').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      event.target.classList.add('active');
-
-      // 更新表单显示
-      document.querySelectorAll('.login-form').forEach(form => {
-        form.classList.remove('active');
-      });
-
-      if (method === 'register') {
-        document.querySelector('form[action="/register"]').classList.add('active');
-      } else {
-        document.querySelector('form[action="/login"]').classList.add('active');
-      }
-    }
-  </script>
 </body>
 </html>

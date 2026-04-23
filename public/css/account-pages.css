@@ -1,0 +1,147 @@
+.auth-container {
+  max-width: 400px;
+  padding-top: 80px;
+}
+
+.account-container {
+  max-width: 600px;
+  padding-top: 40px;
+}
+
+.account-card {
+  background: var(--surface-soft);
+  padding: 20px;
+}
+
+.auth-title {
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.account-title {
+  margin-bottom: 20px;
+}
+
+.account-title--settings {
+  margin-bottom: 24px;
+}
+
+.auth-lede {
+  margin-bottom: 28px;
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.auth-note {
+  margin-top: 24px;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.auth-link-row,
+.account-link-row {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.account-link-row {
+  margin-top: 16px;
+}
+
+.account-link {
+  color: var(--primary);
+  font-size: 0.85rem;
+}
+
+.message-extra {
+  margin-top: 10px;
+}
+
+.login-tabs {
+  display: flex;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.login-tab {
+  flex: 1;
+  padding: 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.login-tab.active {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.login-form {
+  display: none;
+}
+
+.login-form.active {
+  display: block;
+}
+
+.forgot-password {
+  display: block;
+  margin-top: 12px;
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+.forgot-password:hover {
+  color: var(--primary);
+}
+
+.form-control-center {
+  text-align: center;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-action {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.warning-callout {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid var(--warning-border);
+  border-radius: 8px;
+  background: var(--warning-bg);
+}
+
+.warning-callout p {
+  margin: 0;
+  color: var(--warning-foreground);
+  font-size: 0.9rem;
+}
+
+.form-group--compact {
+  margin-bottom: 16px;
+}
+
+.form-group--final {
+  margin-bottom: 20px;
+}
