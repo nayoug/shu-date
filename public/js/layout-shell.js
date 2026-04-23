@@ -68,8 +68,11 @@
 
       if (!target) return;
 
+      const isExpanded = button.getAttribute("aria-expanded") === "true";
+
       button.setAttribute("aria-controls", targetId);
-      target.hidden = button.getAttribute("aria-expanded") !== "true";
+      target.hidden = !isExpanded;
+      target.classList.toggle("show", isExpanded);
 
       button.addEventListener("click", () => {
         const shouldOpen = button.getAttribute("aria-expanded") !== "true";
