@@ -24,8 +24,7 @@
 
 .dev-tools-trigger:focus-visible,
 .dev-tools-close:focus-visible,
-.dev-tools-action:focus-visible,
-.dev-input:focus-visible {
+.dev-tools-action:focus-visible {
   outline: 3px solid var(--primary-light);
   outline-offset: 2px;
 }
@@ -271,6 +270,7 @@
   .app.drawer-open ~ .dev-tools-panel {
     opacity: 0;
     pointer-events: none;
+    visibility: hidden;
   }
 }
 
