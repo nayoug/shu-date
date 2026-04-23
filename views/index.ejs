@@ -1,14 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>心有所SHU - 上大交友匹配</title>
-  <link rel="stylesheet" href="/css/style.css?v=0.2.0">
-  <%- include('partials/head-icons') %>
-  <% if (typeof isDev !== 'undefined' && isDev) { %>
-  <link rel="stylesheet" href="/css/dev-tools.css?v=0.2.0">
-  <% } %>
+  <%- include('partials/document-head', { fullTitle: '心有所SHU - 上大交友匹配', devToolsStyles: true }) %>
 </head>
 <body>
   <%- include('partials/navbar') %>
