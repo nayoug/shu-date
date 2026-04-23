@@ -1,12 +1,31 @@
-<button class="dev-tool-btn" onclick="toggleDevModal()" title="开发者工具">🔧</button>
-<div class="dev-modal" id="devModal">
-  <div class="dev-modal-header">
-    <span>🛠️ 开发者工具<span class="dev-badge">DEV</span></span>
-    <button class="close-btn" onclick="toggleDevModal()">×</button>
-  </div>
-  <div class="dev-modal-body">
-    <div class="dev-section">
-      <div class="dev-section-title">快速登录</div>
+<button
+  class="dev-tools-trigger"
+  id="devToolsTrigger"
+  type="button"
+  aria-label="打开开发者工具"
+  aria-controls="devToolsPanel"
+  aria-expanded="false"
+>
+  <span class="dev-tools-trigger__mark" aria-hidden="true">⚙</span>
+</button>
+
+<section
+  class="dev-tools-panel"
+  id="devToolsPanel"
+  aria-labelledby="devToolsTitle"
+  aria-hidden="true"
+>
+  <header class="dev-tools-panel__header">
+    <div>
+      <p class="dev-tools-eyebrow">DEV</p>
+      <h2 id="devToolsTitle">开发者工具</h2>
+    </div>
+    <button class="icon-btn dev-tools-close" type="button" aria-label="关闭开发者工具">✕</button>
+  </header>
+
+  <div class="dev-tools-panel__body">
+    <section class="dev-tools-section" aria-labelledby="devQuickLoginTitle">
+      <div class="section-title dev-tools-section__title" id="devQuickLoginTitle">快速登录</div>
       <% if (devLoginEnabled) { %>
       <form method="post" action="/dev/login" class="dev-login-form">
         <label for="devEmailInput" class="dev-input-label">学校邮箱前缀</label>
@@ -25,34 +44,91 @@
           autocapitalize="none"
           spellcheck="false"
         >
-        <button type="submit" class="dev-btn primary">🚀 一键登录</button>
+        <button type="submit" class="dev-tools-action dev-tools-action--primary">一键登录</button>
       </form>
       <% } else { %>
-      <div class="dev-info">快捷登录已关闭。需要设置 <code>ENABLE_DEV_LOGIN=true</code>；如需通过内网访问，还需额外设置 <code>DEV_LOGIN_ALLOW_PRIVATE_NETWORK=true</code>。</div>
+      <div class="dev-tools-note">
+        快捷登录已关闭。需要设置 <code>ENABLE_DEV_LOGIN=true</code>；如需通过内网访问，还需额外设置 <code>DEV_LOGIN_ALLOW_PRIVATE_NETWORK=true</code>。
+      </div>
       <% } %>
-    </div>
-    <div class="dev-section">
-      <div class="dev-section-title">环境信息</div>
-      <div class="dev-info"><strong>环境:</strong> <%= isProduction ? 'production' : 'development' %></div>
-    </div>
-    <div class="dev-section">
-      <div class="dev-section-title">快捷操作</div>
-      <a href="/admin" class="dev-btn">📊 管理后台</a>
-      <a href="/logout" class="dev-btn">🔓 退出登录</a>
-    </div>
-  </div>
-</div>
-<script>
-  function toggleDevModal() {
-    const modal = document.getElementById('devModal');
-    modal.classList.toggle('show');
-  }
+    </section>
 
-  document.addEventListener('click', function(e) {
-    const modal = document.getElementById('devModal');
-    const btn = document.querySelector('.dev-tool-btn');
-    if (modal && btn && !modal.contains(e.target) && !btn.contains(e.target)) {
-      modal.classList.remove('show');
+    <section class="dev-tools-section" aria-labelledby="devEnvironmentTitle">
+      <div class="section-title dev-tools-section__title" id="devEnvironmentTitle">环境信息</div>
+      <div class="dev-tools-status">
+        <span>当前环境</span>
+        <strong><%= isProduction ? 'production' : 'development' %></strong>
+      </div>
+    </section>
+
+    <section class="dev-tools-section" aria-labelledby="devActionsTitle">
+      <div class="section-title dev-tools-section__title" id="devActionsTitle">快捷操作</div>
+      <div class="dev-tools-actions">
+        <a href="/admin" class="dev-tools-action">管理后台</a>
+        <a href="/logout" class="dev-tools-action">退出登录</a>
+      </div>
+    </section>
+  </div>
+</section>
+
+<script>
+  (function() {
+    const trigger = document.getElementById('devToolsTrigger');
+    const panel = document.getElementById('devToolsPanel');
+    const closeButton = panel ? panel.querySelector('.dev-tools-close') : null;
+    const app = document.getElementById('app');
+
+    if (!trigger || !panel) return;
+
+    function setOpen(isOpen) {
+      panel.classList.toggle('show', isOpen);
+      panel.setAttribute('aria-hidden', String(!isOpen));
+      trigger.setAttribute('aria-expanded', String(isOpen));
+      trigger.setAttribute('aria-label', isOpen ? '关闭开发者工具' : '打开开发者工具');
+
+      if (isOpen) {
+        const input = panel.querySelector('.dev-input');
+        if (input && window.matchMedia && window.matchMedia('(min-width: 640px)').matches) {
+          input.focus();
+        }
+      }
     }
-  });
+
+    function isOpen() {
+      return panel.classList.contains('show');
+    }
+
+    trigger.addEventListener('click', function() {
+      setOpen(!isOpen());
+    });
+
+    if (closeButton) {
+      closeButton.addEventListener('click', function() {
+        setOpen(false);
+        trigger.focus();
+      });
+    }
+
+    document.addEventListener('click', function(e) {
+      if (!isOpen()) return;
+      if (panel.contains(e.target) || trigger.contains(e.target)) return;
+      setOpen(false);
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && isOpen()) {
+        setOpen(false);
+        trigger.focus();
+      }
+    });
+
+    if (app && window.MutationObserver) {
+      const observer = new MutationObserver(function() {
+        if (app.classList.contains('drawer-open')) {
+          setOpen(false);
+        }
+      });
+      observer.observe(app, { attributes: true, attributeFilter: ['class'] });
+    }
+  })();
 </script>
