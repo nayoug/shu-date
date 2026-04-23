@@ -5,7 +5,7 @@
       <div class="drawer-brand">
         <span class="brand-red">心有所</span>SHU
       </div>
-      <button class="icon-btn" id="closeDrawer" aria-label="关闭菜单">✕</button>
+      <button class="icon-btn" id="closeDrawer" type="button" aria-label="关闭菜单">✕</button>
     </div>
 
     <% if (typeof user !== 'undefined' && user) { %>
@@ -21,14 +21,14 @@
     <div class="menu-scroll">
       <div class="section-title">主导航</div>
       <div class="menu-group">
-        <a href="/" class="menu-item" style="text-decoration: none;">
+        <a href="/" class="menu-item">
           <span class="menu-item-left">
             <span class="menu-icon">⌂</span>
             <span>主页</span>
           </span>
         </a>
 
-        <button class="menu-item expandable" aria-expanded="false" data-target="matchMenu">
+        <button class="menu-item expandable" type="button" aria-expanded="false" aria-controls="matchMenu" data-target="matchMenu">
           <span class="menu-item-left">
             <span class="menu-icon">♡</span>
             <span>匹配</span>
@@ -37,17 +37,17 @@
             <span class="chevron">›</span>
           </span>
         </button>
-        <div class="submenu" id="matchMenu">
-          <a href="/matches" class="submenu-item" style="text-decoration: none;">
+        <div class="submenu" id="matchMenu" hidden>
+          <a href="/matches" class="submenu-item">
             <span class="submenu-item-left">每周推荐</span>
           </a>
-          <a href="/couple-match" class="submenu-item" style="text-decoration: none;">
+          <a href="/couple-match" class="submenu-item">
             <span class="submenu-item-left">情侣匹配</span>
           </a>
         </div>
 
         <% const notificationCount = typeof user !== 'undefined' && user ? (user.unreadNotifications || 0) : (typeof unreadNotifications !== 'undefined' ? unreadNotifications : 0); %>
-        <a href="/notifications" class="menu-item" style="text-decoration: none;">
+        <a href="/notifications" class="menu-item">
           <span class="menu-item-left">
             <span class="menu-icon">🔔</span>
             <span>通知</span>
@@ -60,7 +60,7 @@
         </a>
 
         <% if (typeof user !== 'undefined' && user) { %>
-        <button class="menu-item expandable" aria-expanded="false" data-target="userMenu">
+        <button class="menu-item expandable" type="button" aria-expanded="false" aria-controls="userMenu" data-target="userMenu">
           <span class="menu-item-left">
             <span class="menu-icon">👤</span>
             <span>个人中心</span>
@@ -69,21 +69,21 @@
             <span class="chevron">›</span>
           </span>
         </button>
-        <div class="submenu" id="userMenu">
+        <div class="submenu" id="userMenu" hidden>
           <% if (typeof hasProfile !== 'undefined' && hasProfile) { %>
-            <a href="/profile?edit=1" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">修改问卷</span></a>
-            <a href="/profile" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">查看恋爱人格</span></a>
+            <a href="/profile?edit=1" class="submenu-item"><span class="submenu-item-left">修改问卷</span></a>
+            <a href="/profile" class="submenu-item"><span class="submenu-item-left">查看恋爱人格</span></a>
           <% } else { %>
-            <a href="/profile" class="submenu-item" style="text-decoration: none; color: var(--primary, currentColor);"><span class="submenu-item-left">填写问卷</span></a>
+            <a href="/profile" class="submenu-item submenu-item--primary"><span class="submenu-item-left">填写问卷</span></a>
           <% } %>
-          <a href="/settings" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">设置</span></a>
+          <a href="/settings" class="submenu-item"><span class="submenu-item-left">设置</span></a>
           <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-            <a href="/admin" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">管理后台</span></a>
+            <a href="/admin" class="submenu-item"><span class="submenu-item-left">管理后台</span></a>
           <% } %>
-          <a href="/logout" class="submenu-item" style="text-decoration: none;"><span class="submenu-item-left">退出登录</span></a>
+          <a href="/logout" class="submenu-item"><span class="submenu-item-left">退出登录</span></a>
         </div>
         <% } else { %>
-        <a href="/login" class="menu-item" style="text-decoration: none;">
+        <a href="/login" class="menu-item">
           <span class="menu-item-left">
             <span class="menu-icon">👤</span>
             <span>登录</span>
@@ -109,8 +109,8 @@
 
   <div class="main-wrap" id="mainWrap">
     <header class="topbar">
-      <button class="icon-btn" id="openDrawer" aria-label="打开菜单">☰</button>
-      <a href="/" class="brand" style="text-decoration: none; color: var(--foreground);">
+      <button class="icon-btn" id="openDrawer" type="button" aria-label="打开菜单" aria-controls="drawer" aria-expanded="false">☰</button>
+      <a href="/" class="brand">
         <span class="brand-red">心有所</span>SHU
       </a>
     </header>

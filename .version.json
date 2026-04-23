@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-23T04:39:34.775Z",
+  "generatedAt": "2026-04-23T12:36:34.039Z",
   "resources": {
     "css/account-pages.css": {
       "hash": "1b1d17ce",
@@ -11,8 +11,8 @@
       "version": "0.2.0-1fdea12d"
     },
     "css/style.css": {
-      "hash": "4dc496e9",
-      "version": "0.2.0-4dc496e9"
+      "hash": "6d46d0bd",
+      "version": "0.2.0-6d46d0bd"
     },
     "favicon.ico": {
       "hash": "5ecd6c3b",
@@ -37,6 +37,10 @@
     "images/campus.jpg": {
       "hash": "63b62764",
       "version": "0.2.0-63b62764"
+    },
+    "js/layout-shell.js": {
+      "hash": "2b474f11",
+      "version": "0.2.0-2b474f11"
     },
     "js/login-tabs.js": {
       "hash": "0ce13845",

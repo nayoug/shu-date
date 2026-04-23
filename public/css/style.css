@@ -1250,6 +1250,8 @@ body {
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.02em;
+  color: var(--foreground);
+  text-decoration: none;
 }
 
 .brand-red {
@@ -1343,6 +1345,7 @@ body {
   padding: 14px 16px;
   font-size: 15px;
   cursor: pointer;
+  text-decoration: none;
   transition: background 0.2s;
   font-family: inherit;
 }
@@ -1420,6 +1423,10 @@ body {
   padding-left: 48px;
   font-size: 14px;
   color: var(--muted-foreground);
+}
+
+.submenu-item--primary {
+  color: var(--primary, currentColor);
 }
 
 .theme-card {
