@@ -2,6 +2,9 @@
 <html lang="zh-CN">
 <head>
   <%- include('partials/document-head', { pageTitle: '匹配结果', devToolsStyles: true }) %>
+  <% if (!matchComment) { %>
+  <script src="/js/couple-result.js?v=0.2.0" defer></script>
+  <% } %>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -24,14 +27,14 @@
       </div>
 
       <% if (typeof matchComment !== 'undefined' && matchComment) { %>
-      <div style="margin-bottom: 24px; padding: 16px; background: var(--accent); border-radius: 8px;">
-        <h3 style="margin-bottom: 16px;">匹配评语</h3>
-        <p style="margin: 0; color: var(--muted-foreground); line-height: 1.6;"><%= matchComment %></p>
+      <div class="match-comment">
+        <h3 class="match-comment__title">匹配评语</h3>
+        <p class="match-comment__text"><%= matchComment %></p>
       </div>
       <% } else { %>
-      <div id="comment-loading" style="margin-bottom: 24px; padding: 16px; background: var(--accent); border-radius: 8px;">
-        <h3 style="margin-bottom: 12px;">匹配评语</h3>
-        <p style="margin: 0; color: var(--muted-foreground);" data-comment-text>深度思考中...</p>
+      <div id="comment-loading" class="match-comment" data-comment-url="/api/couple-match/comment/<%= requestId %>">
+        <h3 class="match-comment__title">匹配评语</h3>
+        <p class="match-comment__text" data-comment-text>深度思考中...</p>
       </div>
       <% } %>
 
@@ -51,29 +54,6 @@
       </div>
     </div>
   </div>
-
-  <% if (!matchComment) { %>
-  <script>
-    (function() {
-      fetch('/api/couple-match/comment/<%= requestId %>')
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          var container = document.getElementById('comment-loading');
-          var text = container.querySelector('[data-comment-text]');
-          if (data.success && data.comment) {
-            text.textContent = data.comment;
-          } else {
-            text.textContent = '暂时无法生成评语';
-          }
-        })
-        .catch(function() {
-          var container = document.getElementById('comment-loading');
-          var text = container.querySelector('[data-comment-text]');
-          text.textContent = '加载失败';
-        });
-    })();
-  </script>
-  <% } %>
 
   <%- include('partials/site-footer') %>
 </body>

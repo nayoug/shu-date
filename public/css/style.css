@@ -754,38 +754,109 @@ body {
 }
 
 /* ===== 匹配结果 ===== */
+.match-list {
+  display: grid;
+  gap: 16px;
+}
+
 .match-card {
-  background: var(--match-card-bg);
-  padding: 32px;
-  border-radius: var(--radius-lg);
-  text-align: center;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
 }
 
-.match-card h3 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin-bottom: 20px;
-  color: var(--foreground);
+.match-rank {
+  min-width: 50px;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--primary);
 }
 
-.match-info {
-  background: var(--match-info-bg);
-  padding: 24px;
-  border-radius: var(--radius);
-  margin: 20px 0;
-  text-align: left;
+.match-summary {
+  flex: 1;
+  min-width: 0;
+}
+
+.match-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.match-interest {
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
 }
 
 .match-score {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--primary-light);
-  color: var(--primary);
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 0.9rem;
+  align-self: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.match-score--high {
+  background: oklch(0.95 0.08 145);
+  color: oklch(0.4 0.12 145);
+}
+
+.match-score--medium {
+  background: oklch(0.95 0.08 80);
+  color: oklch(0.45 0.12 80);
+}
+
+.match-score--low {
+  background: oklch(0.95 0.08 25);
+  color: oklch(0.45 0.15 25);
+}
+
+.match-comment {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--accent);
+  border-radius: 8px;
+}
+
+.match-comment__title {
+  margin-bottom: 12px;
+}
+
+.match-comment__text {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+
+@media (max-width: 700px) {
+  .match-card {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .match-rank {
+    min-width: 0;
+    font-size: 1.5rem;
+  }
+
+  .match-meta {
+    gap: 10px 12px;
+  }
+
+  .match-meta span {
+    min-width: calc(50% - 6px);
+  }
+
+  .match-score {
+    align-self: flex-start;
+  }
 }
 
 /* ===== 表格 ===== */

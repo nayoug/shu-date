@@ -2,69 +2,6 @@
 <html lang="zh-CN">
 <head>
   <%- include('partials/document-head', { pageTitle: '匹配结果', devToolsStyles: true }) %>
-  <style>
-    .match-list {
-      display: grid;
-      gap: 16px;
-    }
-    .match-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 20px;
-      padding: 20px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: var(--surface-soft);
-    }
-    .match-rank {
-      min-width: 50px;
-      font-size: 2rem;
-      font-weight: 700;
-      line-height: 1;
-      color: var(--primary);
-    }
-    .match-summary {
-      flex: 1;
-      min-width: 0;
-    }
-    .match-meta {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-    .match-interest {
-      color: var(--muted-foreground);
-      font-size: 0.9rem;
-      overflow-wrap: anywhere;
-    }
-    .match-score {
-      align-self: center;
-      padding: 10px 14px;
-      border-radius: 999px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    @media (max-width: 700px) {
-      .match-card {
-        flex-direction: column;
-        gap: 14px;
-      }
-      .match-rank {
-        min-width: 0;
-        font-size: 1.5rem;
-      }
-      .match-meta {
-        gap: 10px 12px;
-      }
-      .match-meta span {
-        min-width: calc(50% - 6px);
-      }
-      .match-score {
-        align-self: flex-start;
-      }
-    }
-  </style>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -113,10 +50,8 @@
             </div>
           </div>
           <% if (m.score !== null && m.score !== undefined) { %>
-          <div class="match-score" style="
-            background: <%= m.score >= 0.7 ? 'oklch(0.95 0.08 145)' : m.score >= 0.5 ? 'oklch(0.95 0.08 80)' : 'oklch(0.95 0.08 25)' %>;
-            color: <%= m.score >= 0.7 ? 'oklch(0.4 0.12 145)' : m.score >= 0.5 ? 'oklch(0.45 0.12 80)' : 'oklch(0.45 0.15 25)' %>;
-          ">
+          <% const scoreTone = m.score >= 0.7 ? 'high' : (m.score >= 0.5 ? 'medium' : 'low'); %>
+          <div class="match-score match-score--<%= scoreTone %>">
             <%= Math.round(m.score * 100) %>%
           </div>
           <% } %>
