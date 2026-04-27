@@ -1,0 +1,24 @@
+<%
+  const providedFullTitle = typeof fullTitle !== 'undefined' && fullTitle ? fullTitle : '';
+  const resolvedTitle = typeof pageTitle !== 'undefined' && pageTitle
+    ? pageTitle
+    : (typeof title !== 'undefined' && title ? title : '');
+  const resolvedDocumentTitle = providedFullTitle || (resolvedTitle ? `${resolvedTitle} - 心有所SHU` : '心有所SHU');
+  const includeAccountStyles = typeof accountPage !== 'undefined' && accountPage;
+  const includeLoginTabsScript = typeof loginTabsScript !== 'undefined' && loginTabsScript;
+  const includeDevToolsStyles = typeof devToolsStyles !== 'undefined' && devToolsStyles && typeof isDev !== 'undefined' && isDev;
+%>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= resolvedDocumentTitle %></title>
+<link rel="stylesheet" href="/css/style.css?v=0.2.0">
+<% if (includeAccountStyles) { %>
+  <link rel="stylesheet" href="/css/account-pages.css?v=0.2.0">
+<% } %>
+<%- include('head-icons') %>
+<% if (includeDevToolsStyles) { %>
+  <link rel="stylesheet" href="/css/dev-tools.css?v=0.2.0">
+<% } %>
+<% if (includeLoginTabsScript) { %>
+  <script src="/js/login-tabs.js?v=0.2.0" defer></script>
+<% } %>

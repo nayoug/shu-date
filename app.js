@@ -75,6 +75,69 @@ function redirectWithMessage(res, path, message, type = 'error') {
   return res.redirect(303, `${path}${separator}msg=${encodeURIComponent(message)}&type=${encodeURIComponent(type)}`);
 }
 
+function normalizeClientIpAddress(ip) {
+  if (typeof ip !== 'string') {
+    return '';
+  }
+
+  const trimmed = ip.trim().toLowerCase();
+  return trimmed.startsWith('::ffff:') ? trimmed.slice(7) : trimmed;
+}
+
+function isTrustedDevLoginIp(ip) {
+  if (!ip) {
+    return false;
+  }
+
+  if (/^127\./.test(ip) || ip === '::1' || ip === 'localhost') {
+    return true;
+  }
+
+  if (process.env.DEV_LOGIN_ALLOW_PRIVATE_NETWORK !== 'true') {
+    return false;
+  }
+
+  return (
+    /^10\./.test(ip) ||
+    /^192\.168\./.test(ip) ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip) ||
+    ip.startsWith('fc') ||
+    ip.startsWith('fd') ||
+    ip.startsWith('fe80:')
+  );
+}
+
+function isTrustedDevLoginRequest(req) {
+  return isTrustedDevLoginIp(normalizeClientIpAddress(req.ip || ''));
+}
+
+function requireTrustedDevLoginSource(req, res, next) {
+  if (!isTrustedDevLoginRequest(req)) {
+    return res.status(404).send('Not Found');
+  }
+
+  return next();
+}
+
+function getSafeRefererPath(req, fallback = '/') {
+  const referer = req.get('referer');
+  if (!referer) {
+    return fallback;
+  }
+
+  try {
+    const refererUrl = new URL(referer);
+    const host = req.get('host');
+    if (!host || refererUrl.host !== host) {
+      return fallback;
+    }
+
+    return `${refererUrl.pathname}${refererUrl.search}`;
+  } catch {
+    return fallback;
+  }
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -186,6 +249,7 @@ let db = dbModule;
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 const weeklyMatchEnabled = process.env.WEEKLY_MATCH_ENABLED === 'true';
+const devLoginEnabled = !isProduction && process.env.ENABLE_DEV_LOGIN === 'true';
 const sessionSecret = process.env.SESSION_SECRET;
 const appVersion = process.env.APP_VERSION || packageJson.version;
 const fullCommitSha = process.env.GIT_COMMIT || process.env.RENDER_GIT_COMMIT || null;
@@ -255,6 +319,8 @@ app.use(session({
 app.use((req, res, next) => {
   res.locals.isDev = !isProduction;
   res.locals.isProduction = isProduction;
+  res.locals.devLoginEnabled = devLoginEnabled && isTrustedDevLoginRequest(req);
+  res.locals.devLoginCsrfToken = res.locals.devLoginEnabled ? ensureCsrfToken(req) : null;
   next();
 });
 
@@ -491,6 +557,7 @@ const requireValidSettingsPasswordCsrf = createCsrfValidator('/settings/password
 const requireValidSurveyCsrf = createCsrfValidator('/profile');
 const requireValidCoupleMatchCsrf = createCsrfValidator('/couple-match');
 const requireValidNotificationsCsrf = createCsrfValidator('/notifications');
+const requireValidDevLoginCsrf = createCsrfValidator('/');
 
 function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面暂时不可用') {
   res.status(status).render(view, locals, (renderErr, html) => {
@@ -714,6 +781,33 @@ async function renderInfoPage(req, res, pageKey) {
 app.get('/', wrapAsync(async (req, res) => {
   const user = await loadCurrentUserFromSession(req);
 
+  // 计算匹配倒计时 - 使用北京时间
+  const now = new Date();
+  const SHANGHAI_TZ = 8 * 60 * 60 * 1000; // UTC+8
+
+  // 获取本周二19:00北京时间的时间戳
+  const getThisWeekTuesday19 = () => {
+    const nowInShanghai = new Date(now.getTime() + SHANGHAI_TZ);
+    const dayOfWeek = nowInShanghai.getDay();
+    const daysToTuesday = dayOfWeek <= 2 ? 2 - dayOfWeek : 9 - dayOfWeek;
+
+    // 从周一开始，加daysToTuesday天
+    const base = new Date(nowInShanghai);
+    base.setDate(base.getDate() + daysToTuesday);
+    base.setHours(19, 0, 0, 0);
+    return base.getTime() - SHANGHAI_TZ;
+  };
+
+  const matchOpenStart = getThisWeekTuesday19();
+  const matchOpenEnd = matchOpenStart + 24 * 60 * 60 * 1000;
+  const nowTime = now.getTime();
+  const isMatchOpen = nowTime >= matchOpenStart && nowTime < matchOpenEnd;
+
+  // 下次匹配时间: 如果当前在开启窗口内，指向下周二
+  const nextMatchTime = isMatchOpen
+    ? matchOpenStart + 7 * 24 * 60 * 60 * 1000
+    : matchOpenStart;
+
   res.render('index', {
     title: '首页',
     user,
@@ -722,7 +816,10 @@ app.get('/', wrapAsync(async (req, res) => {
     showPassword: true,
     message: req.query.msg,
     messageType: req.query.type,
-    weeklyMatchEnabled
+    weeklyMatchEnabled,
+    nextMatchTime,
+    now: now.getTime(),
+    isMatchOpen
   });
 }));
 
@@ -780,13 +877,14 @@ app.get('/login', (req, res) => {
   renderViewWithCsrf(req, res, 'login', { title: '登录', loginMethod: method, email, message: msg, messageType: type });
 });
 
-if (!isProduction) {
-  app.get('/dev/login/:prefix', wrapAsync(async (req, res) => {
-    const rawPrefix = typeof req.params.prefix === 'string' ? req.params.prefix.trim() : '';
+if (devLoginEnabled) {
+  app.post('/dev/login', requireTrustedDevLoginSource, requireValidDevLoginCsrf, wrapAsync(async (req, res) => {
+    const rawPrefix = typeof req.body?.emailPrefix === 'string' ? req.body.emailPrefix.trim() : '';
     const normalizedPrefix = rawPrefix.replace(/@shu\.edu\.cn$/i, '').toLowerCase();
+    const redirectPath = getSafeRefererPath(req, '/');
 
     if (!normalizedPrefix || !/^[a-z0-9._%+-]+$/i.test(normalizedPrefix)) {
-      return redirectWithMessage(res, '/login', '请输入合法的邮箱前缀');
+      return redirectWithMessage(res, redirectPath, '请输入合法的邮箱前缀');
     }
 
     const email = `${normalizedPrefix}@shu.edu.cn`;
@@ -802,7 +900,7 @@ if (!isProduction) {
     }
 
     if (!user?.id) {
-      return redirectWithMessage(res, '/login', '开发环境快捷登录失败');
+      return redirectWithMessage(res, redirectPath, '开发环境快捷登录失败');
     }
 
     await regenerateSession(req);
@@ -1514,6 +1612,17 @@ app.post('/confirm-match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, r
   );
 
   res.redirect('/?msg=已确认参与本周匹配&type=success');
+}));
+
+// 取消本周匹配
+app.post('/confirm-match/cancel', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
+  // 将 year 和 week 设为 0，表示取消
+  await db.execute(
+    'UPDATE users SET weekly_match_year = 0, weekly_match_week = 0 WHERE id = $1',
+    [req.user.id]
+  );
+
+  res.redirect('/confirm-match?msg=已取消本周匹配&type=success');
 }));
 
 // 提交问卷

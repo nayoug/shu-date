@@ -1,40 +1,39 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>注销账号 - 心有所SHU</title>
-  <link rel="stylesheet" href="/css/style.css?v=0.2.0">
-  <%- include('partials/head-icons') %>
+  <%- include('partials/document-head', {
+    pageTitle: '注销账号',
+    accountPage: true
+  }) %>
 </head>
 <body>
   <%- include('partials/navbar') %>
 
-  <div class="container" style="max-width: 600px; padding-top: 40px;">
-    <div class="card" style="background: var(--surface-soft); padding: 20px;">
-      <h2 style="margin-bottom: 20px;">🗑️ 注销账号确认</h2>
+  <div class="container account-container">
+    <div class="card account-card">
+      <h2 class="account-title">🗑️ 注销账号确认</h2>
 
-      <div style="background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-        <p style="margin: 0; color: var(--warning-foreground); font-size: 0.9rem;">
+      <div class="warning-callout">
+        <p>
           <strong>⚠️ 注意：</strong>注销后，您的恋爱人格测试结果、匹配记录以及所有个人资料将被永久删除，无法恢复。
         </p>
       </div>
 
       <% if (typeof deleteMessage !== 'undefined' && deleteMessage) { %>
-        <div class="alert alert-<%= deleteMessageType || 'error' %>" style="margin-bottom: 16px;">
+        <div class="alert alert-<%= deleteMessageType || 'error' %> form-group--compact">
           <%= deleteMessage %>
         </div>
       <% } %>
 
       <form action="/settings/delete" method="POST">
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">邮箱</label>
-          <input type="email" name="email" placeholder="请输入您的邮箱" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; box-sizing: border-box; background: var(--card); color: var(--foreground);">
+        <div class="form-group form-group--compact">
+          <label>邮箱</label>
+          <input type="email" name="email" placeholder="请输入您的邮箱">
         </div>
 
-        <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">密码</label>
-          <input type="password" name="password" placeholder="请输入您的密码" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; box-sizing: border-box; background: var(--card); color: var(--foreground);">
+        <div class="form-group form-group--final">
+          <label>密码</label>
+          <input type="password" name="password" placeholder="请输入您的密码">
         </div>
 
         <% if (typeof csrfToken !== 'undefined') { %>
@@ -43,10 +42,11 @@
         <button type="submit" class="btn btn-danger">确认注销账号</button>
       </form>
 
-      <div style="margin-top: 16px; text-align: center;">
-        <a href="/settings" style="color: var(--primary); font-size: 0.85rem;">← 返回设置</a>
+      <div class="account-link-row">
+        <a href="/settings" class="account-link">← 返回设置</a>
       </div>
     </div>
   </div>
+  <%- include('partials/site-footer') %>
 </body>
 </html>

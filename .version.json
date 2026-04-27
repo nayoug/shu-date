@@ -1,14 +1,18 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-12T18:29:35.515Z",
+  "generatedAt": "2026-04-24T02:35:16.470Z",
   "resources": {
+    "css/account-pages.css": {
+      "hash": "1b1d17ce",
+      "version": "0.2.0-1b1d17ce"
+    },
     "css/dev-tools.css": {
-      "hash": "3d04e83c",
-      "version": "0.2.0-3d04e83c"
+      "hash": "1fdea12d",
+      "version": "0.2.0-1fdea12d"
     },
     "css/style.css": {
-      "hash": "b693f4d1",
-      "version": "0.2.0-b693f4d1"
+      "hash": "0cd31def",
+      "version": "0.2.0-0cd31def"
     },
     "favicon.ico": {
       "hash": "5ecd6c3b",
@@ -33,6 +37,22 @@
     "images/campus.jpg": {
       "hash": "63b62764",
       "version": "0.2.0-63b62764"
+    },
+    "js/couple-result.js": {
+      "hash": "dacb5796",
+      "version": "0.2.0-dacb5796"
+    },
+    "js/layout-shell.js": {
+      "hash": "2b474f11",
+      "version": "0.2.0-2b474f11"
+    },
+    "js/login-tabs.js": {
+      "hash": "0ce13845",
+      "version": "0.2.0-0ce13845"
+    },
+    "js/theme.js": {
+      "hash": "c1b29b66",
+      "version": "0.2.0-c1b29b66"
     }
   }
 }

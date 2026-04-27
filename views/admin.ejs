@@ -1,32 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>管理后台 - 心有所SHU</title>
-  <link rel="stylesheet" href="/css/style.css?v=0.2.0">
-  <%- include('partials/head-icons') %>
-  <% if (typeof isDev !== 'undefined' && isDev) { %>
-  <link rel="stylesheet" href="/css/dev-tools.css?v=bottom-right">
-  <% } %>
+  <%- include('partials/document-head', { pageTitle: '管理后台', devToolsStyles: true }) %>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="/" class="logo">心有所<span>SHU</span></a>
-      <div class="nav-links">
-        <a href="/profile">我的资料</a>
-        <a href="/matches">匹配结果</a>
-        <a href="/admin" style="color: var(--primary); font-weight: 600;">管理</a>
-        <div class="theme-switch" role="group" aria-label="主题切换">
-          <button type="button" class="theme-switch__button" data-theme-option="system" aria-pressed="false">系统</button>
-          <button type="button" class="theme-switch__button" data-theme-option="light" aria-pressed="false">浅色</button>
-          <button type="button" class="theme-switch__button" data-theme-option="dark" aria-pressed="false">深色</button>
-        </div>
-        <a href="/logout" class="btn">退出</a>
-      </div>
-    </div>
-  </nav>
+  <%- include('partials/navbar') %>
 
   <div class="container">
     <% if (typeof message !== 'undefined' && message) { %>

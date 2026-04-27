@@ -1,13 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>匹配结果 - 心有所SHU</title>
-  <link rel="stylesheet" href="/css/style.css?v=0.2.0">
-  <%- include('partials/head-icons') %>
-  <% if (typeof isDev !== 'undefined' && isDev) { %>
-  <link rel="stylesheet" href="/css/dev-tools.css?v=bottom-right">
+  <%- include('partials/document-head', { pageTitle: '匹配结果', devToolsStyles: true }) %>
+  <% if (!matchComment) { %>
+  <script src="/js/couple-result.js?v=0.2.0" defer></script>
   <% } %>
 </head>
 <body>
@@ -19,7 +15,7 @@
 
       <% if (typeof message !== 'undefined' && message) { %>
         <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 20px;">
-          <%- message %>
+          <%= message %>
         </div>
       <% } %>
 
@@ -31,14 +27,14 @@
       </div>
 
       <% if (typeof matchComment !== 'undefined' && matchComment) { %>
-      <div style="margin-bottom: 24px; padding: 16px; background: var(--accent); border-radius: 8px;">
-        <h3 style="margin-bottom: 16px;">匹配评语</h3>
-        <p style="margin: 0; color: var(--muted-foreground); line-height: 1.6;"><%= matchComment %></p>
+      <div class="match-comment">
+        <h3 class="match-comment__title">匹配评语</h3>
+        <p class="match-comment__text"><%= matchComment %></p>
       </div>
       <% } else { %>
-      <div id="comment-loading" style="margin-bottom: 24px; padding: 16px; background: var(--accent); border-radius: 8px;">
-        <h3 style="margin-bottom: 12px;">匹配评语</h3>
-        <p style="margin: 0; color: var(--muted-foreground);">深度思考中...</p>
+      <div id="comment-loading" class="match-comment" data-comment-url="/api/couple-match/comment/<%= requestId %>">
+        <h3 class="match-comment__title">匹配评语</h3>
+        <p class="match-comment__text" data-comment-text>深度思考中...</p>
       </div>
       <% } %>
 
@@ -59,7 +55,7 @@
     </div>
   </div>
 
-  <% if (!matchComment) { %>
+<% if (!matchComment) { %>
   <script>
     (function() {
       fetch('/api/couple-match/comment/<%= requestId %>')
@@ -81,5 +77,6 @@
   </script>
   <% } %>
 
+  <%- include('partials/site-footer') %>
 </body>
 </html>

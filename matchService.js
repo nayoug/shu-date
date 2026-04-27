@@ -383,11 +383,6 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
   const year = targetYear !== null ? targetYear : getYear();
   const weekNumber = targetWeek !== null ? targetWeek : getWeekNumber();
 
-  const existing = await dbModule.queryOne('SELECT id FROM matches WHERE match_year = $1 AND week_number = $2', [year, weekNumber]);
-  if (existing) {
-    return { success: false, message: '本周已执行匹配' };
-  }
-
   const users = await dbModule.query(`
     SELECT u.id as user_id, u.email, u.nickname, u.name, p.my_grade
     FROM users u
@@ -445,6 +440,32 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
         }
       });
     }
+  }
+
+  try {
+    await dbModule.withTransaction(async (client) => {
+      await client.query('LOCK TABLE matches IN SHARE ROW EXCLUSIVE MODE');
+
+      const existing = await client.query(
+        'SELECT id FROM matches WHERE match_year = $1 AND week_number = $2 LIMIT 1',
+        [year, weekNumber]
+      );
+      if (existing.rowCount > 0) {
+        throw new Error('WEEKLY_MATCH_ALREADY_EXISTS');
+      }
+
+      for (const pair of results) {
+        await client.query(`
+          INSERT INTO matches (user_id_1, user_id_2, score, week_number, match_year)
+          VALUES ($1, $2, $3, $4, $5)
+        `, [pair.user1.id, pair.user2.id, pair.score, weekNumber, year]);
+      }
+    });
+  } catch (error) {
+    if (error.message === 'WEEKLY_MATCH_ALREADY_EXISTS') {
+      return { success: false, message: '本周已执行匹配' };
+    }
+    throw error;
   }
 
   return { success: true, message: `匹配完成，共 ${results.length} 对`, results };

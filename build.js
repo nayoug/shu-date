@@ -53,25 +53,24 @@ function findEjsFiles(dir) {
   return files;
 }
 
-// 资源引用正则（匹配 href="/css/xxx.css" 或 src="/js/xxx.js" 等）
-const RESOURCE_REGEX = /(?:href|src)=["']([^"']+\.(?:css|js|jpe?g|png|svg|ico|webp|avif|gif))["']/g;
+// 资源引用正则（匹配 href="/css/xxx.css"、src="/js/xxx.js" 以及已带查询参数的版本化资源）
+const RESOURCE_REGEX = /(?:href|src)=["']([^"']+\.(?:css|js|jpe?g|png|svg|ico|webp|avif|gif)(?:\?[^"']*)?)["']/g;
 
 // 更新单个文件中的资源引用
 function updateResourceReferences(filePath, version) {
-  let content = fs.readFileSync(filePath, 'utf-8');
+  const content = fs.readFileSync(filePath, 'utf-8');
   let updated = false;
-  let match;
 
   const newContent = content.replace(RESOURCE_REGEX, (fullMatch, resourcePath) => {
-    // 排除已经有标准版本号格式的资源 (?v=数字.数字.数字)
-    // 但允许替换临时 hack 如 ?v=bottom-right
-    if (/^\?v=\d+\.\d+\.\d+/.test(resourcePath.split('?')[1])) {
+    const cleanPath = resourcePath.split('?')[0];
+    const nextPath = `${cleanPath}?v=${version}`;
+
+    if (resourcePath === nextPath) {
       return fullMatch;
     }
+
     updated = true;
-    // 移除现有的查询参数再添加新版本号
-    const cleanPath = resourcePath.split('?')[0];
-    return fullMatch.replace(resourcePath, `${cleanPath}?v=${version}`);
+    return fullMatch.replace(resourcePath, nextPath);
   });
 
   if (updated) {
@@ -84,13 +83,14 @@ function updateResourceReferences(filePath, version) {
 
 // 恢复原始引用（去掉版本号，用于下次构建前重置）
 function resetResourceReferences(filePath) {
-  let content = fs.readFileSync(filePath, 'utf-8');
+  const content = fs.readFileSync(filePath, 'utf-8');
   let updated = false;
 
   const newContent = content.replace(RESOURCE_REGEX, (fullMatch, resourcePath) => {
     if (resourcePath.includes('?v=')) {
       updated = true;
-      return fullMatch.replace(`?v=${VERSION}`, '').replace(resourcePath, resourcePath);
+      const cleanPath = resourcePath.split('?')[0];
+      return fullMatch.replace(resourcePath, cleanPath);
     }
     return fullMatch;
   });
@@ -106,7 +106,6 @@ function resetResourceReferences(filePath) {
 function main() {
   const args = process.argv.slice(2);
   const version = getVersion();
-  const VERSION = version; // 供 reset 使用
 
   console.log(`\n🔧 静态资源版本化构建`);
   console.log(`   版本: ${version}\n`);

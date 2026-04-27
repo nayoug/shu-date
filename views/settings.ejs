@@ -1,31 +1,31 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>账户设置 - 心有所SHU</title>
-  <link rel="stylesheet" href="/css/style.css?v=0.2.0">
-  <%- include('partials/head-icons') %>
+  <%- include('partials/document-head', {
+    pageTitle: '账户设置',
+    accountPage: true
+  }) %>
 </head>
 <body>
   <%- include('partials/navbar') %>
 
-  <div class="container" style="max-width: 600px; padding-top: 40px;">
+  <div class="container account-container">
     <div class="card">
-      <h2 style="margin-bottom: 24px;">⚙️ 账户设置</h2>
+      <h2 class="account-title account-title--settings">⚙️ 账户设置</h2>
 
-      <div style="display: flex; flex-direction: column; gap: 16px;">
-        <a href="/settings/password" class="btn" style="text-align: left; display: flex; align-items: center; gap: 10px;">
+      <div class="settings-actions">
+        <a href="/settings/password" class="btn settings-action">
           <span>🔐</span>
           <span>修改密码</span>
         </a>
 
-        <a href="/settings/delete" class="btn btn-danger" style="text-align: left; display: flex; align-items: center; gap: 10px;">
+        <a href="/settings/delete" class="btn btn-danger settings-action">
           <span>🗑️</span>
           <span>注销账号</span>
         </a>
       </div>
     </div>
   </div>
+  <%- include('partials/site-footer') %>
 </body>
 </html>

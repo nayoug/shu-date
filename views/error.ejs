@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= typeof title !== 'undefined' ? title : '服务器异常' %> - 心有所SHU</title>
-  <link rel="stylesheet" href="/css/style.css?v=0.2.0">
-  <%- include('partials/head-icons') %>
+  <%- include('partials/document-head', { pageTitle: typeof title !== 'undefined' ? title : '服务器异常' }) %>
 </head>
 <body>
+  <%- include('partials/navbar') %>
+
   <div class="container" style="max-width: 640px; padding-top: 96px;">
     <div class="card" style="text-align: center;">
       <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
