@@ -62,12 +62,14 @@
             <a href="/login" class="btn">回到登录页</a>
           </div>
         <% } else if (user.hasProfile) { %>
-          <p class="home-status__summary">资料已经提交完成，接下来等每周推荐更新，再回来看看这周系统给你的结果。</p>
+          <p class="home-status__summary">资料已经提交完成<% if (typeof weeklyMatchEnabled !== 'undefined' && weeklyMatchEnabled) { %>，接下来等每周推荐更新，再回来看看这周系统给你的结果。<% } else { %>。<% } %></p>
           <div class="home-status__actions">
-            <% if (user.weeklyMatchConfirmed) { %>
-            <a href="/matches" class="btn">看看匹配</a>
-            <% } else { %>
-            <a href="/confirm-match" class="btn">确认匹配</a>
+            <% if (typeof weeklyMatchEnabled !== 'undefined' && weeklyMatchEnabled) { %>
+              <% if (user.weeklyMatchConfirmed) { %>
+              <a href="/matches" class="btn">看看匹配</a>
+              <% } else { %>
+              <a href="/confirm-match" class="btn">确认匹配</a>
+              <% } %>
             <% } %>
             <a href="/profile?edit=1" class="btn btn-secondary">查看资料</a>
           </div>
@@ -97,6 +99,7 @@
               <p><%= user.hasProfile ? '资料已经提交，偏好和性格信息都在库里。' : '补完资料后，系统才会进入匹配流程。' %></p>
             </div>
           </li>
+          <% if (typeof weeklyMatchEnabled !== 'undefined' && weeklyMatchEnabled) { %>
           <li class="home-status__step <%= user.verified && user.hasProfile && user.weeklyMatchConfirmed ? 'is-done' : (user.verified && user.hasProfile ? 'is-current' : 'is-pending') %>">
             <span class="home-status__step-badge"><%= user.verified && user.hasProfile && user.weeklyMatchConfirmed ? '✓' : '3' %></span>
             <div>
@@ -111,6 +114,15 @@
               <p><%= user.verified && user.hasProfile && user.weeklyMatchConfirmed ? '接下来只要等每周推荐更新，就可以回来看结果。' : '完成前两步后，这里会成为你的主要入口。' %></p>
             </div>
           </li>
+          <% } else { %>
+          <li class="home-status__step <%= user.verified && user.hasProfile ? 'is-current' : 'is-pending' %>">
+            <span class="home-status__step-badge">3</span>
+            <div>
+              <strong>等待开启</strong>
+              <p>每周匹配功能正在准备中，即将开放。</p>
+            </div>
+          </li>
+          <% } %>
         </ul>
       </aside>
     </section>

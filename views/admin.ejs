@@ -98,7 +98,7 @@
             <td><%= u.name || '-' %></td>
             <td><%= u.verified ? '✅ 已验证' : '⏳ 未验证' %></td>
             <td><%= u.hasProfile ? '✅ 有' : '❌ 无' %></td>
-            <td><%= u.created_at ? u.created_at.slice(0, 10) : '-' %></td>
+            <td><%= u.created_at ? new Date(u.created_at).toISOString().slice(0, 10) : '-' %></td>
           </tr>
           <% }); %>
         </tbody>

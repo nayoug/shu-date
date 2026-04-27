@@ -52,6 +52,25 @@
       font-weight: 700;
       white-space: nowrap;
     }
+    .match-comment {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .match-comment p {
+      margin: 0 0 8px 0;
+    }
+    .match-comment p:last-child {
+      margin-bottom: 0;
+    }
+    .match-comment-loading {
+      text-align: center;
+      color: var(--muted-foreground);
+      font-size: 0.9rem;
+      padding: 20px;
+    }
     @media (max-width: 700px) {
       .match-card {
         flex-direction: column;
@@ -83,6 +102,12 @@
       <h2>邮箱未验证</h2>
       <p style="color: var(--muted-foreground);">请先完成邮箱验证后查看匹配结果。</p>
     </div>
+    <% } else if (typeof weeklyMatchEnabled !== 'undefined' && !weeklyMatchEnabled) { %>
+    <div class="card" style="text-align: center;">
+      <div style="font-size: 4rem; margin-bottom: 16px;">🔒</div>
+      <h2>每周匹配暂未开启</h2>
+      <p style="color: var(--muted-foreground);">该功能正在调试中，开放时间请留意通知。</p>
+    </div>
     <% } else if (!matches || matches.length === 0) { %>
     <div class="card" style="text-align: center;">
       <div style="font-size: 4rem; margin-bottom: 16px;">🤔</div>
@@ -90,13 +115,13 @@
       <p style="color: var(--muted-foreground); margin-bottom: 24px;">
         <%= hasWeeklyRelease
           ? '本周正式匹配结果已经发布，但这周暂时还没有匹配到适合你的对象。'
-          : '本周正式匹配结果还没发布，等管理员执行本周匹配后再来看看。' %>
+          : '匹配结果还没发布，等管理员执行本周匹配后再来看看。' %>
       </p>
     </div>
     <% } else { %>
     <div class="card">
       <h2 style="display: flex; align-items: center; gap: 10px;">
-        💕 本周正式匹配结果
+        💕 匹配结果
       </h2>
       <p style="color: var(--muted-foreground); margin-bottom: 24px;">
         这是本周已经发布并落库的正式匹配结果：
@@ -104,30 +129,22 @@
 
       <div class="match-list">
         <% matches.forEach(function(m, index) { %>
-        <div class="match-card">
+        <a href="/matches/detail/<%= matchId %>" class="match-card" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 16px;">
           <div class="match-rank">
             #<%= index + 1 %>
           </div>
-          <div class="match-summary">
-            <div class="match-meta">
-              <span><strong>年级:</strong> <%= m.my_grade || '-' %></span>
-              <span><strong>性别:</strong> <%= m.gender || '-' %></span>
-              <span><strong>校区:</strong> <%= m.campus || '-' %></span>
-              <span><strong>LoveType:</strong> <%= m.lovetype_code || '-' %></span>
-            </div>
-            <div class="match-interest">
-              <strong>兴趣爱好:</strong> <%= m.interests || '-' %>
-            </div>
+          <div style="flex: 1;">
+            <div>你的匹配对象是： <%= m.nickname || m.email %> </div>
           </div>
           <% if (m.score !== null && m.score !== undefined) { %>
           <div class="match-score" style="
-            background: <%= m.score >= 0.7 ? 'oklch(0.95 0.08 145)' : m.score >= 0.5 ? 'oklch(0.95 0.08 80)' : 'oklch(0.95 0.08 25)' %>;
-            color: <%= m.score >= 0.7 ? 'oklch(0.4 0.12 145)' : m.score >= 0.5 ? 'oklch(0.45 0.12 80)' : 'oklch(0.45 0.15 25)' %>;
+            background: <%= m.score >= 70 ? 'oklch(0.95 0.08 145)' : m.score >= 50 ? 'oklch(0.95 0.08 80)' : 'oklch(0.95 0.08 25)' %>;
+            color: <%= m.score >= 70 ? 'oklch(0.4 0.12 145)' : m.score >= 50 ? 'oklch(0.45 0.12 80)' : 'oklch(0.45 0.15 25)' %>;
           ">
-            <%= Math.round(m.score * 100) %>%
+            <%= Math.round(m.score) %>分
           </div>
           <% } %>
-        </div>
+        </a>
         <% }); %>
       </div>
 
@@ -144,6 +161,30 @@
 
   <% if (typeof isDev !== 'undefined' && isDev) { %>
   <%- include('partials/dev-tools') %>
+  <% } %>
+
+  <% if (typeof matchId !== 'undefined' && matchId && !(typeof weeklyMatch !== 'undefined' && weeklyMatch && weeklyMatch.matchComment)) { %>
+  <script>
+    (function() {
+      const commentEl = document.getElementById('match-comment');
+      const matchId = commentEl?.dataset.matchId;
+      if (!matchId) return;
+
+      fetch('/api/weekly-match/comment/' + matchId)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.success && data.comment) {
+            var formatted = data.comment.replace(/\n/g, '<br>');
+            commentEl.innerHTML = formatted;
+          } else {
+            commentEl.innerHTML = '<div style="color: var(--muted-foreground); text-align: center;">暂无可用评语</div>';
+          }
+        })
+        .catch(function() {
+          commentEl.innerHTML = '<div style="color: var(--muted-foreground); text-align: center;">加载失败</div>';
+        });
+    })();
+  </script>
   <% } %>
 </body>
 </html>

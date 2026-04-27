@@ -185,6 +185,7 @@ function resolveDeployTime() {
 let db = dbModule;
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
+const weeklyMatchEnabled = process.env.WEEKLY_MATCH_ENABLED === 'true';
 const sessionSecret = process.env.SESSION_SECRET;
 const appVersion = process.env.APP_VERSION || packageJson.version;
 const fullCommitSha = process.env.GIT_COMMIT || process.env.RENDER_GIT_COMMIT || null;
@@ -392,7 +393,7 @@ const passwordChangeRateLimiter = createRedirectRateLimiter({
 
 const adminActionRateLimiter = createRedirectRateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 3,
+  limit: 9999,
   keyGenerator: getUserScopedRateLimitKey,
   redirectTo() {
     return '/admin';
@@ -720,7 +721,8 @@ app.get('/', wrapAsync(async (req, res) => {
     hasProfile: !!user?.hasProfile,
     showPassword: true,
     message: req.query.msg,
-    messageType: req.query.type
+    messageType: req.query.type,
+    weeklyMatchEnabled
   });
 }));
 
@@ -1476,6 +1478,11 @@ app.post('/settings/delete', isLoggedIn, requireValidDeleteCsrf, wrapAsync(async
 
 // 确认匹配页面
 app.get('/confirm-match', isLoggedIn, wrapAsync(async (req, res) => {
+  // 检查每周匹配功能是否开启
+  if (!weeklyMatchEnabled) {
+    return res.redirect('/?msg=每周匹配功能暂未开启&type=warning');
+  }
+
   const profile = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
   if (!profile) {
     return res.redirect('/profile?msg=请先填写问卷&type=warning');
@@ -1623,7 +1630,8 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
       nickname: req.session.nickname,
       hasProfile: false,
       showPassword: true,
-      matchSource: 'weekly'
+      matchSource: 'weekly',
+      weeklyMatchEnabled
     });
   }
 
@@ -1646,9 +1654,11 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
   const hasWeeklyRelease = parseInt(weeklyRelease?.count || '0', 10) > 0;
   const weeklyMatches = await db.query(`
     SELECT
+      m.id,
       m.week_number,
       m.score,
       m.matched_at,
+      m.match_comment,
       partner.id AS partner_id,
       partner.email AS partner_email,
       partner.nickname AS partner_nickname,
@@ -1676,6 +1686,7 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     score: weeklyMatches[0].score,
     matchedAt: weeklyMatches[0].matched_at,
     matchId: weeklyMatches[0].id,
+    matchComment: weeklyMatches[0].match_comment,
     partner: {
       id: weeklyMatches[0].partner_id,
       email: weeklyMatches[0].partner_email,
@@ -1701,7 +1712,79 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     isAdmin: req.isAdmin,
     matchSource: 'weekly',
     weekNumber,
-    hasWeeklyRelease
+    hasWeeklyRelease,
+    weeklyMatchEnabled
+  });
+}));
+
+// 每周匹配详情页
+app.get('/matches/detail/:id', isLoggedIn, wrapAsync(async (req, res) => {
+  const matchId = parseInt(req.params.id, 10);
+  if (!matchId) {
+    return res.redirect('/matches');
+  }
+
+  const weekNumber = getWeekNumber();
+  const matchYear = getYear();
+
+  // 查询匹配详情
+  const match = await db.queryOne(`
+    SELECT m.*,
+      partner.id AS partner_id,
+      partner.email AS partner_email,
+      partner.nickname AS partner_nickname,
+      partner.name AS partner_name,
+      p.my_grade AS partner_grade,
+      p.gender AS partner_gender,
+      p.campus AS partner_campus,
+      p.interests AS partner_interests,
+      p.lovetype_code AS partner_lovetype_code
+    FROM matches m
+    JOIN users partner
+      ON partner.id = CASE
+        WHEN m.user_id_1 = $1 THEN m.user_id_2
+        ELSE m.user_id_1
+      END
+    LEFT JOIN profiles p ON p.user_id = partner.id
+    WHERE m.id = $2 AND (m.user_id_1 = $1 OR m.user_id_2 = $1)
+  `, [req.user.id, matchId]);
+
+  if (!match) {
+    return res.redirect('/matches?msg=匹配不存在&type=error');
+  }
+
+  const partner = {
+    id: match.partner_id,
+    email: match.partner_email,
+    nickname: match.partner_nickname || match.partner_name || match.partner_email?.split('@')[0],
+    my_grade: match.partner_grade,
+    gender: match.partner_gender,
+    campus: match.partner_campus,
+    interests: match.partner_interests,
+    lovetype_code: match.partner_lovetype_code,
+    score: match.score
+  };
+
+  res.render('match-detail', {
+    title: '匹配详情',
+    user: req.user,
+    nickname: req.session.nickname,
+    hasProfile: true,
+    weeklyMatch: {
+      matchId: match.id,
+      score: match.score,
+      matchComment: match.match_comment,
+      partner: partner
+    },
+    matches: [{
+      ...partner,
+      email: partner.email
+    }],
+    matchId: match.id,
+    isAdmin: req.isAdmin,
+    matchSource: 'weekly',
+    weekNumber,
+    weeklyMatchEnabled
   });
 }));
 
@@ -1967,7 +2050,7 @@ async function generateMatchComment(userAProfile, userBProfile, matchScore) {
     return info.join('， ');
   };
 
-  const prompt = `请为以下两位用户生成一段100-150字的匹配评语，要有梗、有趣、活泼一些：
+  const prompt = `请为以下两位用户生成一段匹配评语，要有梗、有趣、活泼一些：
 
 用户A问卷: ${buildProfileSummary(userAProfile)}
 用户B问卷: ${buildProfileSummary(userBProfile)}
@@ -1975,14 +2058,14 @@ async function generateMatchComment(userAProfile, userBProfile, matchScore) {
 
 要求：
 - 语言生动有趣
-- 若性取向不符合，可以用活泼有趣的方式提及
-- 适度调侃但不过分
-- 适度提及双方的加分项和亮点
+- 简要描述对方（1-2句话，不暴露隐私）
+- 提及双方的共同点/加分项
+- 给1-2个简单的聊天话题开启建议或是第一次约会建议
 - 我们都是上海大学大学生
-- 给一些简单的聊天话题开启建议
 - 不要夸大或过于乐观
+- 不要使用用户A/B代称，使用对方的昵称
 
-- 100-150字，直接输出评语内容，按段落分为换成2-3段显示，不需要开场白`;
+重要：请使用纯文本格式输出，不要使用markdown，不要使用任何符号（如**、##等），段落之间用换行符\\n分隔，每段1-2句话，150-250字`;
 
   try {
     const response = await fetch(url, {
@@ -2372,30 +2455,30 @@ async function runWeeklyMatch() {
     return result;
   }
 
-  const { sendMatchEmail } = require('./mailer');
-  const emailTasks = [];
-  for (const pair of result.results || []) {
-    emailTasks.push(sendMatchEmail(
-      pair.user1.email,
-      pair.user1.nickname || '同学',
-      pair.user2.nickname || 'TA',
-      pair.user2.my_grade,
-      null
-    ));
-    emailTasks.push(sendMatchEmail(
-      pair.user2.email,
-      pair.user2.nickname || '同学',
-      pair.user1.nickname || 'TA',
-      pair.user1.my_grade,
-      null
-    ));
-  }
-
-  const emailResults = await Promise.all(emailTasks);
-  const failedEmailCount = emailResults.filter(item => !item?.success).length;
-  if (failedEmailCount > 0) {
-    console.error(`❌ 本次匹配共有 ${failedEmailCount} 封邮件发送失败`);
-  }
+  // TODO: 匹配邮件通知已禁用，如需启用请恢复以下代码
+  // const { sendMatchEmail } = require('./mailer');
+  // const emailTasks = [];
+  // for (const pair of result.results || []) {
+  //   emailTasks.push(sendMatchEmail(
+  //     pair.user1.email,
+  //     pair.user1.nickname || '同学',
+  //     pair.user2.nickname || 'TA',
+  //     pair.user2.my_grade,
+  //     null
+  //   ));
+  //   emailTasks.push(sendMatchEmail(
+  //     pair.user2.email,
+  //     pair.user2.nickname || '同学',
+  //     pair.user1.nickname || 'TA',
+  //     pair.user1.my_grade,
+  //     null
+  //   ));
+  // }
+  // const emailResults = await Promise.all(emailTasks);
+  // const failedEmailCount = emailResults.filter(item => !item?.success).length;
+  // if (failedEmailCount > 0) {
+  //   console.error(`❌ 本次匹配共有 ${failedEmailCount} 封邮件发送失败`);
+  // }
 
   return result;
 }
@@ -2413,30 +2496,30 @@ async function runWeeklyMatchWithWeek(targetYear, targetWeek) {
     return result;
   }
 
-  const { sendMatchEmail } = require('./mailer');
-  const emailTasks = [];
-  for (const pair of result.results || []) {
-    emailTasks.push(sendMatchEmail(
-      pair.user1.email,
-      pair.user1.nickname || '同学',
-      pair.user2.nickname || 'TA',
-      pair.user2.my_grade,
-      null
-    ));
-    emailTasks.push(sendMatchEmail(
-      pair.user2.email,
-      pair.user2.nickname || '同学',
-      pair.user1.nickname || 'TA',
-      pair.user1.my_grade,
-      null
-    ));
-  }
-
-  const emailResults = await Promise.all(emailTasks);
-  const failedEmailCount = emailResults.filter(item => !item?.success).length;
-  if (failedEmailCount > 0) {
-    console.error(`❌ 本次匹配共有 ${failedEmailCount} 封邮件发送失败`);
-  }
+  // TODO: 匹配邮件通知已禁用，如需启用请恢复以下代码
+  // const { sendMatchEmail } = require('./mailer');
+  // const emailTasks = [];
+  // for (const pair of result.results || []) {
+  //   emailTasks.push(sendMatchEmail(
+  //     pair.user1.email,
+  //     pair.user1.nickname || '同学',
+  //     pair.user2.nickname || 'TA',
+  //     pair.user2.my_grade,
+  //     null
+  //   ));
+  //   emailTasks.push(sendMatchEmail(
+  //     pair.user2.email,
+  //     pair.user2.nickname || '同学',
+  //     pair.user1.nickname || 'TA',
+  //     pair.user1.my_grade,
+  //     null
+  //   ));
+  // }
+  // const emailResults = await Promise.all(emailTasks);
+  // const failedEmailCount = emailResults.filter(item => !item?.success).length;
+  // if (failedEmailCount > 0) {
+  //   console.error(`❌ 本次匹配共有 ${failedEmailCount} 封邮件发送失败`);
+  // }
 
   return result;
 }
