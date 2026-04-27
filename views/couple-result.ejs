@@ -12,7 +12,7 @@
 
       <% if (typeof message !== 'undefined' && message) { %>
         <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 20px;">
-          <%- message %>
+          <%= message %>
         </div>
       <% } %>
 
@@ -31,7 +31,7 @@
       <% } else { %>
       <div id="comment-loading" style="margin-bottom: 24px; padding: 16px; background: var(--accent); border-radius: 8px;">
         <h3 style="margin-bottom: 12px;">匹配评语</h3>
-        <p style="margin: 0; color: var(--muted-foreground);">深度思考中...</p>
+        <p style="margin: 0; color: var(--muted-foreground);" data-comment-text>深度思考中...</p>
       </div>
       <% } %>
 
@@ -59,15 +59,17 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
           var container = document.getElementById('comment-loading');
+          var text = container.querySelector('[data-comment-text]');
           if (data.success && data.comment) {
-            container.innerHTML = '<h3 style="margin-bottom: 12px;">匹配评语</h3><p style="margin: 0; color: var(--muted-foreground); line-height: 1.6;">' + data.comment + '</p>';
+            text.textContent = data.comment;
           } else {
-            container.innerHTML = '<h3 style="margin-bottom: 12px;">匹配评语</h3><p style="margin: 0; color: var(--muted-foreground);">暂时无法生成评语</p>';
+            text.textContent = '暂时无法生成评语';
           }
         })
         .catch(function() {
           var container = document.getElementById('comment-loading');
-          container.innerHTML = '<h3 style="margin-bottom: 12px;">匹配评语</h3><p style="margin: 0; color: var(--muted-foreground);">加载失败</p>';
+          var text = container.querySelector('[data-comment-text]');
+          text.textContent = '加载失败';
         });
     })();
   </script>
