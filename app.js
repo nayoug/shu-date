@@ -2151,7 +2151,7 @@ async function generateMatchComment(userAProfile, userBProfile, matchScore, user
     if (profile.gender) info.push(`性别: ${profile.gender}`);
     if (profile.my_grade) info.push(`年级: ${profile.my_grade}`);
     if (profile.age) info.push(`年龄: ${profile.age}`);
-    if (profile.campus) info.push(`校区: ${profile.campus}`);
+    if (profile.campus) info.push(`所属的校区: ${profile.campus}`);
     if (profile.height) info.push(`身高: ${profile.height}cm`);
     if (profile.hometown) info.push(`家乡: ${profile.hometown}`);
     if (profile.purpose) info.push(`交友目的: ${profile.purpose}`);
@@ -2197,9 +2197,10 @@ ${userBNickname || '用户B'}问卷: ${buildProfileSummary(userBProfile)}
 
 要求：
 - 我们都是上海大学的学生，可以适当结合一些校园生活的元素
+- 宝山、嘉定、延长为上海大学的三个校区，不是家乡所在地
 - 语言生动有趣
-- 简要描述双方
-- 提及双方的共同点/加分项，可以强调双方的兴趣爱好
+- 可以简要描述双方的基本信息，但不要直接列出所有问卷内容
+- 提及双方的共同点/加分项，可以强调双方的共同兴趣爱好
 - 给1-2个简单的聊天话题开启建议或是第一次约会建议
 - 不要夸大或过于乐观
 - 不要使用用户A或B做完代称，使用双方的昵称
