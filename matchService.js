@@ -51,15 +51,65 @@ function parseTagsField(value) {
 
 // ============ 硬筛选阶段 ============
 
+// 独立的硬筛选检查函数（备用，目前 filterCandidates 内联了相同逻辑）
+function passesHardFilters(myProfile, theirProfile) {
+  // 1. 性别互相对应
+  if (myProfile.preferred_gender && myProfile.preferred_gender !== '不限') {
+    if (theirProfile.gender !== myProfile.preferred_gender) return false;
+  }
+  if (theirProfile.preferred_gender && theirProfile.preferred_gender !== '不限') {
+    if (myProfile.gender !== theirProfile.preferred_gender) return false;
+  }
+
+  // 2. 年龄范围互相对应
+  if (myProfile.age_min !== null && myProfile.age_max !== null && theirProfile.age !== null) {
+    const theirAge = parseInt(theirProfile.age);
+    if (theirAge < myProfile.age_min || theirAge > myProfile.age_max) return false;
+  }
+  if (theirProfile.age_min !== null && theirProfile.age_max !== null && myProfile.age !== null) {
+    const myAge = parseInt(myProfile.age);
+    if (myAge < theirProfile.age_min || myAge > theirProfile.age_max) return false;
+  }
+
+  // 3. 校区互相对应
+  if (myProfile.accepted_campus && theirProfile.campus) {
+    const accepted = myProfile.accepted_campus.split(',').map(s => s.trim());
+    if (!accepted.includes(theirProfile.campus)) return false;
+  }
+  if (theirProfile.accepted_campus && myProfile.campus) {
+    const accepted = theirProfile.accepted_campus.split(',').map(s => s.trim());
+    if (!accepted.includes(myProfile.campus)) return false;
+  }
+
+  // 4. 身高互相对应
+  if (!isHeightWithinRange(theirProfile.height, myProfile.preferred_height_min, myProfile.preferred_height_max)) return false;
+  if (!isHeightWithinRange(myProfile.height, theirProfile.preferred_height_min, theirProfile.preferred_height_max)) return false;
+
+  // 5. 家乡（同家乡要求）
+  if (myProfile.preferred_hometown === '同家乡' && myProfile.hometown) {
+    if (theirProfile.hometown !== myProfile.hometown) return false;
+  }
+  if (theirProfile.preferred_hometown === '同家乡' && theirProfile.hometown) {
+    if (myProfile.hometown !== theirProfile.hometown) return false;
+  }
+
+  return true;
+}
+
 function filterCandidates(myProfile, allProfiles) {
   return allProfiles.filter(p => {
-    // 1. 性别互相对应
+    // 1. 性别互相对应：我的性别必须在对方的偏好中，对方的性别也必须在我的偏好中
     if (myProfile.preferred_gender && myProfile.preferred_gender !== '不限') {
-      if (p.gender !== myProfile.preferred_gender) return false;
+      if (p.gender !== myProfile.preferred_gender) {
+        return false;
+      }
     }
     if (p.preferred_gender && p.preferred_gender !== '不限') {
-      if (myProfile.gender !== p.preferred_gender) return false;
+      if (myProfile.gender !== p.preferred_gender) {
+        return false;
+      }
     }
+    // 如果双方都没有设置偏好（null/空），不限制
 
     // 2. 年龄范围互相对应
     if (myProfile.age_min !== null && myProfile.age_max !== null && p.age !== null) {
@@ -262,14 +312,15 @@ function calculateMatchDetails(myProfile, theirProfile) {
 // ============ 数据库查询接口 ============
 
 async function findMatches(userId, targetYear = null, targetWeek = null) {
-  const myUser = await dbModule.queryOne('SELECT * FROM users WHERE id = $1', [userId]);
+  const userIdInt = parseInt(userId, 10);
+  const myUser = await dbModule.queryOne('SELECT * FROM users WHERE id = $1', [userIdInt]);
   if (!myUser) return [];
 
-  const myProfile = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userId]);
+  const myProfile = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userIdInt]);
   if (!myProfile) return [];
 
   const filters = ['u.id != $1', 'u.verified = 1'];
-  const params = [userId];
+  const params = [userIdInt];
 
   if (targetYear !== null && targetWeek !== null) {
     params.push(targetYear, targetWeek);
@@ -278,7 +329,7 @@ async function findMatches(userId, targetYear = null, targetWeek = null) {
   }
 
   const allProfiles = await dbModule.query(`
-    SELECT u.id, u.email, u.nickname, u.name, p.*
+    SELECT u.id as user_id, u.email, u.nickname, u.name, p.*
     FROM users u
     JOIN profiles p ON u.id = p.user_id
     WHERE ${filters.join(' AND ')}
@@ -292,16 +343,19 @@ async function findMatches(userId, targetYear = null, targetWeek = null) {
   const scored = candidates.map(candidate => {
     const scoreAB = calculateMatchScore(myProfile, candidate);
     const scoreBA = calculateMatchScore(candidate, myProfile);
-    const score = harmonicMean(scoreAB, scoreBA);
+    const scoreRaw = harmonicMean(scoreAB, scoreBA);
+    // 归一化：开根号乘10，始终百分制
+    const score = Math.round(Math.sqrt(scoreRaw) * 10);
     const detailsA = calculateMatchDetails(myProfile, candidate);
 
     return {
-      user_id: candidate.id,
+      user_id: candidate.user_id,
       email: candidate.email,
       nickname: candidate.nickname || candidate.name,
       name: candidate.name,
       my_grade: candidate.my_grade,
       gender: candidate.gender,
+      preferred_gender: candidate.preferred_gender,
       age: candidate.age,
       height: candidate.height,
       campus: candidate.campus,
@@ -309,7 +363,7 @@ async function findMatches(userId, targetYear = null, targetWeek = null) {
       interests: candidate.interests,
       lovetype_code: candidate.lovetype_code,
       lovetype_label: lovetypeService.getCompatibilityLabel(myProfile.lovetype_code, candidate.lovetype_code),
-      score: Math.round(score) / 100,
+      score: score,
       score_ab: scoreAB,
       score_ba: scoreBA,
       score_breakdown: detailsA.breakdown
@@ -330,7 +384,7 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
   const weekNumber = targetWeek !== null ? targetWeek : getWeekNumber();
 
   const users = await dbModule.query(`
-    SELECT u.id, u.email, u.nickname, u.name, p.my_grade
+    SELECT u.id as user_id, u.email, u.nickname, u.name, p.my_grade
     FROM users u
     JOIN profiles p ON u.id = p.user_id
     WHERE u.verified = 1
@@ -346,19 +400,28 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
   const results = [];
 
   for (const user of users) {
-    if (matched.has(user.id)) continue;
+    if (matched.has(user.user_id)) continue;
 
-    const matches = (await findMatches(user.id, year, weekNumber)).filter(m => !matched.has(m.user_id));
+    const allMatches = await findMatches(user.user_id, year, weekNumber);
+    const matches = allMatches.filter(m => !matched.has(m.user_id));
 
     if (matches.length > 0) {
       const bestMatch = matches[0];
-      matched.add(user.id);
-      matched.add(bestMatch.user_id);
+      const userId1 = parseInt(user.user_id, 10);
+      const userId2 = parseInt(bestMatch.user_id, 10);
+
+      // 跳过无效用户ID
+      if (isNaN(userId1) || isNaN(userId2)) {
+        continue;
+      }
+
+      matched.add(userId1);
+      matched.add(userId2);
 
       results.push({
         score: bestMatch.score,
         user1: {
-          id: user.id,
+          id: user.user_id,
           email: user.email,
           nickname: user.nickname || user.name || user.email.split('@')[0],
           my_grade: user.my_grade
@@ -402,7 +465,7 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
   return { success: true, message: `匹配完成，共 ${results.length} 对`, results };
 }
 
-// 获取情侣匹配得分
+// 获取情侣匹配得分（不进行硬筛选，已在一起的用户不受约束限制）
 async function getCoupleMatch(userAId, userBId) {
   const profileA = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userAId]);
   const profileB = await dbModule.queryOne('SELECT * FROM profiles WHERE user_id = $1', [userBId]);

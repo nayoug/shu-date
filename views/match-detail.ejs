@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>匹配详情 - 心有所SHU</title>
+  <link rel="stylesheet" href="/css/style.css?v=0.2.0">
+  <%- include('partials/head-icons') %>
+  <% if (typeof isDev !== 'undefined' && isDev) { %>
+  <link rel="stylesheet" href="/css/dev-tools.css?v=bottom-right">
+  <% } %>
+  <style>
+    .detail-score {
+      text-align: center;
+      padding: 32px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+    }
+    .detail-score .label {
+      color: var(--muted-foreground);
+      margin-bottom: 8px;
+    }
+    .detail-score .score {
+      font-size: 64px;
+      font-weight: bold;
+    }
+    .detail-info {
+      padding: 20px;
+      background: var(--accent);
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .detail-info h3 {
+      margin: 0 0 16px 0;
+      font-size: 1.1rem;
+    }
+    .detail-info p {
+      margin: 0;
+      padding: 8px 0;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .detail-info p:first-child {
+      border-top: 1px solid var(--border);
+    }
+    .detail-info p:last-child {
+      border-bottom: none;
+    }
+    .detail-info .label {
+      color: var(--muted-foreground);
+    }
+    .detail-comment {
+      padding: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+    .detail-comment h3 {
+      margin: 0 0 12px 0;
+      font-size: 1rem;
+    }
+    .detail-comment p {
+      margin: 0;
+      line-height: 1.7;
+      color: var(--muted-foreground);
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container" style="max-width: 600px; padding-top: 40px;">
+    <div class="card">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px;">
+        <a href="/matches" style="text-decoration: none; color: var(--muted-foreground);">← 返回</a>
+      </div>
+
+      <% if (matches && matches.length > 0) { %>
+        <% var m = matches[0]; %>
+        <div class="detail-score" style="background: var(--accent);">
+          <div class="label">与 <%= m.nickname || m.email %> 的匹配度</div>
+          <div class="score" style="color: <%= m.score >= 70 ? 'oklch(0.55 0.15 145)' : m.score >= 50 ? 'oklch(0.6 0.15 80)' : 'oklch(0.6 0.15 25)' %>;">
+            <%= m.score !== null && m.score !== undefined ? Math.round(m.score) : '--' %>分
+          </div>
+        </div>
+
+        <% if (typeof weeklyMatch !== 'undefined' && weeklyMatch && weeklyMatch.matchComment) { %>
+        <div class="detail-comment">
+          <h3>💕 AI 智能匹配评语</h3>
+          <p><%= weeklyMatch.matchComment %></p>
+        </div>
+        <% } else if (typeof matchId !== 'undefined' && matchId) { %>
+        <div class="detail-comment" id="match-comment" data-match-id="<%= matchId %>">
+          <h3>💕 AI 智能匹配评语</h3>
+          <p style="color: var(--muted-foreground);">加载AI评语中...</p>
+        </div>
+        <% } %>
+
+        <div class="detail-info">
+          <h3>对方的基本信息</h3>
+          <p><span class="label">昵称</span><span><%= m.nickname || '未填写' %></span></p>
+          <p><span class="label">年级</span><span><%= m.my_grade || '未填写' %></span></p>
+          <p><span class="label">性别</span><span><%= m.gender || '未填写' %></span></p>
+          <p><span class="label">校区</span><span><%= m.campus || '未填写' %></span></p>
+          <p><span class="label">恋爱类型</span><span><%= m.lovetype_code || '未填写' %></span></p>
+          <p><span class="label">邮箱</span><span><%= m.email || '未填写' %></span></p>
+        </div>
+
+        <div class="detail-info">
+          <h3>对方的兴趣爱好</h3>
+          <% var interestList = (m.interests || '').split(',').filter(function(i) { return i; }); %>
+          <% if (interestList.length > 0) { %>
+          <p style="display: block; border: none; padding: 0;">
+            <%= interestList.map(function(i) { return i.replace(/^[^|-]+[|-]/, ''); }).join(', ') %>
+          </p>
+          <% } else { %>
+          <p style="display: block; border: none; padding: 0;">未填写</p>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div style="text-align: center; padding: 40px;">
+          <p style="color: var(--muted-foreground);">未找到匹配信息</p>
+          <a href="/matches" class="btn btn-secondary" style="margin-top: 16px;">返回</a>
+        </div>
+      <% } %>
+
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="/matches" class="btn btn-secondary">返回匹配列表</a>
+      </div>
+    </div>
+  </div>
+
+  <%- include('partials/site-footer') %>
+
+  <% if (typeof isDev !== 'undefined' && isDev) { %>
+  <%- include('partials/dev-tools') %>
+  <% } %>
+
+  <% if (typeof matchId !== 'undefined' && matchId && !(typeof weeklyMatch !== 'undefined' && weeklyMatch && weeklyMatch.matchComment)) { %>
+  <script>
+    (function() {
+      const commentEl = document.getElementById('match-comment');
+      const matchId = commentEl?.dataset.matchId;
+      if (!matchId) return;
+
+      fetch('/api/weekly-match/comment/' + matchId)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.success && data.comment) {
+            commentEl.querySelector('p').textContent = data.comment;
+          } else {
+            commentEl.querySelector('p').textContent = '暂无可用评语';
+          }
+        })
+        .catch(function() {
+          commentEl.querySelector('p').textContent = '加载失败';
+        });
+    })();
+  </script>
+  <% } %>
+</body>
+</html>
