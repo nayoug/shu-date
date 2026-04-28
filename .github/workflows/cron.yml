@@ -1,0 +1,18 @@
+name: Weekly Match Cron
+
+on:
+  schedule:
+    - cron: '0 11 * * 2'  # 每周二 19:00 北京时间
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger weekly match
+        run: |
+          curl -X POST ${{ vars.CRON_URL }} \
+            -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}"
