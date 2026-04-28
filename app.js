@@ -2106,13 +2106,43 @@ app.post('/couple-match/reject/:id', isLoggedIn, requireValidNotificationsCsrf, 
 }));
 
 // DeepSeek API 调用函数
-async function generateMatchComment(userAProfile, userBProfile, matchScore) {
+async function generateMatchComment(userAProfile, userBProfile, matchScore, userANickname, userBNickname) {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
     console.error('DeepSeek API Key 未配置');
     return null;
   }
   const url = 'https://api.deepseek.com/v1/chat/completions';
+
+  // 辅助函数：将题目数值转换为文字描述（只处理-2和+2极值）
+  const mapScaleValue = (fieldName, value) => {
+    if (value === null || value === undefined) return null;
+    if (value !== -2 && value !== 2) return value;
+
+    // 每个字段的极值映射（-2=左边，+2=右边）
+    const maps = {
+      relationship_rhythm: { '-2': '需要独处空间，给自己充电', '2': '喜欢黏在一起，时刻陪伴对方' },
+      romantic_ritual: { '-2': '务实派，不太在意节日与形式', '2': '浪漫派，很看重纪念日与惊喜' },
+      relationship_style: { '-2': '独立自在型，保留各自空间', '2': '亲密黏人型，偏爱时刻陪伴' },
+      sleep_pattern: { '-2': '熬夜选手，典型夜猫子', '2': '早睡早起，元气早鸟人' },
+      diet_preference: { '-2': '几乎全在学校各大食堂解决', '2': '频繁出去吃顿好的犒劳自己' },
+      spice_tolerance: { '-2': '一点辣都碰不了', '2': '无辣不欢' },
+      date_preference: { '-2': '校园漫步/图书馆安静相伴', '2': '走出校园，去市区逛街玩耍' },
+      spending_style: { '-2': '精打细算，能省则省', '2': '注重体验，愿意为体验买单' },
+      drinking_habit: { '-2': '滴酒不沾', '2': '经常喝酒' },
+      smoking_habit: { '-2': '从不抽', '2': '经常抽' },
+      pet_attitude: { '-2': '非常喜欢，想养宠物', '2': '不喜欢，也不接受养宠物' },
+      sexual_timing: { '-2': '第一次约会', '2': '结婚后' },
+      conflict_style: { '-2': '先冷静，回避激烈交锋', '2': '必须当下立刻沟通解决，绝不过夜' },
+      meeting_frequency: { '-2': '每天', '2': '两周及以上1次' },
+      partner_drinking: { '-2': '完全不接受对方喝酒', '2': '很乐意一起小酌' },
+      partner_smoking: { '-2': '完全不接受对方抽烟', '2': '很乐意一起' },
+      partner_interest: { '-2': '更喜欢互补', '2': '必须要有高度重合的爱好' }
+    };
+
+    const fieldMap = maps[fieldName];
+    return fieldMap ? fieldMap[String(value)] : value;
+  };
 
   // 构建双方信息摘要，包含所有问卷题目
   const buildProfileSummary = (profile) => {
@@ -2127,33 +2157,33 @@ async function generateMatchComment(userAProfile, userBProfile, matchScore) {
     if (profile.purpose) info.push(`交友目的: ${profile.purpose}`);
     if (profile.core_traits) info.push(`核心特质: ${profile.core_traits}`);
     // 恋爱观念
-    if (profile.relationship_rhythm !== null) info.push(`恋爱节奏: ${profile.relationship_rhythm}`);
-    if (profile.romantic_ritual !== null) info.push(`仪式感: ${profile.romantic_ritual}`);
-    if (profile.relationship_style !== null) info.push(`相处模式: ${profile.relationship_style}`);
-    if (profile.sleep_pattern !== null) info.push(`作息习惯: ${profile.sleep_pattern}`);
-    if (profile.diet_preference !== null) info.push(`饮食偏好: ${profile.diet_preference}`);
-    if (profile.spice_tolerance !== null) info.push(`辣度接受度: ${profile.spice_tolerance}`);
-    if (profile.date_preference !== null) info.push(`约会偏好: ${profile.date_preference}`);
-    if (profile.spending_style !== null) info.push(`消费观念: ${profile.spending_style}`);
-    if (profile.drinking_habit !== null) info.push(`饮酒习惯: ${profile.drinking_habit}`);
-    if (profile.smoking_habit !== null) info.push(`吸烟习惯: ${profile.smoking_habit}`);
-    if (profile.pet_attitude !== null) info.push(`宠物态度: ${profile.pet_attitude}`);
-    if (profile.sexual_timing !== null) info.push(`性观念: ${profile.sexual_timing}`);
-    if (profile.conflict_style !== null) info.push(`应对冲突: ${profile.conflict_style}`);
-    if (profile.meeting_frequency !== null) info.push(`见面频率: ${profile.meeting_frequency}`);
+    if (profile.relationship_rhythm !== null) info.push(`恋爱节奏: ${mapScaleValue('relationship_rhythm', profile.relationship_rhythm)}`);
+    if (profile.romantic_ritual !== null) info.push(`仪式感: ${mapScaleValue('romantic_ritual', profile.romantic_ritual)}`);
+    if (profile.relationship_style !== null) info.push(`相处模式: ${mapScaleValue('relationship_style', profile.relationship_style)}`);
+    if (profile.sleep_pattern !== null) info.push(`作息习惯: ${mapScaleValue('sleep_pattern', profile.sleep_pattern)}`);
+    if (profile.diet_preference !== null) info.push(`饮食偏好: ${mapScaleValue('diet_preference', profile.diet_preference)}`);
+    if (profile.spice_tolerance !== null) info.push(`辣度接受度: ${mapScaleValue('spice_tolerance', profile.spice_tolerance)}`);
+    if (profile.date_preference !== null) info.push(`约会偏好: ${mapScaleValue('date_preference', profile.date_preference)}`);
+    if (profile.spending_style !== null) info.push(`消费观念: ${mapScaleValue('spending_style', profile.spending_style)}`);
+    if (profile.drinking_habit !== null) info.push(`饮酒习惯: ${mapScaleValue('drinking_habit', profile.drinking_habit)}`);
+    if (profile.smoking_habit !== null) info.push(`吸烟习惯: ${mapScaleValue('smoking_habit', profile.smoking_habit)}`);
+    if (profile.pet_attitude !== null) info.push(`宠物态度: ${mapScaleValue('pet_attitude', profile.pet_attitude)}`);
+    if (profile.sexual_timing !== null) info.push(`性观念: ${mapScaleValue('sexual_timing', profile.sexual_timing)}`);
+    if (profile.conflict_style !== null) info.push(`应对冲突: ${mapScaleValue('conflict_style', profile.conflict_style)}`);
+    if (profile.meeting_frequency !== null) info.push(`见面频率: ${mapScaleValue('meeting_frequency', profile.meeting_frequency)}`);
     // 个人特征
     if (profile.my_traits) info.push(`个人特征: ${profile.my_traits}`);
     if (profile.partner_traits) info.push(`偏好特质: ${profile.partner_traits}`);
     if (profile.interests) info.push(`兴趣爱好: ${profile.interests}`);
-    if (profile.partner_interest !== null) info.push(`对方兴趣权重: ${profile.partner_interest}`);
+    if (profile.partner_interest !== null) info.push(`对方兴趣权重: ${mapScaleValue('partner_interest', profile.partner_interest)}`);
     // 择偶偏好
     if (profile.preferred_gender) info.push(`偏好性别: ${profile.preferred_gender}`);
     if (profile.age_min !== null && profile.age_max !== null) info.push(`年龄偏好: ${profile.age_min}-${profile.age_max}`);
     if (profile.preferred_height_min !== null && profile.preferred_height_max !== null) info.push(`身高偏好: ${profile.preferred_height_min}-${profile.preferred_height_max}`);
     if (profile.preferred_hometown) info.push(`家乡偏好: ${profile.preferred_hometown}`);
     if (profile.accepted_campus) info.push(`接受校区: ${profile.accepted_campus}`);
-    if (profile.partner_drinking !== null) info.push(`对方饮酒偏好: ${profile.partner_drinking}`);
-    if (profile.partner_smoking !== null) info.push(`对方吸烟偏好: ${profile.partner_smoking}`);
+    if (profile.partner_drinking !== null) info.push(`对方饮酒偏好: ${mapScaleValue('partner_drinking', profile.partner_drinking)}`);
+    if (profile.partner_smoking !== null) info.push(`对方吸烟偏好: ${mapScaleValue('partner_smoking', profile.partner_smoking)}`);
     // LoveType
     if (profile.lovetype_code) info.push(`恋爱类型: ${profile.lovetype_code}`);
     return info.join('， ');
@@ -2161,20 +2191,21 @@ async function generateMatchComment(userAProfile, userBProfile, matchScore) {
 
   const prompt = `请为以下两位用户生成一段匹配评语，要有梗、有趣、活泼一些：
 
-用户A问卷: ${buildProfileSummary(userAProfile)}
-用户B问卷: ${buildProfileSummary(userBProfile)}
+${userANickname || '用户A'}问卷: ${buildProfileSummary(userAProfile)}
+${userBNickname || '用户B'}问卷: ${buildProfileSummary(userBProfile)}
 匹配得分: ${Math.round(matchScore)}分
 
 要求：
+- 我们都是上海大学的学生，可以适当结合一些校园生活的元素
 - 语言生动有趣
-- 简要描述对方（1-2句话，不暴露隐私）
-- 提及双方的共同点/加分项
+- 简要描述双方
+- 提及双方的共同点/加分项，可以强调双方的兴趣爱好
 - 给1-2个简单的聊天话题开启建议或是第一次约会建议
-- 我们都是上海大学大学生
 - 不要夸大或过于乐观
-- 不要使用用户A/B代称，使用对方的昵称
+- 不要使用用户A或B做完代称，使用双方的昵称
+- 不要提及具体偏好程度的选择，而是采用描述性的方式，如不要说“仪式感都打分-2”，而是说“你们都不太重视仪式感，可能更适合随性自然的相处方式”
 
-重要：请使用纯文本格式输出，不要使用markdown，不要使用任何符号（如**、##等），段落之间用换行符\\n分隔，每段1-2句话，150-250字`;
+重要：请使用纯文本格式输出，不要使用markdown，不要使用任何符号（如**、##等），段落之间可以用换行符\\n分隔，每段1-2句话，150-250字`;
 
   try {
     const response = await fetch(url, {
@@ -2319,6 +2350,8 @@ app.get('/api/couple-match/comment/:id', isLoggedIn, wrapAsync(async (req, res) 
   // 否则重新生成
   const profileA = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [coupleRequest.requester_id]);
   const profileB = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [coupleRequest.receiver_id]);
+  const userA = await db.queryOne('SELECT nickname FROM users WHERE id = $1', [coupleRequest.requester_id]);
+  const userB = await db.queryOne('SELECT nickname FROM users WHERE id = $1', [coupleRequest.receiver_id]);
 
   if (!profileA || !profileB) {
     return res.json({ success: false, error: '无法获取用户资料' });
@@ -2331,7 +2364,7 @@ app.get('/api/couple-match/comment/:id', isLoggedIn, wrapAsync(async (req, res) 
     return res.json({ success: false, error: '无法计算匹配得分' });
   }
 
-  const comment = await generateMatchComment(profileA, profileB, matchResult.total);
+  const comment = await generateMatchComment(profileA, profileB, matchResult.total, userA.nickname, userB.nickname);
 
   // 保存到数据库
   await db.execute(`
@@ -2364,6 +2397,8 @@ app.get('/api/weekly-match/comment/:id', isLoggedIn, wrapAsync(async (req, res) 
   // 否则重新生成
   const profileA = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
   const profileB = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [match.partner_id]);
+  const userA = await db.queryOne('SELECT nickname FROM users WHERE id = $1', [req.user.id]);
+  const userB = await db.queryOne('SELECT nickname FROM users WHERE id = $1', [match.partner_id]);
 
   if (!profileA || !profileB) {
     return res.json({ success: false, error: '无法获取用户资料' });
@@ -2376,7 +2411,7 @@ app.get('/api/weekly-match/comment/:id', isLoggedIn, wrapAsync(async (req, res) 
     return res.json({ success: false, error: '无法计算匹配得分' });
   }
 
-  const comment = await generateMatchComment(profileA, profileB, matchResult.total);
+  const comment = await generateMatchComment(profileA, profileB, matchResult.total, userA.nickname, userB.nickname);
 
   // 保存到数据库
   await db.execute(`
