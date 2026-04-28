@@ -90,7 +90,7 @@
         <% if (typeof weeklyMatch !== 'undefined' && weeklyMatch && weeklyMatch.matchComment) { %>
         <div class="detail-comment">
           <h3>💕 AI 智能匹配评语</h3>
-          <%= weeklyMatch.matchComment %>
+          <p><%= weeklyMatch.matchComment %></p>
         </div>
         <% } else if (typeof matchId !== 'undefined' && matchId) { %>
         <div class="detail-comment" id="match-comment" data-match-id="<%= matchId %>">

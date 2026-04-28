@@ -55,30 +55,6 @@
     </div>
   </div>
 
-<% if (!matchComment) { %>
-  <script>
-    (function() {
-      fetch('/api/couple-match/comment/<%= requestId %>')
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          var container = document.getElementById('comment-loading');
-          var textEl = container.querySelector('[data-comment-text]');
-          if (data.success && data.comment) {
-            textEl.style.whiteSpace = 'pre-line';
-            textEl.textContent = data.comment;
-          } else {
-            textEl.textContent = '暂时无法生成评语';
-          }
-        })
-        .catch(function() {
-          var container = document.getElementById('comment-loading');
-          var textEl = container.querySelector('[data-comment-text]');
-          textEl.textContent = '加载失败';
-        });
-    })();
-  </script>
-  <% } %>
-
   <%- include('partials/site-footer') %>
 </body>
 </html>

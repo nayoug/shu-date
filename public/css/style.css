@@ -833,6 +833,7 @@ body {
   margin: 0;
   color: var(--muted-foreground);
   line-height: 1.6;
+  white-space: pre-line;
 }
 
 @media (max-width: 700px) {
