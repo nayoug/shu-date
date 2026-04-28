@@ -9,92 +9,67 @@
     }
     .match-card {
       display: flex;
-      align-items: flex-start;
-      gap: 20px;
-      padding: 20px;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
       border-radius: 16px;
       border: 1px solid var(--border);
       background: var(--surface-soft);
     }
-    .match-rank {
-      min-width: 50px;
-      font-size: 2rem;
-      font-weight: 700;
-      line-height: 1;
-      color: var(--primary);
+    .match-card--current {
+      border-color: var(--primary);
+      border-width: 2px;
     }
-    .match-summary {
+    .match-card--no-match {
+      border-color: var(--border);
+    }
+    .match-week {
+      min-width: 90px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .match-info {
       flex: 1;
       min-width: 0;
     }
-    .match-meta {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
+    .match-partner {
+      font-weight: 600;
+      margin-bottom: 4px;
     }
-    .match-interest {
+    .match-status {
+      font-size: 0.85rem;
       color: var(--muted-foreground);
-      font-size: 0.9rem;
-      overflow-wrap: anywhere;
+    }
+    .match-status--warn {
+      color: var(--warning);
+    }
+    .match-status--wait {
+      color: var(--primary);
     }
     .match-score {
-      align-self: center;
-      padding: 10px 14px;
+      padding: 8px 14px;
       border-radius: 999px;
       font-weight: 700;
       white-space: nowrap;
     }
-    .match-comment {
-      margin-top: 16px;
-      padding: 16px;
-      border-radius: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-    }
-    .match-comment p {
-      margin: 0 0 8px 0;
-    }
-    .match-comment p:last-child {
-      margin-bottom: 0;
-    }
-    .match-comment-loading {
-      text-align: center;
-      color: var(--muted-foreground);
-      font-size: 0.9rem;
-      padding: 20px;
-    }
-    .week-badge {
+    .match-detail-link {
       display: inline-block;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      background: var(--primary);
-      color: #fff;
-      opacity: 0.85;
+      margin-top: 6px;
+      font-size: 0.85rem;
+      color: var(--primary);
+      text-decoration: none;
     }
-    .week-badge--current {
-      background: var(--success);
-      opacity: 1;
+    .match-detail-link:hover {
+      text-decoration: underline;
     }
     @media (max-width: 700px) {
       .match-card {
         flex-direction: column;
-        gap: 14px;
+        align-items: flex-start;
+        gap: 10px;
       }
-      .match-rank {
+      .match-week {
         min-width: 0;
-        font-size: 1.5rem;
-      }
-      .match-meta {
-        gap: 10px 12px;
-      }
-      .match-meta span {
-        min-width: calc(50% - 6px);
-      }
-      .match-score {
-        align-self: flex-start;
       }
     }
   </style>
@@ -129,47 +104,88 @@
       <p style="color: var(--muted-foreground); margin-bottom: 24px;">确认后即可查看历史匹配记录和参与本周匹配。</p>
       <a href="/confirm-match" class="btn btn-large">确认参与匹配</a>
     </div>
-    <% } else if (!matchList || matchList.length === 0) { %>
+    <% } else { %>
+
+    <% if (currentWeekEntry) { %>
+    <div class="card">
+      <h3 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
+        <span>本周</span>
+      </h3>
+      <% if (currentWeekEntry.status === 'matched') { %>
+      <a href="/matches/detail/<%= currentWeekEntry.matchId %>" class="match-card match-card--current" style="text-decoration: none; color: inherit;">
+        <div class="match-week">第<%= currentWeekEntry.weekNumber %>周</div>
+        <div class="match-info">
+          <div class="match-partner"><%= currentWeekEntry.partner.nickname || currentWeekEntry.partner.email %></div>
+          <% if (currentWeekEntry.score !== null && currentWeekEntry.score !== undefined) { %>
+          <% const scoreTone = currentWeekEntry.score >= 70 ? 'high' : (currentWeekEntry.score >= 50 ? 'medium' : 'low'); %>
+          <div class="match-score match-score--<%= scoreTone %>" style="display: inline-block; margin-top: 4px;">
+            <%= Math.round(currentWeekEntry.score) %>分
+          </div>
+          <% } %>
+        </div>
+        <div style="color: var(--muted-foreground); font-size: 0.85rem;">查看详情 →</div>
+      </a>
+      <% } else if (currentWeekEntry.status === 'no_match') { %>
+      <div class="match-card match-card--no-match">
+        <div class="match-week">第<%= currentWeekEntry.weekNumber %>周</div>
+        <div class="match-info">
+          <div class="match-partner" style="color: var(--muted-foreground);">抱歉，未能匹配到合适的对象</div>
+          <div class="match-status">下周再来试试吧~</div>
+        </div>
+      </div>
+      <% } else if (currentWeekEntry.status === 'not_confirmed') { %>
+      <div class="match-card match-card--no-match">
+        <div class="match-week">第<%= currentWeekEntry.weekNumber %>周</div>
+        <div class="match-info">
+          <div class="match-status match-status--warn">请先确认参与本周匹配</div>
+        </div>
+        <a href="/confirm-match" class="btn btn-small">去确认</a>
+      </div>
+      <% } %>
+    </div>
+    <% } else if (weeklyMatchConfirmed) { %>
+    <div class="card">
+      <h3 style="margin: 0 0 16px 0;">本周</h3>
+      <div class="match-card match-card--no-match">
+        <div class="match-week">第<%= currentWeekInfo.week %>周</div>
+        <div class="match-info">
+          <div class="match-status match-status--wait">已确认参与匹配，请等待周二 19:00 公布结果</div>
+        </div>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (historyList && historyList.length > 0) { %>
+    <div class="card" style="margin-top: 16px;">
+      <h3 style="margin: 0 0 16px 0; color: var(--muted-foreground);">历史匹配</h3>
+      <div class="match-list">
+        <% historyList.forEach(function(m) { %>
+        <a href="/matches/detail/<%= m.matchId %>" class="match-card" style="text-decoration: none; color: inherit;">
+          <div class="match-week">第<%= m.weekNumber %>周</div>
+          <div class="match-info">
+            <div class="match-partner"><%= m.partner.nickname || m.partner.email %></div>
+            <% if (m.score !== null && m.score !== undefined) { %>
+            <% const scoreTone = m.score >= 70 ? 'high' : (m.score >= 50 ? 'medium' : 'low'); %>
+            <div class="match-score match-score--<%= scoreTone %>" style="display: inline-block; margin-top: 4px;">
+              <%= Math.round(m.score) %>分
+            </div>
+            <% } %>
+          </div>
+          <div style="color: var(--muted-foreground); font-size: 0.85rem;">查看详情 →</div>
+        </a>
+        <% }); %>
+      </div>
+    </div>
+    <% } %>
+
+    <% if ((!historyList || historyList.length === 0) && !currentWeekEntry) { %>
     <div class="card" style="text-align: center;">
       <div style="font-size: 4rem; margin-bottom: 16px;">🔍</div>
       <h2>暂无匹配记录</h2>
       <p style="color: var(--muted-foreground);">还没有匹配记录，完成问卷并确认参与匹配后会在每周二公布结果。</p>
     </div>
-    <% } else { %>
-    <div class="card">
-      <h2 style="display: flex; align-items: center; gap: 10px;">
-        💕 匹配历史
-      </h2>
-      <p style="color: var(--muted-foreground); margin-bottom: 24px;">
-        以下是你参与的所有匹配记录：
-      </p>
+    <% } %>
 
-      <div class="match-list">
-        <% matchList.forEach(function(m) { %>
-        <a href="/matches/detail/<%= m.matchId %>" class="match-card" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 16px;">
-          <div class="match-rank">
-            <%= m.year %>
-          </div>
-          <div style="flex: 1;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-              <span class="week-badge <%= (typeof currentWeekInfo !== 'undefined' && currentWeekInfo.year === m.year && currentWeekInfo.week === m.weekNumber) ? 'week-badge--current' : '' %>">
-                <%= m.year %>年第<%= m.weekNumber %>周
-              </span>
-              <span style="color: var(--muted-foreground); font-size: 0.85rem;">
-                <%= m.partner.nickname || m.partner.email %>
-              </span>
-            </div>
-          </div>
-          <% if (m.score !== null && m.score !== undefined) { %>
-          <% const scoreTone = m.score >= 70 ? 'high' : (m.score >= 50 ? 'medium' : 'low'); %>
-          <div class="match-score match-score--<%= scoreTone %>">
-            <%= Math.round(m.score) %>分
-          </div>
-          <% } %>
-        </a>
-        <% }); %>
-      </div>
-    </div>
     <% } %>
   </div>
 

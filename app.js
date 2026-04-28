@@ -1804,6 +1804,25 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     }
   }));
 
+  // 构建本周状态条目
+  const isCurrentWeek = weekInfo.year && weekInfo.week;
+  const currentWeekMatch = matchList.find(m => m.year === weekInfo.year && m.weekNumber === weekInfo.week);
+  let currentWeekEntry = null;
+  if (isCurrentWeek) {
+    if (req.user.weeklyMatchConfirmed) {
+      if (currentWeekMatch) {
+        currentWeekEntry = { ...currentWeekMatch, status: 'matched' };
+      } else {
+        currentWeekEntry = { year: weekInfo.year, weekNumber: weekInfo.week, status: 'no_match' };
+      }
+    } else {
+      currentWeekEntry = { year: weekInfo.year, weekNumber: weekInfo.week, status: 'not_confirmed' };
+    }
+  }
+
+  // 历史匹配（排除本周）
+  const historyList = matchList.filter(m => !(m.year === weekInfo.year && m.weekNumber === weekInfo.week));
+
   res.render('matches', {
     title: '匹配结果',
     user: req.user,
@@ -1811,6 +1830,8 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     hasProfile: true,
     showPassword: true,
     matchList,
+    historyList,
+    currentWeekEntry,
     isAdmin: req.isAdmin,
     weeklyMatchEnabled,
     hasWeeklyRelease,
