@@ -1829,7 +1829,6 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     nickname: req.session.nickname,
     hasProfile: true,
     showPassword: true,
-    matchList,
     historyList,
     currentWeekEntry,
     isAdmin: req.isAdmin,
@@ -1905,7 +1904,6 @@ app.get('/matches/detail/:id', isLoggedIn, wrapAsync(async (req, res) => {
     matchId: match.id,
     isAdmin: req.isAdmin,
     matchSource: 'weekly',
-    weekNumber,
     weeklyMatchEnabled
   });
 }));
