@@ -31,6 +31,9 @@
         <p style="color: var(--muted-foreground); margin-bottom: 24px;">
           点击下方按钮确认，你确定要参与本周匹配吗？确认后系统才会将你纳入本周的匹配候选池。
         </p>
+        <p style="font-size: 0.9rem; color: var(--muted-foreground); margin-bottom: 24px; padding: 12px; background: var(--accent); border-radius: 8px;">
+          <strong>匹配成功后将向对方展示：</strong>学校邮箱、昵称、年级、性别、校区、LoveType、兴趣爱好和匹配评语。请确认可接受这些信息被对方查看。
+        </p>
 
         <form method="POST" action="/confirm-match">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">

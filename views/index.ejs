@@ -82,12 +82,14 @@
               <a href="/confirm-match" class="btn btn-secondary">取消确认</a>
               <% } else { %>
               <a href="/confirm-match" class="btn">确认匹配</a>
+              <p style="font-size: 0.8rem; color: var(--muted-foreground); margin-top: 8px;">匹配成功后，双方会互见学校邮箱等基本信息</p>
               <% } %>
             <% } else { %>
               <% if (user.weeklyMatchConfirmed) { %>
               <a href="/matches" class="btn">看看匹配</a>
               <% } else { %>
               <a href="/confirm-match" class="btn">确认匹配</a>
+              <p style="font-size: 0.8rem; color: var(--muted-foreground); margin-top: 8px;">匹配成功后，双方会互见学校邮箱等基本信息</p>
               <% } %>
             <% } %>
             <a href="/profile?edit=1" class="btn btn-secondary">查看资料</a>
