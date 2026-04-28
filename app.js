@@ -1769,7 +1769,6 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
       m.matched_at,
       m.match_comment,
       partner.id AS partner_id,
-      partner.email AS partner_email,
       partner.nickname AS partner_nickname,
       partner.name AS partner_name,
       p.my_grade AS partner_grade,
@@ -1798,8 +1797,7 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     matchComment: weeklyMatches[0].match_comment,
     partner: {
       id: weeklyMatches[0].partner_id,
-      email: weeklyMatches[0].partner_email,
-      nickname: weeklyMatches[0].partner_nickname || weeklyMatches[0].partner_name || weeklyMatches[0].partner_email?.split('@')[0],
+      nickname: weeklyMatches[0].partner_nickname || weeklyMatches[0].partner_name || '同学',
       my_grade: weeklyMatches[0].partner_grade,
       gender: weeklyMatches[0].partner_gender,
       campus: weeklyMatches[0].partner_campus,
@@ -1840,7 +1838,6 @@ app.get('/matches/detail/:id', isLoggedIn, wrapAsync(async (req, res) => {
   const match = await db.queryOne(`
     SELECT m.*,
       partner.id AS partner_id,
-      partner.email AS partner_email,
       partner.nickname AS partner_nickname,
       partner.name AS partner_name,
       p.my_grade AS partner_grade,
@@ -1864,8 +1861,7 @@ app.get('/matches/detail/:id', isLoggedIn, wrapAsync(async (req, res) => {
 
   const partner = {
     id: match.partner_id,
-    email: match.partner_email,
-    nickname: match.partner_nickname || match.partner_name || match.partner_email?.split('@')[0],
+    nickname: match.partner_nickname || match.partner_name || '同学',
     my_grade: match.partner_grade,
     gender: match.partner_gender,
     campus: match.partner_campus,
@@ -1885,10 +1881,7 @@ app.get('/matches/detail/:id', isLoggedIn, wrapAsync(async (req, res) => {
       matchComment: match.match_comment,
       partner: partner
     },
-    matches: [{
-      ...partner,
-      email: partner.email
-    }],
+    matches: [partner],
     matchId: match.id,
     isAdmin: req.isAdmin,
     matchSource: 'weekly',
@@ -2272,6 +2265,15 @@ app.get('/couple-match/result/:id', isLoggedIn, wrapAsync(async (req, res) => {
 }));
 
 // API: 获取实时推荐列表
+function stripPublicMatchContactFields(match) {
+  const publicMatch = { ...match };
+  delete publicMatch.email;
+  delete publicMatch.partner_email;
+  delete publicMatch.requester_email;
+  delete publicMatch.receiver_email;
+  return publicMatch;
+}
+
 app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
   // 检查是否确认参与匹配
   if (!req.user.weeklyMatchConfirmed) {
@@ -2279,7 +2281,7 @@ app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
   }
   const matchService = require('./matchService');
   const matches = await matchService.findMatches(req.user.id, getYear(), getWeekNumber());
-  res.json({ success: true, source: 'recommendation', data: matches });
+  res.json({ success: true, source: 'recommendation', data: matches.map(stripPublicMatchContactFields) });
 }));
 
 // API: 获取前5名实时推荐
@@ -2290,7 +2292,7 @@ app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
   }
   const matchService = require('./matchService');
   const matches = await matchService.getTopMatches(req.user.id, 5, getYear(), getWeekNumber());
-  res.json({ success: true, source: 'recommendation', data: matches });
+  res.json({ success: true, source: 'recommendation', data: matches.map(stripPublicMatchContactFields) });
 }));
 
 // API: 异步获取匹配评语

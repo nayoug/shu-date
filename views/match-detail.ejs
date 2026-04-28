@@ -81,7 +81,7 @@
       <% if (matches && matches.length > 0) { %>
         <% var m = matches[0]; %>
         <div class="detail-score" style="background: var(--accent);">
-          <div class="label">与 <%= m.nickname || m.email %> 的匹配度</div>
+          <div class="label">与 <%= m.nickname || '同学' %> 的匹配度</div>
           <div class="score" style="color: <%= m.score >= 70 ? 'oklch(0.55 0.15 145)' : m.score >= 50 ? 'oklch(0.6 0.15 80)' : 'oklch(0.6 0.15 25)' %>;">
             <%= m.score !== null && m.score !== undefined ? Math.round(m.score) : '--' %>分
           </div>
@@ -106,7 +106,6 @@
           <p><span class="label">性别</span><span><%= m.gender || '未填写' %></span></p>
           <p><span class="label">校区</span><span><%= m.campus || '未填写' %></span></p>
           <p><span class="label">恋爱类型</span><span><%= m.lovetype_code || '未填写' %></span></p>
-          <p><span class="label">邮箱</span><span><%= m.email || '未填写' %></span></p>
         </div>
 
         <div class="detail-info">

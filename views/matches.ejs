@@ -127,7 +127,7 @@
             #<%= index + 1 %>
           </div>
           <div style="flex: 1;">
-            <div>你的匹配对象是： <%= m.nickname || m.email %> </div>
+            <div>你的匹配对象是： <%= m.nickname || '同学' %> </div>
           </div>
           <% const scoreTone = m.score >= 70 ? 'high' : (m.score >= 50 ? 'medium' : 'low'); %>
           <div class="match-score match-score--<%= scoreTone %>">
