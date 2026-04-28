@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 const packageJson = require('./package.json');
-const { getWeekNumber, getYear } = require('./weekNumber');
+const { getWeekNumber, getYear, getCurrentWeekByTuesday19 } = require('./weekNumber');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
 const dbModule = require('./database');
@@ -380,11 +380,10 @@ async function loadCurrentUserFromSession(req) {
   );
 
   // 检查是否确认了本周的匹配（year + week 与当前周一致）
-  const currentYear = getYear();
-  const currentWeek = getWeekNumber();
+  const currentWeekInfo = getCurrentWeekByTuesday19();
   const weeklyMatchConfirmed = currentUser.weekly_match_year != null
-    && currentUser.weekly_match_year === currentYear
-    && currentUser.weekly_match_week === currentWeek;
+    && currentUser.weekly_match_year === currentWeekInfo.year
+    && currentUser.weekly_match_week === currentWeekInfo.week;
 
   const user = {
     id: currentUser.id,
@@ -1604,11 +1603,10 @@ app.post('/confirm-match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, r
   }
 
   // 更新确认状态为当前 year + week
-  const currentYear = getYear();
-  const currentWeek = getWeekNumber();
+  const currentWeekInfo = getCurrentWeekByTuesday19();
   await db.execute(
     'UPDATE users SET weekly_match_year = $1, weekly_match_week = $2 WHERE id = $3',
-    [currentYear, currentWeek, req.user.id]
+    [currentWeekInfo.year, currentWeekInfo.week, req.user.id]
   );
 
   res.redirect('/?msg=已确认参与本周匹配&type=success');
@@ -1754,11 +1752,10 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     return res.redirect('/confirm-match?msg=请先确认参与本周匹配&type=warning');
   }
 
-  const weekNumber = getWeekNumber();
-  const matchYear = getYear();
+  const weekInfo = getCurrentWeekByTuesday19();
   const weeklyRelease = await db.queryOne(
     'SELECT COUNT(*) as count FROM matches WHERE match_year = $1 AND week_number = $2',
-    [matchYear, weekNumber]
+    [weekInfo.year, weekInfo.week]
   );
   const hasWeeklyRelease = parseInt(weeklyRelease?.count || '0', 10) > 0;
   const weeklyMatches = await db.query(`
@@ -1833,8 +1830,7 @@ app.get('/matches/detail/:id', isLoggedIn, wrapAsync(async (req, res) => {
     return res.redirect('/matches');
   }
 
-  const weekNumber = getWeekNumber();
-  const matchYear = getYear();
+  const weekInfo = getCurrentWeekByTuesday19();
 
   // 查询匹配详情
   const match = await db.queryOne(`
@@ -2310,7 +2306,8 @@ app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
     return res.status(403).json({ success: false, error: '请先确认参与本周匹配' });
   }
   const matchService = require('./matchService');
-  const matches = await matchService.findMatches(req.user.id, getYear(), getWeekNumber());
+  const weekInfo = getCurrentWeekByTuesday19();
+  const matches = await matchService.findMatches(req.user.id, weekInfo.year, weekInfo.week);
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
 
@@ -2321,7 +2318,8 @@ app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
     return res.status(403).json({ success: false, error: '请先确认参与本周匹配' });
   }
   const matchService = require('./matchService');
-  const matches = await matchService.getTopMatches(req.user.id, 5, getYear(), getWeekNumber());
+  const weekInfo = getCurrentWeekByTuesday19();
+  const matches = await matchService.getTopMatches(req.user.id, 5, weekInfo.year, weekInfo.week);
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
 
@@ -2431,11 +2429,13 @@ app.get('/admin', isLoggedIn, requireAdmin, wrapAsync(async (req, res) => {
     ORDER BY u.created_at DESC
   `);
 
+  const weekInfo = getCurrentWeekByTuesday19();
   res.render('admin', {
     title: '管理',
     user: req.user,
     users,
-    weekNumber: getWeekNumber(),
+    weekNumber: weekInfo.week,
+    year: weekInfo.year,
     csrfToken: ensureCsrfToken(req),
     message: req.query.msg,
     messageType: req.query.type,
