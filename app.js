@@ -1747,20 +1747,20 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     return res.redirect('/profile');
   }
 
-  // 检查是否确认参与匹配
-  if (!req.user.weeklyMatchConfirmed) {
-    return res.redirect('/confirm-match?msg=请先确认参与本周匹配&type=warning');
-  }
-
   const weekInfo = getCurrentWeekByTuesday19();
+
+  // 查询当前周是否有匹配发布
   const weeklyRelease = await db.queryOne(
     'SELECT COUNT(*) as count FROM matches WHERE match_year = $1 AND week_number = $2',
     [weekInfo.year, weekInfo.week]
   );
   const hasWeeklyRelease = parseInt(weeklyRelease?.count || '0', 10) > 0;
-  const weeklyMatches = await db.query(`
+
+  // 查询用户所有历史匹配，按周倒序排列
+  const allMatches = await db.query(`
     SELECT
       m.id,
+      m.match_year,
       m.week_number,
       m.score,
       m.matched_at,
@@ -1781,30 +1781,28 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
         ELSE m.user_id_1
       END
     LEFT JOIN profiles p ON p.user_id = partner.id
-    WHERE m.match_year = $3 AND m.week_number = $2
-      AND ($1 = m.user_id_1 OR $1 = m.user_id_2)
-    ORDER BY m.matched_at DESC, m.id DESC
-    LIMIT 1
-  `, [req.user.id, weekNumber, matchYear]);
+    WHERE $1 = m.user_id_1 OR $1 = m.user_id_2
+    ORDER BY m.match_year DESC, m.week_number DESC
+  `, [req.user.id]);
 
-  const weeklyMatch = weeklyMatches.length > 0 ? {
-    weekNumber: weeklyMatches[0].week_number,
-    score: weeklyMatches[0].score,
-    matchedAt: weeklyMatches[0].matched_at,
-    matchId: weeklyMatches[0].id,
-    matchComment: weeklyMatches[0].match_comment,
+  const matchList = allMatches.map(row => ({
+    matchId: row.id,
+    year: row.match_year,
+    weekNumber: row.week_number,
+    score: row.score,
+    matchedAt: row.matched_at,
+    matchComment: row.match_comment,
     partner: {
-      id: weeklyMatches[0].partner_id,
-      email: weeklyMatches[0].partner_email,
-      nickname: weeklyMatches[0].partner_nickname || weeklyMatches[0].partner_name || weeklyMatches[0].partner_email?.split('@')[0],
-      my_grade: weeklyMatches[0].partner_grade,
-      gender: weeklyMatches[0].partner_gender,
-      campus: weeklyMatches[0].partner_campus,
-      interests: weeklyMatches[0].partner_interests,
-      lovetype_code: weeklyMatches[0].partner_lovetype_code,
-      score: weeklyMatches[0].score
+      id: row.partner_id,
+      email: row.partner_email,
+      nickname: row.partner_nickname || row.partner_name || row.partner_email?.split('@')[0],
+      my_grade: row.partner_grade,
+      gender: row.partner_gender,
+      campus: row.partner_campus,
+      interests: row.partner_interests,
+      lovetype_code: row.partner_lovetype_code
     }
-  } : null;
+  }));
 
   res.render('matches', {
     title: '匹配结果',
@@ -1812,14 +1810,12 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     nickname: req.session.nickname,
     hasProfile: true,
     showPassword: true,
-    weeklyMatch: weeklyMatch,
-    matches: weeklyMatch ? [weeklyMatch.partner] : [],
-    matchId: weeklyMatch ? weeklyMatch.matchId : null,
+    matchList,
     isAdmin: req.isAdmin,
-    matchSource: 'weekly',
-    weekNumber,
+    weeklyMatchEnabled,
     hasWeeklyRelease,
-    weeklyMatchEnabled
+    currentWeekInfo: weekInfo,
+    weeklyMatchConfirmed: req.user.weeklyMatchConfirmed
   });
 }));
 
