@@ -1804,19 +1804,15 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     }
   }));
 
-  // 构建本周状态条目
+  // 构建本周状态条目（仅已确认用户可见）
   const isCurrentWeek = weekInfo.year && weekInfo.week;
   const currentWeekMatch = matchList.find(m => m.year === weekInfo.year && m.weekNumber === weekInfo.week);
   let currentWeekEntry = null;
-  if (isCurrentWeek) {
-    if (req.user.weeklyMatchConfirmed) {
-      if (currentWeekMatch) {
-        currentWeekEntry = { ...currentWeekMatch, status: 'matched' };
-      } else {
-        currentWeekEntry = { year: weekInfo.year, weekNumber: weekInfo.week, status: 'no_match' };
-      }
+  if (isCurrentWeek && req.user.weeklyMatchConfirmed) {
+    if (currentWeekMatch) {
+      currentWeekEntry = { ...currentWeekMatch, status: 'matched' };
     } else {
-      currentWeekEntry = { year: weekInfo.year, weekNumber: weekInfo.week, status: 'not_confirmed' };
+      currentWeekEntry = { year: weekInfo.year, weekNumber: weekInfo.week, status: 'waiting' };
     }
   }
 

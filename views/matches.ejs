@@ -97,14 +97,16 @@
       <p style="color: var(--muted-foreground);">需要完成问卷才能查看匹配结果。</p>
       <a href="/profile" class="btn" style="margin-top: 16px;">去填写问卷</a>
     </div>
-    <% } else if (!weeklyMatchConfirmed) { %>
+    <% } else { %>
+
+    <% if (!weeklyMatchConfirmed) { %>
     <div class="card" style="text-align: center;">
       <div style="font-size: 4rem; margin-bottom: 16px;">🤝</div>
       <h2>请确认参与本周匹配</h2>
-      <p style="color: var(--muted-foreground); margin-bottom: 24px;">确认后即可查看历史匹配记录和参与本周匹配。</p>
+      <p style="color: var(--muted-foreground); margin-bottom: 24px;">确认后即可参与本周匹配。</p>
       <a href="/confirm-match" class="btn btn-large">确认参与匹配</a>
     </div>
-    <% } else { %>
+    <% } %>
 
     <% if (currentWeekEntry) { %>
     <div class="card">
@@ -125,7 +127,7 @@
         </div>
         <div style="color: var(--muted-foreground); font-size: 0.85rem;">查看详情 →</div>
       </a>
-      <% } else if (currentWeekEntry.status === 'no_match') { %>
+      <% } else if (currentWeekEntry.status === 'waiting') { %>
       <div class="match-card match-card--no-match">
         <div class="match-week">第<%= currentWeekEntry.weekNumber %>周</div>
         <div class="match-info">
