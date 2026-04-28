@@ -60,8 +60,16 @@
         <div class="form-group">
           <input class="form-control-center" type="text" name="nickname" placeholder="昵称" value="<%= typeof nickname !== 'undefined' ? nickname : '' %>" autocomplete="nickname" aria-label="昵称" required>
         </div>
-        <div class="form-group">
+        <div class="form-group email-with-help">
           <input class="form-control-center" type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="email" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required>
+          <a href="javascript:void(0)" class="email-help-link" onclick="toggleEmailGuide()">邮箱申请指引</a>
+        </div>
+        <div id="email-guide" class="email-guide" style="display: none;">
+          <div class="email-guide-content">
+            <p><strong>邮箱账号申请：</strong><a href="https://oauth.shu.edu.cn/" target="_blank">https://oauth.shu.edu.cn/</a></p>
+            <p><strong>申请完成后登录上海大学邮件系统：</strong><a href="https://newmail.shu.edu.cn/coremail/" target="_blank">https://newmail.shu.edu.cn/coremail/</a></p>
+            <p><strong>忘记邮箱账号：</strong>点击忘记密码 -&gt; 邮箱申请 -&gt; 随便写一个邮箱账号 -&gt; 点击确认就可以弹出之前注册的邮箱账号</p>
+          </div>
         </div>
         <div class="form-group">
           <input class="form-control-center" type="password" name="password" placeholder="设置密码（至少6位）" autocomplete="new-password" aria-label="设置密码" required minlength="6">
@@ -92,5 +100,15 @@
   </div>
 
   <%- include('partials/site-footer') %>
+<script>
+function toggleEmailGuide() {
+  var guide = document.getElementById('email-guide');
+  if (guide.style.display === 'none') {
+    guide.style.display = 'block';
+  } else {
+    guide.style.display = 'none';
+  }
+}
+</script>
 </body>
 </html>
