@@ -10,13 +10,18 @@
     <div class="card">
       <h2 style="margin-bottom: 24px;">💕 确认匹配</h2>
 
-      <% if (typeof message !== 'undefined' && message) { %>
+      <% if (typeof message !== 'undefined' && message && message !== '已取消本周匹配') { %>
         <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 20px;">
           <%= message %>
         </div>
       <% } %>
 
-      <% if (user.weeklyMatchConfirmed) { %>
+      <% if (message === '已取消本周匹配') { %>
+        <div class="alert alert-success" style="margin-bottom: 20px;">
+          <%= message %>
+        </div>
+        <a href="/" class="btn" style="width: 100%; text-align: center;">返回首页</a>
+      <% } else if (user.weeklyMatchConfirmed) { %>
         <p style="color: var(--muted-foreground); margin-bottom: 24px;">
           你已确认参与本周匹配。
         </p>
