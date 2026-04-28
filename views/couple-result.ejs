@@ -62,16 +62,18 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
           var container = document.getElementById('comment-loading');
+          var textEl = container.querySelector('[data-comment-text]');
           if (data.success && data.comment) {
-            var formatted = data.comment.replace(/\n/g, '<br>');
-            container.innerHTML = '<h3 style="margin-bottom: 12px;">匹配评语</h3><p style="margin: 0; color: var(--muted-foreground); line-height: 1.6;">' + formatted + '</p>';
+            textEl.style.whiteSpace = 'pre-line';
+            textEl.textContent = data.comment;
           } else {
-            container.innerHTML = '<h3 style="margin-bottom: 12px;">匹配评语</h3><p style="margin: 0; color: var(--muted-foreground);">暂时无法生成评语</p>';
+            textEl.textContent = '暂时无法生成评语';
           }
         })
         .catch(function() {
           var container = document.getElementById('comment-loading');
-          container.innerHTML = '<h3 style="margin-bottom: 12px;">匹配评语</h3><p style="margin: 0; color: var(--muted-foreground);">加载失败</p>';
+          var textEl = container.querySelector('[data-comment-text]');
+          textEl.textContent = '加载失败';
         });
     })();
   </script>

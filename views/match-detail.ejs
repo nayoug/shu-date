@@ -65,6 +65,7 @@
       margin: 0;
       line-height: 1.7;
       color: var(--muted-foreground);
+      white-space: pre-line;
     }
   </style>
 </head>
@@ -89,7 +90,7 @@
         <% if (typeof weeklyMatch !== 'undefined' && weeklyMatch && weeklyMatch.matchComment) { %>
         <div class="detail-comment">
           <h3>💕 AI 智能匹配评语</h3>
-          <%- weeklyMatch.matchComment.replace(/\n/g, '<br>') %>
+          <%= weeklyMatch.matchComment %>
         </div>
         <% } else if (typeof matchId !== 'undefined' && matchId) { %>
         <div class="detail-comment" id="match-comment" data-match-id="<%= matchId %>">
@@ -149,14 +150,13 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
           if (data.success && data.comment) {
-            var formatted = data.comment.replace(/\n/g, '<br>');
-            commentEl.innerHTML = '<h3>💕 DS 匹配评语</h3><p>' + formatted + '</p>';
+            commentEl.querySelector('p').textContent = data.comment;
           } else {
-            commentEl.innerHTML = '<h3>💕 DS 匹配评语</h3><p style="color: var(--muted-foreground);">暂无可用评语</p>';
+            commentEl.querySelector('p').textContent = '暂无可用评语';
           }
         })
         .catch(function() {
-          commentEl.innerHTML = '<h3>💕 DS 匹配评语</h3><p style="color: var(--muted-foreground);">加载失败</p>';
+          commentEl.querySelector('p').textContent = '加载失败';
         });
     })();
   </script>

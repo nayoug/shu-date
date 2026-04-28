@@ -407,8 +407,6 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
 
     if (matches.length > 0) {
       const bestMatch = matches[0];
-      // score 已在 findMatches 中完成归一化（开根号乘10），直接使用
-      const normalizedScore = bestMatch.score;
       const userId1 = parseInt(user.user_id, 10);
       const userId2 = parseInt(bestMatch.user_id, 10);
 
@@ -417,10 +415,6 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
         continue;
       }
 
-      await dbModule.execute(`
-        INSERT INTO matches (user_id_1, user_id_2, score, week_number, match_year)
-        VALUES ($1, $2, $3, $4, $5)
-      `, [userId1, userId2, normalizedScore, weekNumber, year]);
       matched.add(userId1);
       matched.add(userId2);
 
