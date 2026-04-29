@@ -19,7 +19,7 @@
 
 const dbModule = require('./database');
 const lovetypeService = require('./lovetypeService');
-const { getWeekNumber, getYear } = require('./weekNumber');
+const { getWeekNumber, getYear, getCurrentWeekByTuesday19 } = require('./weekNumber');
 
 // ============ 工具函数 ============
 
@@ -380,8 +380,11 @@ async function getTopMatches(userId, topN = 5, targetYear = null, targetWeek = n
 }
 
 async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
-  const year = targetYear !== null ? targetYear : getYear();
-  const weekNumber = targetWeek !== null ? targetWeek : getWeekNumber();
+  const weekInfo = targetYear !== null && targetWeek !== null
+    ? { year: targetYear, week: targetWeek }
+    : getCurrentWeekByTuesday19();
+  const year = weekInfo.year;
+  const weekNumber = weekInfo.week;
 
   const users = await dbModule.query(`
     SELECT u.id as user_id, u.email, u.nickname, u.name, p.my_grade

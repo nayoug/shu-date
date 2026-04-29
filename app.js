@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 const packageJson = require('./package.json');
-const { getWeekNumber, getYear } = require('./weekNumber');
+const { getWeekNumber, getYear, getCurrentWeekByTuesday19 } = require('./weekNumber');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
 const dbModule = require('./database');
@@ -380,11 +380,10 @@ async function loadCurrentUserFromSession(req) {
   );
 
   // 检查是否确认了本周的匹配（year + week 与当前周一致）
-  const currentYear = getYear();
-  const currentWeek = getWeekNumber();
+  const currentWeekInfo = getCurrentWeekByTuesday19();
   const weeklyMatchConfirmed = currentUser.weekly_match_year != null
-    && currentUser.weekly_match_year === currentYear
-    && currentUser.weekly_match_week === currentWeek;
+    && currentUser.weekly_match_year === currentWeekInfo.year
+    && currentUser.weekly_match_week === currentWeekInfo.week;
 
   const user = {
     id: currentUser.id,
@@ -1604,11 +1603,10 @@ app.post('/confirm-match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, r
   }
 
   // 更新确认状态为当前 year + week
-  const currentYear = getYear();
-  const currentWeek = getWeekNumber();
+  const currentWeekInfo = getCurrentWeekByTuesday19();
   await db.execute(
     'UPDATE users SET weekly_match_year = $1, weekly_match_week = $2 WHERE id = $3',
-    [currentYear, currentWeek, req.user.id]
+    [currentWeekInfo.year, currentWeekInfo.week, req.user.id]
   );
 
   res.redirect('/?msg=已确认参与本周匹配&type=success');
@@ -1749,21 +1747,20 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     return res.redirect('/profile');
   }
 
-  // 检查是否确认参与匹配
-  if (!req.user.weeklyMatchConfirmed) {
-    return res.redirect('/confirm-match?msg=请先确认参与本周匹配&type=warning');
-  }
+  const weekInfo = getCurrentWeekByTuesday19();
 
-  const weekNumber = getWeekNumber();
-  const matchYear = getYear();
+  // 查询当前周是否有匹配发布
   const weeklyRelease = await db.queryOne(
     'SELECT COUNT(*) as count FROM matches WHERE match_year = $1 AND week_number = $2',
-    [matchYear, weekNumber]
+    [weekInfo.year, weekInfo.week]
   );
   const hasWeeklyRelease = parseInt(weeklyRelease?.count || '0', 10) > 0;
-  const weeklyMatches = await db.query(`
+
+  // 查询用户所有历史匹配，按周倒序排列
+  const allMatches = await db.query(`
     SELECT
       m.id,
+      m.match_year,
       m.week_number,
       m.score,
       m.matched_at,
@@ -1784,30 +1781,43 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
         ELSE m.user_id_1
       END
     LEFT JOIN profiles p ON p.user_id = partner.id
-    WHERE m.match_year = $3 AND m.week_number = $2
-      AND ($1 = m.user_id_1 OR $1 = m.user_id_2)
-    ORDER BY m.matched_at DESC, m.id DESC
-    LIMIT 1
-  `, [req.user.id, weekNumber, matchYear]);
+    WHERE $1 = m.user_id_1 OR $1 = m.user_id_2
+    ORDER BY m.match_year DESC, m.week_number DESC
+  `, [req.user.id]);
 
-  const weeklyMatch = weeklyMatches.length > 0 ? {
-    weekNumber: weeklyMatches[0].week_number,
-    score: weeklyMatches[0].score,
-    matchedAt: weeklyMatches[0].matched_at,
-    matchId: weeklyMatches[0].id,
-    matchComment: weeklyMatches[0].match_comment,
+  const matchList = allMatches.map(row => ({
+    matchId: row.id,
+    year: row.match_year,
+    weekNumber: row.week_number,
+    score: row.score,
+    matchedAt: row.matched_at,
+    matchComment: row.match_comment,
     partner: {
-      id: weeklyMatches[0].partner_id,
-      email: weeklyMatches[0].partner_email,
-      nickname: weeklyMatches[0].partner_nickname || weeklyMatches[0].partner_name || weeklyMatches[0].partner_email?.split('@')[0],
-      my_grade: weeklyMatches[0].partner_grade,
-      gender: weeklyMatches[0].partner_gender,
-      campus: weeklyMatches[0].partner_campus,
-      interests: weeklyMatches[0].partner_interests,
-      lovetype_code: weeklyMatches[0].partner_lovetype_code,
-      score: weeklyMatches[0].score
+      id: row.partner_id,
+      email: row.partner_email,
+      nickname: row.partner_nickname || row.partner_name || row.partner_email?.split('@')[0],
+      my_grade: row.partner_grade,
+      gender: row.partner_gender,
+      campus: row.partner_campus,
+      interests: row.partner_interests,
+      lovetype_code: row.partner_lovetype_code
     }
-  } : null;
+  }));
+
+  // 构建本周状态条目（仅已确认用户可见）
+  const isCurrentWeek = weekInfo.year && weekInfo.week;
+  const currentWeekMatch = matchList.find(m => m.year === weekInfo.year && m.weekNumber === weekInfo.week);
+  let currentWeekEntry = null;
+  if (isCurrentWeek && req.user.weeklyMatchConfirmed) {
+    if (currentWeekMatch) {
+      currentWeekEntry = { ...currentWeekMatch, status: 'matched' };
+    } else {
+      currentWeekEntry = { year: weekInfo.year, weekNumber: weekInfo.week, status: 'waiting' };
+    }
+  }
+
+  // 历史匹配（排除本周）
+  const historyList = matchList.filter(m => !(m.year === weekInfo.year && m.weekNumber === weekInfo.week));
 
   res.render('matches', {
     title: '匹配结果',
@@ -1815,14 +1825,13 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     nickname: req.session.nickname,
     hasProfile: true,
     showPassword: true,
-    weeklyMatch: weeklyMatch,
-    matches: weeklyMatch ? [weeklyMatch.partner] : [],
-    matchId: weeklyMatch ? weeklyMatch.matchId : null,
+    historyList,
+    currentWeekEntry,
     isAdmin: req.isAdmin,
-    matchSource: 'weekly',
-    weekNumber,
+    weeklyMatchEnabled,
     hasWeeklyRelease,
-    weeklyMatchEnabled
+    currentWeekInfo: weekInfo,
+    weeklyMatchConfirmed: req.user.weeklyMatchConfirmed
   });
 }));
 
@@ -1833,8 +1842,7 @@ app.get('/matches/detail/:id', isLoggedIn, wrapAsync(async (req, res) => {
     return res.redirect('/matches');
   }
 
-  const weekNumber = getWeekNumber();
-  const matchYear = getYear();
+  const weekInfo = getCurrentWeekByTuesday19();
 
   // 查询匹配详情
   const match = await db.queryOne(`
@@ -1892,7 +1900,6 @@ app.get('/matches/detail/:id', isLoggedIn, wrapAsync(async (req, res) => {
     matchId: match.id,
     isAdmin: req.isAdmin,
     matchSource: 'weekly',
-    weekNumber,
     weeklyMatchEnabled
   });
 }));
@@ -2310,7 +2317,8 @@ app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
     return res.status(403).json({ success: false, error: '请先确认参与本周匹配' });
   }
   const matchService = require('./matchService');
-  const matches = await matchService.findMatches(req.user.id, getYear(), getWeekNumber());
+  const weekInfo = getCurrentWeekByTuesday19();
+  const matches = await matchService.findMatches(req.user.id, weekInfo.year, weekInfo.week);
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
 
@@ -2321,7 +2329,8 @@ app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
     return res.status(403).json({ success: false, error: '请先确认参与本周匹配' });
   }
   const matchService = require('./matchService');
-  const matches = await matchService.getTopMatches(req.user.id, 5, getYear(), getWeekNumber());
+  const weekInfo = getCurrentWeekByTuesday19();
+  const matches = await matchService.getTopMatches(req.user.id, 5, weekInfo.year, weekInfo.week);
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
 
@@ -2431,11 +2440,13 @@ app.get('/admin', isLoggedIn, requireAdmin, wrapAsync(async (req, res) => {
     ORDER BY u.created_at DESC
   `);
 
+  const weekInfo = getCurrentWeekByTuesday19();
   res.render('admin', {
     title: '管理',
     user: req.user,
     users,
-    weekNumber: getWeekNumber(),
+    weekNumber: weekInfo.week,
+    year: weekInfo.year,
     csrfToken: ensureCsrfToken(req),
     message: req.query.msg,
     messageType: req.query.type,
