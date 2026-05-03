@@ -44,29 +44,109 @@ function getThisWeekTuesday19LocalMs(localMs) {
   );
 }
 
-function getCurrentWeekByTuesday19(date = new Date()) {
+function getCurrentWeekWindowLocalMs(date = new Date()) {
   const localMs = getShanghaiLocalMs(date);
   const thisTuesday19LocalMs = getThisWeekTuesday19LocalMs(localMs);
-  const targetTuesdayLocalMs = localMs >= thisTuesday19LocalMs
-    ? thisTuesday19LocalMs + WEEK_MS
-    : thisTuesday19LocalMs;
-
-  return getWeekInfoFromShanghaiLocalMs(targetTuesdayLocalMs);
-}
-
-function getLastClosedWeekByTuesday19(date = new Date()) {
-  const localMs = getShanghaiLocalMs(date);
-  const thisTuesday19LocalMs = getThisWeekTuesday19LocalMs(localMs);
-  const targetTuesdayLocalMs = localMs >= thisTuesday19LocalMs
+  const startLocalMs = localMs >= thisTuesday19LocalMs
     ? thisTuesday19LocalMs
     : thisTuesday19LocalMs - WEEK_MS;
 
-  return getWeekInfoFromShanghaiLocalMs(targetTuesdayLocalMs);
+  return {
+    startLocalMs,
+    endLocalMs: startLocalMs + WEEK_MS
+  };
+}
+
+function getLastClosedWeekWindowLocalMs(date = new Date()) {
+  const localMs = getShanghaiLocalMs(date);
+  const thisTuesday19LocalMs = getThisWeekTuesday19LocalMs(localMs);
+  const endLocalMs = localMs >= thisTuesday19LocalMs
+    ? thisTuesday19LocalMs
+    : thisTuesday19LocalMs - WEEK_MS;
+
+  return {
+    startLocalMs: endLocalMs - WEEK_MS,
+    endLocalMs
+  };
+}
+
+function getCurrentWeekByTuesday19(date = new Date()) {
+  const { endLocalMs } = getCurrentWeekWindowLocalMs(date);
+
+  return getWeekInfoFromShanghaiLocalMs(endLocalMs);
+}
+
+function getLastClosedWeekByTuesday19(date = new Date()) {
+  const { endLocalMs } = getLastClosedWeekWindowLocalMs(date);
+
+  return getWeekInfoFromShanghaiLocalMs(endLocalMs);
+}
+
+function getLegacyCurrentWeekByTuesday19(date = new Date()) {
+  const nowInShanghai = new Date(date.getTime() + SHANGHAI_TZ);
+  const dayOfWeek = nowInShanghai.getDay();
+  const hours = nowInShanghai.getHours();
+  const minutes = nowInShanghai.getMinutes();
+
+  const isPastTuesday19 = dayOfWeek > 2 || (dayOfWeek === 2 && (hours > 19 || (hours === 19 && minutes >= 0)));
+
+  const d = new Date(date.getTime());
+  if (isPastTuesday19) {
+    d.setDate(d.getDate() + 7);
+  }
+  const start = new Date(d.getFullYear(), 0, 1);
+  const diff = d - start;
+  return {
+    year: d.getFullYear(),
+    week: Math.floor(diff / WEEK_MS)
+  };
+}
+
+function weekKey(weekInfo) {
+  return `${weekInfo.year}-${weekInfo.week}`;
+}
+
+function dateFromShanghaiLocalMs(localMs) {
+  return new Date(localMs - SHANGHAI_TZ);
+}
+
+function getCompatibleWeekKeysForWindow(startLocalMs, endLocalMs) {
+  const keys = new Map();
+
+  const addKey = weekInfo => {
+    keys.set(weekKey(weekInfo), weekInfo);
+  };
+
+  addKey(getWeekInfoFromShanghaiLocalMs(endLocalMs));
+
+  for (let sampleLocalMs = startLocalMs; sampleLocalMs < endLocalMs; sampleLocalMs += DAY_MS) {
+    addKey(getLegacyCurrentWeekByTuesday19(dateFromShanghaiLocalMs(sampleLocalMs)));
+  }
+  addKey(getLegacyCurrentWeekByTuesday19(dateFromShanghaiLocalMs(endLocalMs - 1)));
+
+  return Array.from(keys.values());
+}
+
+function getCompatibleCurrentWeekKeysByTuesday19(date = new Date()) {
+  const { startLocalMs, endLocalMs } = getCurrentWeekWindowLocalMs(date);
+  return getCompatibleWeekKeysForWindow(startLocalMs, endLocalMs);
+}
+
+function getCompatibleLastClosedWeekKeysByTuesday19(date = new Date()) {
+  const { startLocalMs, endLocalMs } = getLastClosedWeekWindowLocalMs(date);
+  return getCompatibleWeekKeysForWindow(startLocalMs, endLocalMs);
+}
+
+function isWeekKeyIncluded(weekKeys, year, week) {
+  return weekKeys.some(weekInfo => weekInfo.year === year && weekInfo.week === week);
 }
 
 module.exports = {
   getWeekNumber,
   getYear,
   getCurrentWeekByTuesday19,
-  getLastClosedWeekByTuesday19
+  getLastClosedWeekByTuesday19,
+  getCompatibleCurrentWeekKeysByTuesday19,
+  getCompatibleLastClosedWeekKeysByTuesday19,
+  isWeekKeyIncluded
 };

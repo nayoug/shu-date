@@ -23,6 +23,31 @@ const { getWeekNumber, getYear, getCurrentWeekByTuesday19 } = require('./weekNum
 
 // ============ 工具函数 ============
 
+function normalizeConfirmationWeekKeys(targetYear, targetWeek, options = {}) {
+  const weekKeys = Array.isArray(options.confirmationWeekKeys) && options.confirmationWeekKeys.length > 0
+    ? options.confirmationWeekKeys
+    : [{ year: targetYear, week: targetWeek }];
+  const unique = new Map();
+
+  weekKeys.forEach(weekInfo => {
+    const year = parseNullableInt(weekInfo?.year);
+    const week = parseNullableInt(weekInfo?.week);
+    if (year === null || week === null) return;
+    unique.set(`${year}-${week}`, { year, week });
+  });
+
+  return Array.from(unique.values());
+}
+
+function addConfirmationWeekFilters(filters, params, weekKeys) {
+  const keyClauses = weekKeys.map(weekInfo => {
+    params.push(weekInfo.year, weekInfo.week);
+    return `(u.weekly_match_year = $${params.length - 1} AND u.weekly_match_week = $${params.length})`;
+  });
+
+  filters.push(keyClauses.length > 0 ? `(${keyClauses.join(' OR ')})` : 'FALSE');
+}
+
 function parseNullableInt(value) {
   if (value === null || value === undefined || value === '') return null;
   const parsed = parseInt(value, 10);
@@ -311,7 +336,7 @@ function calculateMatchDetails(myProfile, theirProfile) {
 
 // ============ 数据库查询接口 ============
 
-async function findMatches(userId, targetYear = null, targetWeek = null) {
+async function findMatches(userId, targetYear = null, targetWeek = null, options = {}) {
   const userIdInt = parseInt(userId, 10);
   const myUser = await dbModule.queryOne('SELECT * FROM users WHERE id = $1', [userIdInt]);
   if (!myUser) return [];
@@ -323,9 +348,8 @@ async function findMatches(userId, targetYear = null, targetWeek = null) {
   const params = [userIdInt];
 
   if (targetYear !== null && targetWeek !== null) {
-    params.push(targetYear, targetWeek);
-    filters.push(`u.weekly_match_year = $${params.length - 1}`);
-    filters.push(`u.weekly_match_week = $${params.length}`);
+    const weekKeys = normalizeConfirmationWeekKeys(targetYear, targetWeek, options);
+    addConfirmationWeekFilters(filters, params, weekKeys);
   }
 
   const allProfiles = await dbModule.query(`
@@ -374,26 +398,28 @@ async function findMatches(userId, targetYear = null, targetWeek = null) {
   return scored;
 }
 
-async function getTopMatches(userId, topN = 5, targetYear = null, targetWeek = null) {
-  const matches = await findMatches(userId, targetYear, targetWeek);
+async function getTopMatches(userId, topN = 5, targetYear = null, targetWeek = null, options = {}) {
+  const matches = await findMatches(userId, targetYear, targetWeek, options);
   return matches.slice(0, topN);
 }
 
-async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
+async function saveWeeklyMatches(targetYear = null, targetWeek = null, options = {}) {
   const weekInfo = targetYear !== null && targetWeek !== null
     ? { year: targetYear, week: targetWeek }
     : getCurrentWeekByTuesday19();
   const year = weekInfo.year;
   const weekNumber = weekInfo.week;
+  const confirmationWeekKeys = normalizeConfirmationWeekKeys(year, weekNumber, options);
+  const userFilters = ['u.verified = 1'];
+  const userParams = [];
+  addConfirmationWeekFilters(userFilters, userParams, confirmationWeekKeys);
 
   const users = await dbModule.query(`
     SELECT u.id as user_id, u.email, u.nickname, u.name, p.my_grade
     FROM users u
     JOIN profiles p ON u.id = p.user_id
-    WHERE u.verified = 1
-      AND u.weekly_match_year = $1
-      AND u.weekly_match_week = $2
-  `, [year, weekNumber]);
+    WHERE ${userFilters.join(' AND ')}
+  `, userParams);
 
   if (users.length < 2) {
     return { success: false, message: '用户数量不足' };
@@ -405,7 +431,7 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null) {
   for (const user of users) {
     if (matched.has(user.user_id)) continue;
 
-    const allMatches = await findMatches(user.user_id, year, weekNumber);
+    const allMatches = await findMatches(user.user_id, year, weekNumber, { confirmationWeekKeys });
     const matches = allMatches.filter(m => !matched.has(m.user_id));
 
     if (matches.length > 0) {

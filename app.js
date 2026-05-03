@@ -7,7 +7,15 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 const packageJson = require('./package.json');
-const { getWeekNumber, getYear, getCurrentWeekByTuesday19, getLastClosedWeekByTuesday19 } = require('./weekNumber');
+const {
+  getWeekNumber,
+  getYear,
+  getCurrentWeekByTuesday19,
+  getLastClosedWeekByTuesday19,
+  getCompatibleCurrentWeekKeysByTuesday19,
+  getCompatibleLastClosedWeekKeysByTuesday19,
+  isWeekKeyIncluded
+} = require('./weekNumber');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
 const dbModule = require('./database');
@@ -380,10 +388,9 @@ async function loadCurrentUserFromSession(req) {
   );
 
   // 检查是否确认了本周的匹配（year + week 与当前周一致）
-  const currentWeekInfo = getCurrentWeekByTuesday19();
+  const currentWeekKeys = getCompatibleCurrentWeekKeysByTuesday19();
   const weeklyMatchConfirmed = currentUser.weekly_match_year != null
-    && currentUser.weekly_match_year === currentWeekInfo.year
-    && currentUser.weekly_match_week === currentWeekInfo.week;
+    && isWeekKeyIncluded(currentWeekKeys, currentUser.weekly_match_year, currentUser.weekly_match_week);
 
   const user = {
     id: currentUser.id,
@@ -2318,7 +2325,9 @@ app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
   }
   const matchService = require('./matchService');
   const weekInfo = getCurrentWeekByTuesday19();
-  const matches = await matchService.findMatches(req.user.id, weekInfo.year, weekInfo.week);
+  const matches = await matchService.findMatches(req.user.id, weekInfo.year, weekInfo.week, {
+    confirmationWeekKeys: getCompatibleCurrentWeekKeysByTuesday19()
+  });
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
 
@@ -2330,7 +2339,9 @@ app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
   }
   const matchService = require('./matchService');
   const weekInfo = getCurrentWeekByTuesday19();
-  const matches = await matchService.getTopMatches(req.user.id, 5, weekInfo.year, weekInfo.week);
+  const matches = await matchService.getTopMatches(req.user.id, 5, weekInfo.year, weekInfo.week, {
+    confirmationWeekKeys: getCompatibleCurrentWeekKeysByTuesday19()
+  });
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
 
@@ -2564,7 +2575,7 @@ app.post('/api/cron/weekly-match', requireValidCronSecret, cronRateLimiter, wrap
   console.log(`[Cron] 开始执行周匹配: ${timestamp}`);
 
   try {
-    const result = await runWeeklyMatch();
+    const result = await runClosedWeeklyMatch();
 
     // 发送告警通知
     const { alertMatchSuccess, alertMatchSkipped } = require('./alertService');
@@ -2605,8 +2616,49 @@ app.post('/api/cron/weekly-match', requireValidCronSecret, cronRateLimiter, wrap
 
 async function runWeeklyMatch() {
   const matchService = require('./matchService');
+  const weekInfo = getCurrentWeekByTuesday19();
+  const result = await matchService.saveWeeklyMatches(weekInfo.year, weekInfo.week, {
+    confirmationWeekKeys: getCompatibleCurrentWeekKeysByTuesday19()
+  });
+
+  if (!result.success) {
+    return result;
+  }
+
+  // TODO: 匹配邮件通知已禁用，如需启用请恢复以下代码
+  // const { sendMatchEmail } = require('./mailer');
+  // const emailTasks = [];
+  // for (const pair of result.results || []) {
+  //   emailTasks.push(sendMatchEmail(
+  //     pair.user1.email,
+  //     pair.user1.nickname || '同学',
+  //     pair.user2.nickname || 'TA',
+  //     pair.user2.my_grade,
+  //     null
+  //   ));
+  //   emailTasks.push(sendMatchEmail(
+  //     pair.user2.email,
+  //     pair.user2.nickname || '同学',
+  //     pair.user1.nickname || 'TA',
+  //     pair.user1.my_grade,
+  //     null
+  //   ));
+  // }
+  // const emailResults = await Promise.all(emailTasks);
+  // const failedEmailCount = emailResults.filter(item => !item?.success).length;
+  // if (failedEmailCount > 0) {
+  //   console.error(`❌ 本次匹配共有 ${failedEmailCount} 封邮件发送失败`);
+  // }
+
+  return result;
+}
+
+async function runClosedWeeklyMatch() {
+  const matchService = require('./matchService');
   const weekInfo = getLastClosedWeekByTuesday19();
-  const result = await matchService.saveWeeklyMatches(weekInfo.year, weekInfo.week);
+  const result = await matchService.saveWeeklyMatches(weekInfo.year, weekInfo.week, {
+    confirmationWeekKeys: getCompatibleLastClosedWeekKeysByTuesday19()
+  });
 
   if (!result.success) {
     return result;
