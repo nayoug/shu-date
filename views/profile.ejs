@@ -532,6 +532,12 @@
   <%- include('partials/navbar') %>
 
   <div class="container" style="max-width: 800px;">
+    <% if (typeof message !== 'undefined' && message) { %>
+      <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 16px;">
+        <%= message %>
+      </div>
+    <% } %>
+
     <% if (typeof showPassword !== 'undefined' && showPassword) { %>
     <div class="card" style="background: var(--surface-soft); padding: 20px; margin-bottom: 20px;">
       <h3 style="margin-bottom: 16px;">🔐 修改密码</h3>

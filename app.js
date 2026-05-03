@@ -625,11 +625,134 @@ function destroySession(req) {
   });
 }
 
-function buildProfilePageModel(req, profile) {
+const SURVEY_MULTI_SELECT_FIELDS = [
+  'accepted_campus', 'core_traits',
+  'my_traits', 'partner_traits', 'interests'
+];
+
+const SURVEY_INTEGER_FIELDS = [
+  // 基础信息
+  'age', 'age_min', 'age_max',
+  'height', 'preferred_height_min', 'preferred_height_max',
+  // 恋爱观念
+  'relationship_rhythm', 'romantic_ritual', 'relationship_style',
+  'sleep_pattern', 'diet_preference', 'spice_tolerance', 'date_preference',
+  'spending_style', 'drinking_habit', 'partner_drinking', 'smoking_habit', 'partner_smoking',
+  'pet_attitude', 'sexual_timing', 'conflict_style', 'meeting_frequency',
+  // 个人特征与匹配偏好
+  'partner_interest'
+];
+
+const SURVEY_FIELDS = [
+  // 基础信息
+  'gender', 'preferred_gender', 'my_grade', 'age',
+  'age_min', 'age_max', 'purpose',
+  'campus', 'accepted_campus',
+  'height', 'preferred_height_min', 'preferred_height_max',
+  'hometown', 'preferred_hometown', 'core_traits',
+  // 恋爱观念
+  'relationship_rhythm', 'romantic_ritual', 'relationship_style',
+  'sleep_pattern', 'diet_preference', 'spice_tolerance', 'date_preference',
+  'spending_style', 'drinking_habit', 'partner_drinking', 'smoking_habit', 'partner_smoking',
+  'pet_attitude', 'sexual_timing', 'conflict_style', 'meeting_frequency',
+  // 个人特征与匹配偏好
+  'my_traits', 'partner_traits',
+  'interests', 'partner_interest',
+  // LoveType16
+  'lovetype_answers', 'lovetype_code', 'lovetype_scores'
+];
+
+const SURVEY_REQUIRED_FIELDS = [
+  'gender', 'preferred_gender', 'my_grade', 'purpose', 'campus',
+  'accepted_campus', 'hometown', 'preferred_hometown', 'core_traits',
+  'relationship_rhythm', 'romantic_ritual', 'relationship_style',
+  'sleep_pattern', 'diet_preference', 'spice_tolerance', 'date_preference',
+  'spending_style', 'drinking_habit', 'partner_drinking', 'smoking_habit',
+  'partner_smoking', 'pet_attitude', 'sexual_timing', 'conflict_style',
+  'meeting_frequency', 'my_traits', 'partner_traits', 'interests',
+  'partner_interest'
+];
+
+function hasSurveyValue(data, field) {
+  if (Array.isArray(data[field])) {
+    return data[field].some(value => typeof value === 'string' ? value.trim() : value !== undefined && value !== null);
+  }
+  return data[field] !== undefined && data[field] !== null && String(data[field]).trim() !== '';
+}
+
+function findMissingSurveyFields(data) {
+  const missing = SURVEY_REQUIRED_FIELDS.filter(field => !hasSurveyValue(data, field));
+
+  lovetypeService.LOVETYPE_QUESTIONS.forEach(question => {
+    const field = `lovetype_${question.id}`;
+    if (!hasSurveyValue(data, field)) {
+      missing.push(field);
+    }
+  });
+
+  return missing;
+}
+
+function buildLovetypeAnswerMap(data, includeDefaults = true) {
+  const lovetypeAnswerMap = {};
+  lovetypeService.LOVETYPE_QUESTIONS.forEach(question => {
+    const field = `lovetype_${question.id}`;
+    if (includeDefaults || hasSurveyValue(data, field)) {
+      lovetypeAnswerMap[question.id] = data[field] || '0';
+    }
+  });
+  return lovetypeAnswerMap;
+}
+
+function buildSurveyValues(data, lovetypeAssessment) {
+  const values = {};
+
+  SURVEY_FIELDS.forEach(field => {
+    // 多选
+    if (SURVEY_MULTI_SELECT_FIELDS.includes(field)) {
+      // 兼容 string -> [string]（单选时 Express 返回 string 而非 array）
+      const raw = Array.isArray(data[field])
+        ? data[field]
+        : (typeof data[field] === 'string' && data[field] ? [data[field]] : []);
+      // core_traits 最多 3 项
+      const limit = field === 'core_traits' ? 3 : raw.length;
+      values[field] = raw.slice(0, limit).join(',');
+      return;
+    }
+    // LoveType16
+    if (field === 'lovetype_answers') {
+      values[field] = JSON.stringify(lovetypeAssessment
+        ? lovetypeAssessment.answers
+        : buildLovetypeAnswerMap(data, false));
+      return;
+    }
+    if (field === 'lovetype_code') {
+      values[field] = lovetypeAssessment ? lovetypeAssessment.code : null;
+      return;
+    }
+    if (field === 'lovetype_scores') {
+      values[field] = lovetypeAssessment ? JSON.stringify(lovetypeAssessment.scores) : null;
+      return;
+    }
+    // 整数
+    if (SURVEY_INTEGER_FIELDS.includes(field)) {
+      const parsed = data[field] ? parseInt(data[field], 10) : null;
+      values[field] = (parsed !== null && !isNaN(parsed)) ? parsed : null;
+      return;
+    }
+    // 默认
+    values[field] = data[field] || null;
+  });
+
+  return values;
+}
+
+function buildProfilePageModel(req, profile, overrides = {}) {
   const lovetypeAnswers = lovetypeService.parseStoredAnswers(profile && profile.lovetype_answers);
   const hasLovetypeAnswers = lovetypeAnswers && Object.keys(lovetypeAnswers).length > 0;
   const lovetypeAssessment = hasLovetypeAnswers ? lovetypeService.calculateLoveType(lovetypeAnswers) : null;
-  const showResult = lovetypeAssessment && !req.query.edit;
+  const editMode = overrides.editMode !== undefined ? overrides.editMode : req.query.edit === '1';
+  const showResult = lovetypeAssessment && !editMode;
 
   return {
     title: '填写问卷',
@@ -644,9 +767,9 @@ function buildProfilePageModel(req, profile) {
     isDev: !isProduction,
     isProduction,
     csrfToken: ensureCsrfToken(req),
-    message: req.query.msg,
-    messageType: req.query.type,
-    editMode: req.query.edit === '1'
+    message: overrides.message !== undefined ? overrides.message : req.query.msg,
+    messageType: overrides.messageType !== undefined ? overrides.messageType : req.query.type,
+    editMode
   };
 }
 
@@ -1627,96 +1750,36 @@ app.post('/confirm-match/cancel', isLoggedIn, requireValidCsrf, wrapAsync(async 
 app.post('/survey/submit', isLoggedIn, requireValidSurveyCsrf, wrapAsync(async (req, res) => {
   const data = req.body;
 
-  const lovetypeAnswerMap = {};
-  lovetypeService.LOVETYPE_QUESTIONS.forEach(question => {
-    lovetypeAnswerMap[question.id] = data[`lovetype_${question.id}`] || '0';
-  });
+  const missingFields = findMissingSurveyFields(data);
+  const existing = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
+
+  if (missingFields.length > 0) {
+    const submittedProfile = { ...(existing || {}), ...buildSurveyValues(data, null) };
+    const model = buildProfilePageModel(req, submittedProfile, {
+      editMode: true,
+      message: '请完整填写问卷后再保存',
+      messageType: 'error'
+    });
+    model.nickname = req.session.nickname;
+    model.hasProfile = !!existing;
+    model.showPassword = false;
+    model.passwordMessage = '';
+    model.passwordMessageType = '';
+    return res.status(400).render('profile', model);
+  }
+
+  const lovetypeAnswerMap = buildLovetypeAnswerMap(data);
   const lovetypeAssessment = lovetypeService.calculateLoveType(lovetypeAnswerMap);
-
-  const fields = [
-    // 基础信息
-    'gender', 'preferred_gender', 'my_grade', 'age',
-    'age_min', 'age_max', 'purpose',
-    'campus', 'accepted_campus',
-    'height', 'preferred_height_min', 'preferred_height_max',
-    'hometown', 'preferred_hometown', 'core_traits',
-    // 恋爱观念
-    'relationship_rhythm', 'romantic_ritual', 'relationship_style',
-    'sleep_pattern', 'diet_preference', 'spice_tolerance', 'date_preference',
-    'spending_style', 'drinking_habit', 'partner_drinking', 'smoking_habit', 'partner_smoking',
-    'pet_attitude', 'sexual_timing', 'conflict_style', 'meeting_frequency',
-    // 个人特征与匹配偏好
-    'my_traits', 'partner_traits',
-    'interests', 'partner_interest',
-    // LoveType16
-    'lovetype_answers', 'lovetype_code', 'lovetype_scores'
-  ];
-
-  const values = {};
-  // 多选字段
-  const multiSelectFields = [
-    'accepted_campus', 'core_traits',
-    'my_traits', 'partner_traits', 'interests'
-  ];
-  // 整数字段
-  const integerFields = [
-    // 基础信息
-    'age', 'age_min', 'age_max',
-    'height', 'preferred_height_min', 'preferred_height_max',
-    // 恋爱观念
-    'relationship_rhythm', 'romantic_ritual', 'relationship_style', 
-    'sleep_pattern', 'diet_preference', 'spice_tolerance', 'date_preference',
-    'spending_style', 'drinking_habit', 'partner_drinking', 'smoking_habit', 'partner_smoking', 
-    'pet_attitude', 'sexual_timing', 'conflict_style', 'meeting_frequency',
-    // 个人特征与匹配偏好
-    'partner_interest'
-  ];
-
-  fields.forEach(field => {
-    // 多选
-    if (multiSelectFields.includes(field)) {
-      // 兼容 string -> [string]（单选时 Express 返回 string 而非 array）
-      const raw = Array.isArray(data[field])
-        ? data[field]
-        : (typeof data[field] === 'string' && data[field] ? [data[field]] : []);
-      // core_traits 最多 3 项
-      const limit = field === 'core_traits' ? 3 : raw.length;
-      values[field] = raw.slice(0, limit).join(',');
-      return;
-    }
-    // LoveType16
-    if (field === 'lovetype_answers') {
-      values[field] = JSON.stringify(lovetypeAssessment.answers);
-      return;
-    }
-    if (field === 'lovetype_code') {
-      values[field] = lovetypeAssessment.code;
-      return;
-    }
-    if (field === 'lovetype_scores') {
-      values[field] = JSON.stringify(lovetypeAssessment.scores);
-      return;
-    }
-    // 整数
-    if (integerFields.includes(field)) {
-      const parsed = data[field] ? parseInt(data[field], 10) : null;
-      values[field] = (parsed !== null && !isNaN(parsed)) ? parsed : null;
-      return;
-    }
-    // 默认
-    values[field] = data[field] || null;
-  });
-
-  const existing = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
+  const values = buildSurveyValues(data, lovetypeAssessment);
 
   if (existing) {
-    const setClauses = fields.map((f, i) => `${f} = $${i + 1}`).join(', ');
-    const params = [...fields.map(f => values[f]), req.user.id];
-    await db.execute(`UPDATE profiles SET ${setClauses}, updated_at = CURRENT_TIMESTAMP WHERE user_id = $${fields.length + 1}`, params);
+    const setClauses = SURVEY_FIELDS.map((f, i) => `${f} = $${i + 1}`).join(', ');
+    const params = [...SURVEY_FIELDS.map(f => values[f]), req.user.id];
+    await db.execute(`UPDATE profiles SET ${setClauses}, updated_at = CURRENT_TIMESTAMP WHERE user_id = $${SURVEY_FIELDS.length + 1}`, params);
   } else {
-    const cols = ['user_id', ...fields].join(', ');
-    const placeholders = fields.map((_, i) => `$${i + 2}`).join(', ');
-    const params = [req.user.id, ...fields.map(f => values[f])];
+    const cols = ['user_id', ...SURVEY_FIELDS].join(', ');
+    const placeholders = SURVEY_FIELDS.map((_, i) => `$${i + 2}`).join(', ');
+    const params = [req.user.id, ...SURVEY_FIELDS.map(f => values[f])];
     await db.execute(`INSERT INTO profiles (${cols}) VALUES ($1, ${placeholders})`, params);
   }
 
