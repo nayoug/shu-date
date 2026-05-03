@@ -36,3 +36,6 @@ jobs:
 
       - name: Check matchService.js syntax
         run: node --check matchService.js
+
+      - name: Run tests
+        run: npm test

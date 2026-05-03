@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 const packageJson = require('./package.json');
-const { getWeekNumber, getYear, getCurrentWeekByTuesday19 } = require('./weekNumber');
+const { getWeekNumber, getYear, getCurrentWeekByTuesday19, getLastClosedWeekByTuesday19 } = require('./weekNumber');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
 const dbModule = require('./database');
@@ -2605,7 +2605,8 @@ app.post('/api/cron/weekly-match', requireValidCronSecret, cronRateLimiter, wrap
 
 async function runWeeklyMatch() {
   const matchService = require('./matchService');
-  const result = await matchService.saveWeeklyMatches();
+  const weekInfo = getLastClosedWeekByTuesday19();
+  const result = await matchService.saveWeeklyMatches(weekInfo.year, weekInfo.week);
 
   if (!result.success) {
     return result;
