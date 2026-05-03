@@ -12,6 +12,7 @@ const {
   getYear,
   getCurrentWeekByTuesday19,
   getLastClosedWeekByTuesday19,
+  getCompatibleWeekKeysForWeek,
   getCompatibleCurrentWeekKeysByTuesday19,
   getCompatibleLastClosedWeekKeysByTuesday19,
   isWeekKeyIncluded
@@ -2324,9 +2325,10 @@ app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
     return res.status(403).json({ success: false, error: '请先确认参与本周匹配' });
   }
   const matchService = require('./matchService');
-  const weekInfo = getCurrentWeekByTuesday19();
+  const matchDate = new Date();
+  const weekInfo = getCurrentWeekByTuesday19(matchDate);
   const matches = await matchService.findMatches(req.user.id, weekInfo.year, weekInfo.week, {
-    confirmationWeekKeys: getCompatibleCurrentWeekKeysByTuesday19()
+    confirmationWeekKeys: getCompatibleCurrentWeekKeysByTuesday19(matchDate)
   });
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
@@ -2338,9 +2340,10 @@ app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
     return res.status(403).json({ success: false, error: '请先确认参与本周匹配' });
   }
   const matchService = require('./matchService');
-  const weekInfo = getCurrentWeekByTuesday19();
+  const matchDate = new Date();
+  const weekInfo = getCurrentWeekByTuesday19(matchDate);
   const matches = await matchService.getTopMatches(req.user.id, 5, weekInfo.year, weekInfo.week, {
-    confirmationWeekKeys: getCompatibleCurrentWeekKeysByTuesday19()
+    confirmationWeekKeys: getCompatibleCurrentWeekKeysByTuesday19(matchDate)
   });
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
@@ -2451,7 +2454,8 @@ app.get('/admin', isLoggedIn, requireAdmin, wrapAsync(async (req, res) => {
     ORDER BY u.created_at DESC
   `);
 
-  const weekInfo = getCurrentWeekByTuesday19();
+  const adminWeekDate = new Date();
+  const weekInfo = getLastClosedWeekByTuesday19(adminWeekDate);
   res.render('admin', {
     title: '管理',
     user: req.user,
@@ -2615,49 +2619,16 @@ app.post('/api/cron/weekly-match', requireValidCronSecret, cronRateLimiter, wrap
 // ============ 匹配逻辑 ============
 
 async function runWeeklyMatch() {
-  const matchService = require('./matchService');
-  const weekInfo = getCurrentWeekByTuesday19();
-  const result = await matchService.saveWeeklyMatches(weekInfo.year, weekInfo.week, {
-    confirmationWeekKeys: getCompatibleCurrentWeekKeysByTuesday19()
-  });
-
-  if (!result.success) {
-    return result;
-  }
-
-  // TODO: 匹配邮件通知已禁用，如需启用请恢复以下代码
-  // const { sendMatchEmail } = require('./mailer');
-  // const emailTasks = [];
-  // for (const pair of result.results || []) {
-  //   emailTasks.push(sendMatchEmail(
-  //     pair.user1.email,
-  //     pair.user1.nickname || '同学',
-  //     pair.user2.nickname || 'TA',
-  //     pair.user2.my_grade,
-  //     null
-  //   ));
-  //   emailTasks.push(sendMatchEmail(
-  //     pair.user2.email,
-  //     pair.user2.nickname || '同学',
-  //     pair.user1.nickname || 'TA',
-  //     pair.user1.my_grade,
-  //     null
-  //   ));
-  // }
-  // const emailResults = await Promise.all(emailTasks);
-  // const failedEmailCount = emailResults.filter(item => !item?.success).length;
-  // if (failedEmailCount > 0) {
-  //   console.error(`❌ 本次匹配共有 ${failedEmailCount} 封邮件发送失败`);
-  // }
-
-  return result;
+  // Admin manual trigger mirrors cron so it can retry the just-closed cycle.
+  return runClosedWeeklyMatch();
 }
 
 async function runClosedWeeklyMatch() {
   const matchService = require('./matchService');
-  const weekInfo = getLastClosedWeekByTuesday19();
+  const matchDate = new Date();
+  const weekInfo = getLastClosedWeekByTuesday19(matchDate);
   const result = await matchService.saveWeeklyMatches(weekInfo.year, weekInfo.week, {
-    confirmationWeekKeys: getCompatibleLastClosedWeekKeysByTuesday19()
+    confirmationWeekKeys: getCompatibleLastClosedWeekKeysByTuesday19(matchDate)
   });
 
   if (!result.success) {
@@ -2699,7 +2670,9 @@ async function runClosedWeeklyMatch() {
  */
 async function runWeeklyMatchWithWeek(targetYear, targetWeek) {
   const matchService = require('./matchService');
-  const result = await matchService.saveWeeklyMatches(targetYear, targetWeek);
+  const result = await matchService.saveWeeklyMatches(targetYear, targetWeek, {
+    confirmationWeekKeys: getCompatibleWeekKeysForWeek(targetYear, targetWeek)
+  });
 
   if (!result.success) {
     return result;

@@ -127,6 +127,36 @@ function getCompatibleWeekKeysForWindow(startLocalMs, endLocalMs) {
   return Array.from(keys.values());
 }
 
+function getTuesday19LocalMsForWeekInfo(year, week) {
+  const bucketStartLocalMs = Date.UTC(year, 0, 1) + week * WEEK_MS;
+
+  for (let offsetDays = 0; offsetDays < 7; offsetDays += 1) {
+    const candidateLocalMs = bucketStartLocalMs + offsetDays * DAY_MS + MATCH_OPEN_HOUR * 60 * 60 * 1000;
+    const candidateLocalDate = new Date(candidateLocalMs);
+    const candidateWeekInfo = getWeekInfoFromShanghaiLocalMs(candidateLocalMs);
+
+    if (
+      candidateLocalDate.getUTCDay() === TUESDAY
+      && candidateWeekInfo.year === year
+      && candidateWeekInfo.week === week
+    ) {
+      return candidateLocalMs;
+    }
+  }
+
+  return null;
+}
+
+function getCompatibleWeekKeysForWeek(year, week) {
+  const endLocalMs = getTuesday19LocalMsForWeekInfo(year, week);
+
+  if (endLocalMs === null) {
+    return [{ year, week }];
+  }
+
+  return getCompatibleWeekKeysForWindow(endLocalMs - WEEK_MS, endLocalMs);
+}
+
 function getCompatibleCurrentWeekKeysByTuesday19(date = new Date()) {
   const { startLocalMs, endLocalMs } = getCurrentWeekWindowLocalMs(date);
   return getCompatibleWeekKeysForWindow(startLocalMs, endLocalMs);
@@ -146,6 +176,7 @@ module.exports = {
   getYear,
   getCurrentWeekByTuesday19,
   getLastClosedWeekByTuesday19,
+  getCompatibleWeekKeysForWeek,
   getCompatibleCurrentWeekKeysByTuesday19,
   getCompatibleLastClosedWeekKeysByTuesday19,
   isWeekKeyIncluded

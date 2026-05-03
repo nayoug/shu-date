@@ -4,6 +4,7 @@ const test = require('node:test');
 const {
   getCurrentWeekByTuesday19,
   getLastClosedWeekByTuesday19,
+  getCompatibleWeekKeysForWeek,
   getCompatibleCurrentWeekKeysByTuesday19,
   getCompatibleLastClosedWeekKeysByTuesday19,
   isWeekKeyIncluded
@@ -11,6 +12,10 @@ const {
 
 function weekKey(weekInfo) {
   return `${weekInfo.year}-${weekInfo.week}`;
+}
+
+function sortedWeekKeys(weekKeys) {
+  return weekKeys.map(weekKey).sort();
 }
 
 test('keeps one confirmation cycle stable between Tuesday 19:00 boundaries', () => {
@@ -62,6 +67,13 @@ test('last closed compatible keys cover users confirmed before the cron boundary
 
   assert.equal(isWeekKeyIncluded(keys, 2026, 17), true);
   assert.equal(isWeekKeyIncluded(keys, 2026, 18), true);
+});
+
+test('explicit rerun compatible keys match the matching window for that week', () => {
+  assert.deepEqual(
+    sortedWeekKeys(getCompatibleWeekKeysForWeek(2026, 17)),
+    sortedWeekKeys(getCompatibleLastClosedWeekKeysByTuesday19(new Date('2026-05-05T19:00:00+08:00')))
+  );
 });
 
 test('handles Tuesday 19:00 confirmation cycles across year boundaries', () => {
