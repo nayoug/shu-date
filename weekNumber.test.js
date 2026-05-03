@@ -5,8 +5,12 @@ const {
   getCurrentWeekByTuesday19,
   getLastClosedWeekByTuesday19,
   getCompatibleWeekKeysForWeek,
+  getCurrentConfirmationWindowByTuesday19,
+  getLastClosedConfirmationWindowByTuesday19,
+  getConfirmationWindowForWeek,
   getCompatibleCurrentWeekKeysByTuesday19,
   getCompatibleLastClosedWeekKeysByTuesday19,
+  isConfirmationIncludedInWindow,
   isWeekKeyIncluded
 } = require('./weekNumber');
 
@@ -73,6 +77,44 @@ test('explicit rerun compatible keys match the matching window for that week', (
   assert.deepEqual(
     sortedWeekKeys(getCompatibleWeekKeysForWeek(2026, 17)),
     sortedWeekKeys(getCompatibleLastClosedWeekKeysByTuesday19(new Date('2026-05-05T19:00:00+08:00')))
+  );
+});
+
+test('current confirmation status requires a timestamp for the canonical key', () => {
+  const currentWindow = getCurrentConfirmationWindowByTuesday19(new Date('2026-05-05T19:01:00+08:00'));
+
+  assert.equal(isConfirmationIncludedInWindow(currentWindow, 2026, 18, null), false);
+  assert.equal(
+    isConfirmationIncludedInWindow(currentWindow, 2026, 18, new Date('2026-05-05T19:01:00+08:00')),
+    true
+  );
+});
+
+test('active windows can still honor legacy untimestamped keys before they collide', () => {
+  const currentWindow = getCurrentConfirmationWindowByTuesday19(new Date('2026-04-30T20:00:00+08:00'));
+
+  assert.equal(isConfirmationIncludedInWindow(currentWindow, 2026, 18, null), true);
+});
+
+test('closed-cycle matching excludes new confirmations after the boundary', () => {
+  const closedWindow = getLastClosedConfirmationWindowByTuesday19(new Date('2026-05-05T19:05:00+08:00'));
+
+  assert.equal(
+    isConfirmationIncludedInWindow(closedWindow, 2026, 18, new Date('2026-05-05T19:01:00+08:00')),
+    false
+  );
+  assert.equal(
+    isConfirmationIncludedInWindow(closedWindow, 2026, 18, new Date('2026-05-05T18:59:00+08:00')),
+    true
+  );
+});
+
+test('explicit reruns do not include later-cycle confirmations', () => {
+  const rerunWindow = getConfirmationWindowForWeek(2026, 17);
+
+  assert.equal(
+    isConfirmationIncludedInWindow(rerunWindow, 2026, 18, new Date('2026-05-05T19:01:00+08:00')),
+    false
   );
 });
 

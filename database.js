@@ -41,6 +41,7 @@ async function initDatabase() {
   await pool.query('ALTER TABLE users DROP COLUMN IF EXISTS weekly_match_confirmed');
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_match_year INTEGER DEFAULT 0');
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_match_week INTEGER DEFAULT 0');
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_match_confirmed_at TIMESTAMPTZ');
   
   // profiles 表
   await pool.query(`

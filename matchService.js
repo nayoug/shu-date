@@ -19,14 +19,11 @@
 
 const dbModule = require('./database');
 const lovetypeService = require('./lovetypeService');
-const { getWeekNumber, getYear, getCurrentWeekByTuesday19 } = require('./weekNumber');
+const { getCurrentConfirmationWindowByTuesday19 } = require('./weekNumber');
 
 // ============ 工具函数 ============
 
-function normalizeConfirmationWeekKeys(targetYear, targetWeek, options = {}) {
-  const weekKeys = Array.isArray(options.confirmationWeekKeys) && options.confirmationWeekKeys.length > 0
-    ? options.confirmationWeekKeys
-    : [{ year: targetYear, week: targetWeek }];
+function normalizeWeekKeyList(weekKeys) {
   const unique = new Map();
 
   weekKeys.forEach(weekInfo => {
@@ -39,13 +36,55 @@ function normalizeConfirmationWeekKeys(targetYear, targetWeek, options = {}) {
   return Array.from(unique.values());
 }
 
-function addConfirmationWeekFilters(filters, params, weekKeys) {
-  const keyClauses = weekKeys.map(weekInfo => {
-    params.push(weekInfo.year, weekInfo.week);
-    return `(u.weekly_match_year = $${params.length - 1} AND u.weekly_match_week = $${params.length})`;
-  });
+function normalizeConfirmationWeekKeys(targetYear, targetWeek, options = {}) {
+  const weekKeys = Array.isArray(options.confirmationWeekKeys) && options.confirmationWeekKeys.length > 0
+    ? options.confirmationWeekKeys
+    : [{ year: targetYear, week: targetWeek }];
 
+  return normalizeWeekKeyList(weekKeys);
+}
+
+function addWeekKeyClause(params, weekInfo) {
+  params.push(weekInfo.year, weekInfo.week);
+  return `(u.weekly_match_year = $${params.length - 1} AND u.weekly_match_week = $${params.length})`;
+}
+
+function addConfirmationWeekFilters(filters, params, weekKeys) {
+  const keyClauses = weekKeys.map(weekInfo => addWeekKeyClause(params, weekInfo));
   filters.push(keyClauses.length > 0 ? `(${keyClauses.join(' OR ')})` : 'FALSE');
+}
+
+function addConfirmationWindowFilters(filters, params, confirmationWindow) {
+  const canonicalWeek = confirmationWindow?.canonicalWeek;
+  const startAt = confirmationWindow?.startAt;
+  const endAt = confirmationWindow?.endAt;
+
+  if (!canonicalWeek || !startAt || !endAt) {
+    const fallbackKeys = canonicalWeek ? [canonicalWeek] : [];
+    addConfirmationWeekFilters(filters, params, fallbackKeys);
+    return;
+  }
+
+  const clauses = [];
+  const canonicalClause = addWeekKeyClause(params, canonicalWeek);
+  params.push(startAt, endAt);
+  clauses.push(
+    `(${canonicalClause} AND u.weekly_match_confirmed_at >= $${params.length - 1} AND u.weekly_match_confirmed_at < $${params.length})`
+  );
+
+  const legacyWeekKeys = normalizeWeekKeyList(confirmationWindow.legacyWeekKeys || []);
+  if (legacyWeekKeys.length > 0) {
+    const legacyKeyClauses = legacyWeekKeys.map(weekInfo => addWeekKeyClause(params, weekInfo));
+    params.push(startAt, endAt);
+    clauses.push(
+      `((${legacyKeyClauses.join(' OR ')}) AND (` +
+      `u.weekly_match_confirmed_at IS NULL OR ` +
+      `(u.weekly_match_confirmed_at >= $${params.length - 1} AND u.weekly_match_confirmed_at < $${params.length})` +
+      `))`
+    );
+  }
+
+  filters.push(`(${clauses.join(' OR ')})`);
 }
 
 function parseNullableInt(value) {
@@ -347,7 +386,9 @@ async function findMatches(userId, targetYear = null, targetWeek = null, options
   const filters = ['u.id != $1', 'u.verified = 1'];
   const params = [userIdInt];
 
-  if (targetYear !== null && targetWeek !== null) {
+  if (options.confirmationWindow) {
+    addConfirmationWindowFilters(filters, params, options.confirmationWindow);
+  } else if (targetYear !== null && targetWeek !== null) {
     const weekKeys = normalizeConfirmationWeekKeys(targetYear, targetWeek, options);
     addConfirmationWeekFilters(filters, params, weekKeys);
   }
@@ -404,15 +445,23 @@ async function getTopMatches(userId, topN = 5, targetYear = null, targetWeek = n
 }
 
 async function saveWeeklyMatches(targetYear = null, targetWeek = null, options = {}) {
+  const confirmationWindow = options.confirmationWindow || (targetYear === null || targetWeek === null
+    ? getCurrentConfirmationWindowByTuesday19()
+    : null);
   const weekInfo = targetYear !== null && targetWeek !== null
     ? { year: targetYear, week: targetWeek }
-    : getCurrentWeekByTuesday19();
+    : confirmationWindow.canonicalWeek;
   const year = weekInfo.year;
   const weekNumber = weekInfo.week;
   const confirmationWeekKeys = normalizeConfirmationWeekKeys(year, weekNumber, options);
   const userFilters = ['u.verified = 1'];
   const userParams = [];
-  addConfirmationWeekFilters(userFilters, userParams, confirmationWeekKeys);
+
+  if (confirmationWindow) {
+    addConfirmationWindowFilters(userFilters, userParams, confirmationWindow);
+  } else {
+    addConfirmationWeekFilters(userFilters, userParams, confirmationWeekKeys);
+  }
 
   const users = await dbModule.query(`
     SELECT u.id as user_id, u.email, u.nickname, u.name, p.my_grade

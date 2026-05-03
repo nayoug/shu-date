@@ -11,11 +11,10 @@ const {
   getWeekNumber,
   getYear,
   getCurrentWeekByTuesday19,
-  getLastClosedWeekByTuesday19,
-  getCompatibleWeekKeysForWeek,
-  getCompatibleCurrentWeekKeysByTuesday19,
-  getCompatibleLastClosedWeekKeysByTuesday19,
-  isWeekKeyIncluded
+  getCurrentConfirmationWindowByTuesday19,
+  getLastClosedConfirmationWindowByTuesday19,
+  getConfirmationWindowForWeek,
+  isConfirmationIncludedInWindow
 } = require('./weekNumber');
 require('dotenv').config();
 const lovetypeService = require('./lovetypeService');
@@ -371,7 +370,7 @@ async function loadCurrentUserFromSession(req) {
   }
 
   const currentUser = await db.queryOne(`
-    SELECT id, email, nickname, name, verified, weekly_match_year, weekly_match_week
+    SELECT id, email, nickname, name, verified, weekly_match_year, weekly_match_week, weekly_match_confirmed_at
     FROM users
     WHERE id = $1
   `, [req.session.userId]);
@@ -388,10 +387,14 @@ async function loadCurrentUserFromSession(req) {
     [currentUser.id]
   );
 
-  // 检查是否确认了本周的匹配（year + week 与当前周一致）
-  const currentWeekKeys = getCompatibleCurrentWeekKeysByTuesday19();
-  const weeklyMatchConfirmed = currentUser.weekly_match_year != null
-    && isWeekKeyIncluded(currentWeekKeys, currentUser.weekly_match_year, currentUser.weekly_match_week);
+  // 检查是否确认了本周的匹配（year + week + 窗口时间）
+  const currentConfirmationWindow = getCurrentConfirmationWindowByTuesday19();
+  const weeklyMatchConfirmed = isConfirmationIncludedInWindow(
+    currentConfirmationWindow,
+    currentUser.weekly_match_year,
+    currentUser.weekly_match_week,
+    currentUser.weekly_match_confirmed_at
+  );
 
   const user = {
     id: currentUser.id,
@@ -1613,7 +1616,7 @@ app.post('/confirm-match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, r
   // 更新确认状态为当前 year + week
   const currentWeekInfo = getCurrentWeekByTuesday19();
   await db.execute(
-    'UPDATE users SET weekly_match_year = $1, weekly_match_week = $2 WHERE id = $3',
+    'UPDATE users SET weekly_match_year = $1, weekly_match_week = $2, weekly_match_confirmed_at = CURRENT_TIMESTAMP WHERE id = $3',
     [currentWeekInfo.year, currentWeekInfo.week, req.user.id]
   );
 
@@ -1624,7 +1627,7 @@ app.post('/confirm-match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, r
 app.post('/confirm-match/cancel', isLoggedIn, requireValidCsrf, wrapAsync(async (req, res) => {
   // 将 year 和 week 设为 0，表示取消
   await db.execute(
-    'UPDATE users SET weekly_match_year = 0, weekly_match_week = 0 WHERE id = $1',
+    'UPDATE users SET weekly_match_year = 0, weekly_match_week = 0, weekly_match_confirmed_at = NULL WHERE id = $1',
     [req.user.id]
   );
 
@@ -2326,9 +2329,10 @@ app.get('/api/matches', isLoggedIn, wrapAsync(async (req, res) => {
   }
   const matchService = require('./matchService');
   const matchDate = new Date();
-  const weekInfo = getCurrentWeekByTuesday19(matchDate);
+  const confirmationWindow = getCurrentConfirmationWindowByTuesday19(matchDate);
+  const weekInfo = confirmationWindow.canonicalWeek;
   const matches = await matchService.findMatches(req.user.id, weekInfo.year, weekInfo.week, {
-    confirmationWeekKeys: getCompatibleCurrentWeekKeysByTuesday19(matchDate)
+    confirmationWindow
   });
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
@@ -2341,9 +2345,10 @@ app.get('/api/match/top', isLoggedIn, wrapAsync(async (req, res) => {
   }
   const matchService = require('./matchService');
   const matchDate = new Date();
-  const weekInfo = getCurrentWeekByTuesday19(matchDate);
+  const confirmationWindow = getCurrentConfirmationWindowByTuesday19(matchDate);
+  const weekInfo = confirmationWindow.canonicalWeek;
   const matches = await matchService.getTopMatches(req.user.id, 5, weekInfo.year, weekInfo.week, {
-    confirmationWeekKeys: getCompatibleCurrentWeekKeysByTuesday19(matchDate)
+    confirmationWindow
   });
   res.json({ success: true, source: 'recommendation', data: matches });
 }));
@@ -2455,7 +2460,7 @@ app.get('/admin', isLoggedIn, requireAdmin, wrapAsync(async (req, res) => {
   `);
 
   const adminWeekDate = new Date();
-  const weekInfo = getLastClosedWeekByTuesday19(adminWeekDate);
+  const weekInfo = getLastClosedConfirmationWindowByTuesday19(adminWeekDate).canonicalWeek;
   res.render('admin', {
     title: '管理',
     user: req.user,
@@ -2626,9 +2631,10 @@ async function runWeeklyMatch() {
 async function runClosedWeeklyMatch() {
   const matchService = require('./matchService');
   const matchDate = new Date();
-  const weekInfo = getLastClosedWeekByTuesday19(matchDate);
+  const confirmationWindow = getLastClosedConfirmationWindowByTuesday19(matchDate);
+  const weekInfo = confirmationWindow.canonicalWeek;
   const result = await matchService.saveWeeklyMatches(weekInfo.year, weekInfo.week, {
-    confirmationWeekKeys: getCompatibleLastClosedWeekKeysByTuesday19(matchDate)
+    confirmationWindow
   });
 
   if (!result.success) {
@@ -2670,8 +2676,9 @@ async function runClosedWeeklyMatch() {
  */
 async function runWeeklyMatchWithWeek(targetYear, targetWeek) {
   const matchService = require('./matchService');
+  const confirmationWindow = getConfirmationWindowForWeek(targetYear, targetWeek);
   const result = await matchService.saveWeeklyMatches(targetYear, targetWeek, {
-    confirmationWeekKeys: getCompatibleWeekKeysForWeek(targetYear, targetWeek)
+    confirmationWindow
   });
 
   if (!result.success) {
