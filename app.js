@@ -1751,17 +1751,17 @@ app.post('/survey/submit', isLoggedIn, requireValidSurveyCsrf, wrapAsync(async (
   const data = req.body;
 
   const missingFields = findMissingSurveyFields(data);
-  const existing = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
 
   if (missingFields.length > 0) {
-    const submittedProfile = { ...(existing || {}), ...buildSurveyValues(data, null) };
+    const existingProfile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
+    const submittedProfile = { ...(existingProfile || {}), ...buildSurveyValues(data, null) };
     const model = buildProfilePageModel(req, submittedProfile, {
       editMode: true,
       message: '请完整填写问卷后再保存',
       messageType: 'error'
     });
     model.nickname = req.session.nickname;
-    model.hasProfile = !!existing;
+    model.hasProfile = !!existingProfile;
     model.showPassword = false;
     model.passwordMessage = '';
     model.passwordMessageType = '';
@@ -1771,6 +1771,8 @@ app.post('/survey/submit', isLoggedIn, requireValidSurveyCsrf, wrapAsync(async (
   const lovetypeAnswerMap = buildLovetypeAnswerMap(data);
   const lovetypeAssessment = lovetypeService.calculateLoveType(lovetypeAnswerMap);
   const values = buildSurveyValues(data, lovetypeAssessment);
+
+  const existing = await db.queryOne('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
 
   if (existing) {
     const setClauses = SURVEY_FIELDS.map((f, i) => `${f} = $${i + 1}`).join(', ');
