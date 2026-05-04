@@ -549,10 +549,11 @@
         </div>
       <% } %>
 
-      <form action="/profile/password" method="POST" class="profile-password-form">
+      <form action="/settings/password" method="POST" class="profile-password-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div>
           <label for="profile-current-password" class="profile-password-label">当前密码</label>
-          <input id="profile-current-password" type="password" name="currentPassword" placeholder="若未设置密码则留空" class="profile-password-input">
+          <input id="profile-current-password" type="password" name="currentPassword" placeholder="请输入当前密码" class="profile-password-input">
         </div>
         <div></div>
         <div>
