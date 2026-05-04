@@ -196,6 +196,10 @@ body {
   padding: 24px;
 }
 
+.layout-main {
+  margin-top: 30px;
+}
+
 /* ===== 导航栏 ===== */
 .navbar {
   border-bottom: 1px solid var(--border);
@@ -509,6 +513,11 @@ body {
   z-index: 1;
 }
 
+.hero .hero__status-note {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
 .hero .btn {
   background: var(--hero-button-bg);
   color: var(--hero-button-foreground);
@@ -521,6 +530,10 @@ body {
 .hero .btn:hover {
   background: var(--hero-button-hover);
   transform: translateY(-2px);
+}
+
+.hero .hero__cta {
+  margin-top: 20px;
 }
 
 /* ===== 倒计时 ===== */
