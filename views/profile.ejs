@@ -508,6 +508,7 @@
     }
     .pagination-buttons {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       gap: 12px;
       margin-top: 20px;
@@ -531,6 +532,12 @@
   <%- include('partials/navbar') %>
 
   <div class="container" style="max-width: 800px;">
+    <% if (typeof message !== 'undefined' && message) { %>
+      <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 16px;">
+        <%= message %>
+      </div>
+    <% } %>
+
     <% if (typeof showPassword !== 'undefined' && showPassword) { %>
     <div class="card" style="background: var(--surface-soft); padding: 20px; margin-bottom: 20px;">
       <h3 style="margin-bottom: 16px;">🔐 修改密码</h3>
@@ -663,7 +670,7 @@
   <% } %>
 
   <% if (!showPassword && (!lovetypeResult || (typeof editMode !== 'undefined' && editMode))) { %>
-  <form action="/survey/submit" method="POST">
+  <form action="/survey/submit" method="POST" novalidate>
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
     <!-- 分页进度指示器 -->
@@ -1638,8 +1645,8 @@
     <!-- 分页按钮 -->
     <div class="pagination-buttons">
       <button type="button" id="prevBtn" class="btn btn-secondary" disabled>上一步</button>
+      <button type="submit" id="submitBtn" class="btn">保存问卷</button>
       <button type="button" id="nextBtn" class="btn">下一步</button>
-      <button type="submit" id="submitBtn" class="btn" style="display:none;">提交问卷</button>
     </div>
   </form>
   <% } %>
@@ -2125,16 +2132,16 @@ document.addEventListener('DOMContentLoaded', function() {
     prevBtn.disabled = currentStep === 1;
 
     nextBtn.style.display = currentStep < totalSteps ? 'inline-block' : 'none';
-    submitBtn.style.display = currentStep === totalSteps ? 'inline-block' : 'none';
+    submitBtn.style.display = 'inline-block';
 
     // 下一步按钮始终可点击，点击时通过 validateCurrentStep() 提示用户
     nextBtn.disabled = false;
   }
 
-  // 验证当前步骤的必填项（带提示）
-  function validateCurrentStep() {
-    const currentSection = document.querySelector(`.form-section-pagination[data-step="${currentStep}"]`);
-    if (!currentSection) return true;
+  // 验证指定步骤的必填项（带提示）
+  function validateStep(stepNumber, focusInvalid) {
+    const currentSection = document.querySelector(`.form-section-pagination[data-step="${stepNumber}"]`);
+    if (!currentSection) return { isValid: true, firstInvalid: null };
 
     let isValid = true;
     let firstInvalid = null;
@@ -2159,7 +2166,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // 第4步特殊处理 lovetype：所有 lovetype_ 开头的 radio 组都是必填
-    if (currentStep === 4) {
+    if (stepNumber === 4) {
       const lovetypeNames = [];
       currentSection.querySelectorAll('input[name^="lovetype_"]').forEach(input => {
         const name = input.name;
@@ -2200,7 +2207,7 @@ document.addEventListener('DOMContentLoaded', function() {
       el.classList.remove('form-group--error');
     });
 
-    if (!isValid && firstInvalid) {
+    if (!isValid && firstInvalid && focusInvalid) {
       const formGroup = firstInvalid.closest('.form-group');
       if (formGroup) {
         formGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2210,7 +2217,33 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    return isValid;
+    return { isValid, firstInvalid };
+  }
+
+  function validateCurrentStep() {
+    return validateStep(currentStep, true).isValid;
+  }
+
+  function validateAllSteps() {
+    let firstInvalidStep = null;
+
+    for (let stepNumber = 1; stepNumber <= totalSteps; stepNumber++) {
+      const result = validateStep(stepNumber, false);
+      if (!result.isValid && firstInvalidStep === null) {
+        firstInvalidStep = stepNumber;
+      }
+    }
+
+    if (firstInvalidStep !== null) {
+      currentStep = firstInvalidStep;
+      updatePagination();
+      requestAnimationFrame(function() {
+        validateStep(firstInvalidStep, true);
+      });
+      return false;
+    }
+
+    return true;
   }
 
   if (!hasPaginationControls) return;
@@ -2234,13 +2267,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   surveyForm.addEventListener('submit', function(event) {
-    if (currentStep < totalSteps) {
-      event.preventDefault();
-      validateCurrentStep();
-      return;
-    }
-
-    if (!validateCurrentStep()) {
+    if (!validateAllSteps()) {
       event.preventDefault();
       return;
     }

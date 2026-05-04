@@ -459,6 +459,12 @@ body {
   border-color: var(--info-border);
 }
 
+.alert-warning {
+  background: var(--warning-bg);
+  color: var(--warning-foreground);
+  border-color: var(--warning-border);
+}
+
 /* ===== 首页 Hero ===== */
 .hero {
   text-align: center;
