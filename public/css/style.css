@@ -767,12 +767,26 @@ body {
 
 .match-card {
   display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  padding: 20px;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
   border-radius: 16px;
   border: 1px solid var(--border);
   background: var(--surface-soft);
+}
+
+.match-card--link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.match-card--current {
+  border-color: var(--primary);
+  border-width: 2px;
+}
+
+.match-card--no-match {
+  border-color: var(--border);
 }
 
 .match-rank {
@@ -783,9 +797,34 @@ body {
   color: var(--primary);
 }
 
+.match-week {
+  min-width: 90px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.match-info,
 .match-summary {
   flex: 1;
   min-width: 0;
+}
+
+.match-partner {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.match-status {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+}
+
+.match-status--warn {
+  color: var(--warning);
+}
+
+.match-status--wait {
+  color: var(--primary);
 }
 
 .match-meta {
@@ -802,11 +841,16 @@ body {
 }
 
 .match-score {
+  display: inline-block;
   align-self: center;
   padding: 10px 14px;
   border-radius: 999px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.match-score--compact {
+  margin-top: 4px;
 }
 
 .match-score--high {
@@ -822,6 +866,63 @@ body {
 .match-score--low {
   background: oklch(0.95 0.08 25);
   color: oklch(0.45 0.15 25);
+}
+
+.match-detail-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.match-detail-link:hover {
+  text-decoration: underline;
+}
+
+.match-card__action {
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+}
+
+.match-empty-card {
+  text-align: center;
+}
+
+.match-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+
+.match-empty-text {
+  color: var(--muted-foreground);
+}
+
+.match-empty-text--spaced {
+  margin-bottom: 24px;
+}
+
+.match-action-link {
+  margin-top: 16px;
+}
+
+.match-section-title {
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.match-section-title--simple {
+  display: block;
+}
+
+.match-section-title--muted {
+  color: var(--muted-foreground);
+}
+
+.match-history-section {
+  margin-top: 16px;
 }
 
 .match-comment {
@@ -842,9 +943,136 @@ body {
   white-space: pre-line;
 }
 
+.match-detail-shell {
+  max-width: 600px;
+  padding-top: 40px;
+}
+
+.match-detail-backbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.match-detail-backlink {
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+
+.match-detail-backlink:hover {
+  color: var(--primary);
+}
+
+.detail-score {
+  text-align: center;
+  padding: 32px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  background: var(--accent);
+}
+
+.detail-score .label {
+  color: var(--muted-foreground);
+  margin-bottom: 8px;
+}
+
+.detail-score .score {
+  font-size: 64px;
+  font-weight: bold;
+}
+
+.detail-score .score--high {
+  color: oklch(0.55 0.15 145);
+}
+
+.detail-score .score--medium {
+  color: oklch(0.6 0.15 80);
+}
+
+.detail-score .score--low {
+  color: oklch(0.6 0.15 25);
+}
+
+.detail-info {
+  padding: 20px;
+  background: var(--accent);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.detail-info h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+}
+
+.detail-info p {
+  margin: 0;
+  padding: 8px 0;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-info p:first-of-type {
+  border-top: 1px solid var(--border);
+}
+
+.detail-info p:last-child {
+  border-bottom: none;
+}
+
+.detail-info .label {
+  color: var(--muted-foreground);
+}
+
+.detail-info__text {
+  display: block;
+  border: none;
+  padding: 0;
+}
+
+.detail-comment {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.detail-comment h3 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+}
+
+.detail-comment p {
+  margin: 0;
+  line-height: 1.7;
+  color: var(--muted-foreground);
+  white-space: pre-line;
+}
+
+.match-detail-note {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.match-detail-empty {
+  text-align: center;
+  padding: 40px;
+}
+
+.match-detail-actions {
+  text-align: center;
+  margin-top: 24px;
+}
+
 @media (max-width: 700px) {
   .match-card {
     flex-direction: column;
+    align-items: flex-start;
     gap: 14px;
   }
 
@@ -863,6 +1091,10 @@ body {
 
   .match-score {
     align-self: flex-start;
+  }
+
+  .match-week {
+    min-width: 0;
   }
 }
 
