@@ -1,0 +1,76 @@
+.profile-container {
+  max-width: 800px;
+}
+
+.profile-alert {
+  margin-bottom: 16px;
+}
+
+.profile-password-card {
+  background: var(--surface-soft);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.profile-password-title {
+  margin-bottom: 16px;
+}
+
+.profile-password-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.profile-password-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: var(--foreground);
+}
+
+.profile-password-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--input);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.profile-password-submit {
+  grid-column: 1 / -1;
+}
+
+.profile-password-help {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.profile-forgot-link {
+  color: var(--primary);
+  font-size: 0.85rem;
+  text-decoration: underline;
+}
+
+.profile-result-title {
+  margin-bottom: 8px;
+}
+
+.profile-result-description {
+  color: var(--muted-foreground);
+  margin-bottom: 24px;
+}
+
+.profile-dev-fill {
+  margin-bottom: 20px;
+}
+
+.profile-result-actions {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.profile-result-action {
+  display: inline-block;
+}

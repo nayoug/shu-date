@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>填写问卷 - 心有所SHU</title>
   <link rel="stylesheet" href="/css/style.css?v=0.2.0">
+  <link rel="stylesheet" href="/css/profile.css?v=0.2.0">
     <%- include('partials/head-icons') %>
   <% if (typeof isDev !== 'undefined' && isDev) { %>
   <link rel="stylesheet" href="/css/dev-tools.css?v=0.2.0">
@@ -531,44 +532,45 @@
 <body class="profile-page">
   <%- include('partials/navbar') %>
 
-  <div class="container" style="max-width: 800px;">
+  <div class="container profile-container">
     <% if (typeof message !== 'undefined' && message) { %>
-      <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 16px;">
+      <div class="alert alert-<%= messageType || 'info' %> profile-alert">
         <%= message %>
       </div>
     <% } %>
 
     <% if (typeof showPassword !== 'undefined' && showPassword) { %>
-    <div class="card" style="background: var(--surface-soft); padding: 20px; margin-bottom: 20px;">
-      <h3 style="margin-bottom: 16px;">🔐 修改密码</h3>
+    <div class="card profile-password-card">
+      <h3 class="profile-password-title">🔐 修改密码</h3>
 
       <% if (typeof passwordMessage !== 'undefined' && passwordMessage) { %>
-        <div class="alert alert-<%= passwordMessageType || 'info' %>" style="margin-bottom: 16px;">
+        <div class="alert alert-<%= passwordMessageType || 'info' %> profile-alert">
           <%= passwordMessage %>
         </div>
       <% } %>
 
-      <form action="/profile/password" method="POST" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <form action="/settings/password" method="POST" class="profile-password-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">当前密码</label>
-          <input type="password" name="currentPassword" placeholder="若未设置密码则留空" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; background: var(--card); color: var(--foreground);">
+          <label for="profile-current-password" class="profile-password-label">当前密码</label>
+          <input id="profile-current-password" type="password" name="currentPassword" placeholder="请输入当前密码" class="profile-password-input">
         </div>
         <div></div>
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">新密码</label>
-          <input type="password" name="newPassword" placeholder="至少6位" minlength="6" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; background: var(--card); color: var(--foreground);">
+          <label for="profile-new-password" class="profile-password-label">新密码</label>
+          <input id="profile-new-password" type="password" name="newPassword" placeholder="至少6位" minlength="6" class="profile-password-input">
         </div>
         <div>
-          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--foreground);">确认新密码</label>
-          <input type="password" name="confirmPassword" placeholder="再次输入新密码" style="width: 100%; padding: 10px; border: 1px solid var(--input); border-radius: 8px; background: var(--card); color: var(--foreground);">
+          <label for="profile-confirm-password" class="profile-password-label">确认新密码</label>
+          <input id="profile-confirm-password" type="password" name="confirmPassword" placeholder="再次输入新密码" class="profile-password-input">
         </div>
-        <div style="grid-column: 1 / -1;">
+        <div class="profile-password-submit">
           <button type="submit" class="btn btn-secondary">修改密码</button>
         </div>
       </form>
 
-      <div style="margin-top: 16px; text-align: center;">
-        <a href="/forgot" style="color: var(--primary); font-size: 0.85rem; text-decoration: underline;">忘记密码</a>
+      <div class="profile-password-help">
+        <a href="/forgot" class="profile-forgot-link">忘记密码</a>
       </div>
     </div>
     <% } %>
@@ -576,11 +578,11 @@
     <% if (!showPassword) { %>
     <!-- 恋爱类型结果 -->
     <div class="card">
-      <h2 style="margin-bottom: 8px;">📝 恋爱人格结果</h2>
-      <p style="color: var(--muted-foreground); margin-bottom: 24px;">通过恋爱类型测试，发现您真正的浪漫人格</p>
+      <h2 class="profile-result-title">📝 恋爱人格结果</h2>
+      <p class="profile-result-description">通过恋爱类型测试，发现您真正的浪漫人格</p>
 
     <% if (typeof isDev !== 'undefined' && isDev) { %>
-        <button type="button" id="devFillBtn" class="btn btn-secondary" style="margin-bottom: 20px;">🔧 一键填写（测试）</button>
+        <button type="button" id="devFillBtn" class="btn btn-secondary profile-dev-fill">🔧 一键填写（测试）</button>
     <% } %>
 
     <% if (lovetypeResult) { %>
@@ -662,8 +664,8 @@
         </div>
       <% } %>
 
-      <div style="margin-top: 20px; text-align: center;">
-        <a href="/profile?edit=1" class="btn btn-secondary" style="display: inline-block;">✏️ 修改问卷</a>
+      <div class="profile-result-actions">
+        <a href="/profile?edit=1" class="btn btn-secondary profile-result-action">✏️ 修改问卷</a>
       </div>
     </div>
   <% } %>
