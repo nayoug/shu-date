@@ -868,18 +868,6 @@ body {
   color: oklch(0.45 0.15 25);
 }
 
-.match-detail-link {
-  display: inline-block;
-  margin-top: 6px;
-  font-size: 0.85rem;
-  color: var(--primary);
-  text-decoration: none;
-}
-
-.match-detail-link:hover {
-  text-decoration: underline;
-}
-
 .match-card__action {
   color: var(--muted-foreground);
   font-size: 0.85rem;
