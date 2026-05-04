@@ -2,23 +2,24 @@
 <html lang="zh-CN">
 <head>
   <%- include('partials/document-head', { pageTitle: typeof title !== 'undefined' ? title : '服务器异常' }) %>
+  <script src="/js/history-back.js?v=0.2.0" defer></script>
 </head>
 <body>
   <%- include('partials/navbar') %>
 
-  <div class="container" style="max-width: 640px; padding-top: 96px;">
-    <div class="card" style="text-align: center;">
-      <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
-      <p style="color: var(--muted-foreground); font-size: 0.9rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;">
+  <div class="container message-page">
+    <div class="card message-card">
+      <div class="message-icon">⚠️</div>
+      <p class="message-code">
         <%= typeof statusCode !== 'undefined' ? statusCode : 500 %>
       </p>
-      <h1 style="font-size: 2rem; margin-bottom: 12px;">服务器出了点问题</h1>
-      <p style="color: var(--muted-foreground); margin-bottom: 28px;">
+      <h1 class="message-title">服务器出了点问题</h1>
+      <p class="message-text">
         <%= typeof message !== 'undefined' && message ? message : '服务器内部错误，请稍后再试。' %>
       </p>
-      <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+      <div class="message-actions">
         <a href="/" class="btn">返回首页</a>
-        <button type="button" class="btn" onclick="history.back()" style="background: var(--muted); color: var(--foreground);">
+        <button type="button" class="btn btn-secondary" data-history-back>
           返回上一页
         </button>
       </div>

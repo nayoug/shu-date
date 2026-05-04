@@ -6,12 +6,12 @@
 <body>
   <%- include('partials/navbar') %>
 
-  <div class="container" style="max-width: 600px; padding-top: 40px;">
+  <div class="container notification-page">
     <div class="card">
-      <h2 style="margin-bottom: 24px;">通知中心</h2>
+      <h2 class="notification-title">通知中心</h2>
 
       <% if (typeof message !== 'undefined' && message) { %>
-        <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 20px;">
+        <div class="alert alert-<%= messageType || 'info' %>">
           <%= message %>
         </div>
       <% } %>
@@ -19,28 +19,28 @@
       <% if (notifications && notifications.length > 0) { %>
         <div class="notification-list">
           <% notifications.forEach(function(notification) { %>
-            <div class="notification-item" style="padding: 16px; border-bottom: 1px solid var(--border); <% if (!notification.is_read) { %>background: var(--accent);<% } %>">
-              <div style="display: flex; justify-content: space-between; align-items: start;">
-                <div style="flex: 1;">
-                  <p style="margin: 0 0 8px 0;"><%= notification.content %></p>
-                  <p style="margin: 0; font-size: 12px; color: var(--muted-foreground);">
+            <div class="notification-item<%= !notification.is_read ? ' notification-item--unread' : '' %>">
+              <div class="notification-row">
+                <div class="notification-body">
+                  <p class="notification-content"><%= notification.content %></p>
+                  <p class="notification-time">
                     <%= new Date(notification.created_at).toLocaleString('zh-CN') %>
                   </p>
                 </div>
                 <% if (notification.type === 'match_request' && notification.status === 'pending') { %>
-                  <div style="display: flex; gap: 8px; margin-left: 16px;">
-                    <form method="POST" action="/couple-match/accept/<%= notification.related_request_id %>" style="display: inline;">
+                  <div class="notification-actions">
+                    <form method="POST" action="/couple-match/accept/<%= notification.related_request_id %>" class="inline-form">
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <button type="submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 14px;">同意</button>
+                      <button type="submit" class="btn btn-primary btn-small">同意</button>
                     </form>
-                    <form method="POST" action="/couple-match/reject/<%= notification.related_request_id %>" style="display: inline;">
+                    <form method="POST" action="/couple-match/reject/<%= notification.related_request_id %>" class="inline-form">
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <button type="submit" class="btn btn-secondary" style="padding: 6px 12px; font-size: 14px;">拒绝</button>
+                      <button type="submit" class="btn btn-secondary btn-small">拒绝</button>
                     </form>
                   </div>
                 <% } else if (notification.type === 'match_accepted' && notification.related_request_id) { %>
-                  <div style="margin-left: 16px;">
-                    <a href="/couple-match/result/<%= notification.related_request_id %>" class="btn btn-secondary" style="padding: 6px 12px; font-size: 14px;">查看结果</a>
+                  <div class="notification-action">
+                    <a href="/couple-match/result/<%= notification.related_request_id %>" class="btn btn-secondary btn-small">查看结果</a>
                   </div>
                 <% } %>
               </div>
@@ -48,7 +48,7 @@
           <% }); %>
         </div>
       <% } else { %>
-        <div style="text-align: center; padding: 40px 20px; color: var(--muted-foreground);">
+        <div class="notification-empty">
           <p>暂无通知</p>
         </div>
       <% } %>

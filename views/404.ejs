@@ -6,19 +6,19 @@
 <body>
   <%- include('partials/navbar') %>
 
-  <div class="container" style="max-width: 640px; padding-top: 96px;">
-    <div class="card" style="text-align: center;">
-      <div style="font-size: 3rem; margin-bottom: 16px;">🧭</div>
-      <p style="color: var(--muted-foreground); font-size: 0.9rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;">
+  <div class="container message-page">
+    <div class="card message-card">
+      <div class="message-icon">🧭</div>
+      <p class="message-code">
         <%= typeof statusCode !== 'undefined' ? statusCode : 404 %>
       </p>
-      <h1 style="font-size: 2rem; margin-bottom: 12px;">这个页面不在这里</h1>
-      <p style="color: var(--muted-foreground); margin-bottom: 28px;">
+      <h1 class="message-title">这个页面不在这里</h1>
+      <p class="message-text">
         <%= typeof message !== 'undefined' && message ? message : '你访问的页面不存在，可能已被移动或删除。' %>
       </p>
-      <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+      <div class="message-actions">
         <a href="/" class="btn">回到首页</a>
-        <a href="/login" class="btn" style="background: var(--muted); color: var(--foreground);">去登录</a>
+        <a href="/login" class="btn btn-secondary">去登录</a>
       </div>
     </div>
   </div>

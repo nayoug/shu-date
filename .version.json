@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-04T03:11:16.864Z",
+  "generatedAt": "2026-05-04T03:34:25.916Z",
   "resources": {
     "css/account-pages.css": {
       "hash": "1b1d17ce",
@@ -11,8 +11,8 @@
       "version": "0.2.0-1fdea12d"
     },
     "css/style.css": {
-      "hash": "560c6da3",
-      "version": "0.2.0-560c6da3"
+      "hash": "495ae758",
+      "version": "0.2.0-495ae758"
     },
     "favicon.ico": {
       "hash": "5ecd6c3b",
@@ -41,6 +41,10 @@
     "js/couple-result.js": {
       "hash": "dacb5796",
       "version": "0.2.0-dacb5796"
+    },
+    "js/history-back.js": {
+      "hash": "2eea60ee",
+      "version": "0.2.0-2eea60ee"
     },
     "js/match-detail.js": {
       "hash": "9159358c",
