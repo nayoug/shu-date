@@ -19,8 +19,9 @@
         <form action="/admin/match" method="POST" class="admin-form">
           <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
           <div>
-            <label class="admin-label">确认密码：</label>
+            <label class="admin-label" for="admin-match-password">确认密码：</label>
             <input type="password" name="confirmPassword" placeholder="请输入您的密码" required
+                   id="admin-match-password"
                    class="admin-input">
           </div>
           <button type="submit" class="btn">🔄 执行匹配</button>
@@ -33,23 +34,26 @@
         <form action="/admin/match/rerun" method="POST" class="admin-form">
           <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
           <div>
-            <label class="admin-label">目标年份：</label>
+            <label class="admin-label" for="admin-rerun-year">目标年份：</label>
             <input type="number" name="targetYear" placeholder="留空=当前年" min="2020" max="2100"
+                   id="admin-rerun-year"
                    class="admin-input admin-input--short">
           </div>
           <div>
-            <label class="admin-label">目标周数：</label>
+            <label class="admin-label" for="admin-rerun-week">目标周数：</label>
             <input type="number" name="targetWeek" placeholder="留空=当前周（0 起始）" min="0" max="53"
+                   id="admin-rerun-week"
                    class="admin-input admin-input--short">
           </div>
           <div>
-            <label class="admin-label">确认密码：</label>
+            <label class="admin-label" for="admin-rerun-password">确认密码：</label>
             <input type="password" name="confirmPassword" placeholder="请输入密码确认" required
+                   id="admin-rerun-password"
                    class="admin-input">
           </div>
           <div>
-            <label class="admin-checkbox-label">
-              <input type="checkbox" name="force" value="true">
+            <label class="admin-checkbox-label" for="admin-rerun-force">
+              <input type="checkbox" name="force" value="true" id="admin-rerun-force">
               <span class="admin-checkbox-text">强制重跑 (删除已有记录)</span>
             </label>
           </div>
