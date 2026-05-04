@@ -15,7 +15,7 @@
       <h2>👥 用户管理</h2>
 
       <div style="margin-bottom: 20px; padding: 15px; background: var(--info-bg); border-radius: 8px; border-left: 4px solid var(--info);">
-        <h4 style="margin: 0 0 10px 0; color: var(--info-foreground);">🔄 手动触发本周匹配</h4>
+        <h4 style="margin: 0 0 10px 0; color: var(--info-foreground);">🔄 手动触发已截止匹配</h4>
         <form action="/admin/match" method="POST" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
           <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
           <div>
@@ -25,7 +25,7 @@
           </div>
           <button type="submit" class="btn">🔄 执行匹配</button>
         </form>
-        <span style="margin-left: 15px; color: var(--muted-foreground); font-size: 12px;">当前第 <%= weekNumber %> 周</span>
+        <span style="margin-left: 15px; color: var(--muted-foreground); font-size: 12px;">将执行 <%= year %> 年第 <%= weekNumber %> 周</span>
       </div>
 
       <div style="margin-bottom: 20px; padding: 15px; background: var(--surface-soft); border-radius: 8px; border-left: 4px solid var(--warning);">
