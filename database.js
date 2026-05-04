@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const { getCurrentConfirmationWindowByTuesday19 } = require('./weekNumber');
 const SESSION_TABLE_NAME = 'user_sessions';
 const SESSION_EXPIRE_INDEX_NAME = 'idx_user_sessions_expire';
 
@@ -41,7 +42,34 @@ async function initDatabase() {
   await pool.query('ALTER TABLE users DROP COLUMN IF EXISTS weekly_match_confirmed');
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_match_year INTEGER DEFAULT 0');
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_match_week INTEGER DEFAULT 0');
+  const confirmedAtColumn = await pool.query(`
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'users'
+      AND column_name = 'weekly_match_confirmed_at'
+  `);
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_match_confirmed_at TIMESTAMPTZ');
+  if (confirmedAtColumn.rowCount === 0) {
+    const currentWindow = getCurrentConfirmationWindowByTuesday19();
+    const weekKeys = currentWindow.weekKeys || [];
+    const params = [];
+    const keyClauses = weekKeys.map(weekInfo => {
+      params.push(weekInfo.year, weekInfo.week);
+      return `(weekly_match_year = $${params.length - 1} AND weekly_match_week = $${params.length})`;
+    });
+
+    if (keyClauses.length > 0) {
+      await pool.query(`
+        UPDATE users
+        SET weekly_match_confirmed_at = CURRENT_TIMESTAMP
+        WHERE weekly_match_confirmed_at IS NULL
+          AND weekly_match_year IS NOT NULL
+          AND weekly_match_year <> 0
+          AND (${keyClauses.join(' OR ')})
+      `, params);
+    }
+  }
   
   // profiles 表
   await pool.query(`

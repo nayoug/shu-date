@@ -476,11 +476,12 @@ async function saveWeeklyMatches(targetYear = null, targetWeek = null, options =
 
   const matched = new Set();
   const results = [];
+  const candidateOptions = confirmationWindow ? { confirmationWindow } : { confirmationWeekKeys };
 
   for (const user of users) {
     if (matched.has(user.user_id)) continue;
 
-    const allMatches = await findMatches(user.user_id, year, weekNumber, { confirmationWeekKeys });
+    const allMatches = await findMatches(user.user_id, year, weekNumber, candidateOptions);
     const matches = allMatches.filter(m => !matched.has(m.user_id));
 
     if (matches.length > 0) {
