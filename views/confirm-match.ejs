@@ -6,43 +6,43 @@
 <body>
   <%- include('partials/navbar') %>
 
-  <div class="container" style="max-width: 600px; padding-top: 40px;">
+  <div class="container match-flow-page">
     <div class="card">
-      <h2 style="margin-bottom: 24px;">💕 确认匹配</h2>
+      <h2 class="match-flow-title">💕 确认匹配</h2>
 
       <% if (typeof message !== 'undefined' && message && message !== '已取消本周匹配') { %>
-        <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 20px;">
+        <div class="alert alert-<%= messageType || 'info' %>">
           <%= message %>
         </div>
       <% } %>
 
       <% if (message === '已取消本周匹配') { %>
-        <div class="alert alert-success" style="margin-bottom: 20px;">
+        <div class="alert alert-success">
           <%= message %>
         </div>
-        <a href="/" class="btn" style="width: 100%; text-align: center;">返回首页</a>
+        <a href="/" class="btn match-flow-full-action">返回首页</a>
       <% } else if (user.weeklyMatchConfirmed) { %>
-        <p style="color: var(--muted-foreground); margin-bottom: 24px;">
+        <p class="match-flow-copy">
           你已确认参与本周匹配。
         </p>
-        <form method="POST" action="/confirm-match/cancel" style="margin-bottom: 12px;">
+        <form method="POST" action="/confirm-match/cancel" class="match-flow-form match-flow-form--compact">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button type="submit" class="btn btn-secondary" style="width: 100%;">
+          <button type="submit" class="btn btn-secondary match-flow-full-action">
             取消本周匹配
           </button>
         </form>
-        <a href="/" class="btn" style="width: 100%; text-align: center;">返回首页</a>
+        <a href="/" class="btn match-flow-full-action">返回首页</a>
       <% } else { %>
-        <p style="color: var(--muted-foreground); margin-bottom: 24px;">
+        <p class="match-flow-copy">
           点击下方按钮确认，你确定要参与本周匹配吗？确认后系统才会将你纳入本周的匹配候选池。
         </p>
-        <p style="font-size: 0.9rem; color: var(--muted-foreground); margin-bottom: 24px; padding: 12px; background: var(--accent); border-radius: 8px;">
+        <p class="match-flow-note">
           <strong>匹配成功后将向对方展示：</strong>学校邮箱、昵称、年级、性别、校区、LoveType、兴趣爱好和匹配评语。请确认可接受这些信息被对方查看。
         </p>
 
         <form method="POST" action="/confirm-match">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button type="submit" class="btn" style="width: 100%;">
+          <button type="submit" class="btn match-flow-full-action">
             确认参与本周匹配
           </button>
         </form>

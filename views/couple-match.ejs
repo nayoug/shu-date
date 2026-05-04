@@ -6,63 +6,63 @@
 <body>
   <%- include('partials/navbar') %>
 
-  <div class="container" style="max-width: 600px; padding-top: 40px;">
+  <div class="container match-flow-page">
     <div class="card">
-      <h2 style="margin-bottom: 24px;">情侣匹配</h2>
+      <h2 class="match-flow-title">情侣匹配</h2>
 
       <% if (typeof message !== 'undefined' && message) { %>
-        <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 20px;">
+        <div class="alert alert-<%= messageType || 'info' %>">
           <%= message %>
         </div>
       <% } %>
 
-      <p style="color: var(--muted-foreground); margin-bottom: 20px;">
+      <p class="match-flow-copy match-flow-copy--compact">
         输入对方邮箱，向TA发送情侣匹配申请。双方完成问卷后，在通知中心同意即可查看匹配结果。
       </p>
 
-      <form method="POST" action="/couple-match/request" style="margin-bottom: 32px;">
+      <form method="POST" action="/couple-match/request" class="match-flow-form">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <div style="display: flex; gap: 12px;">
+        <div class="match-flow-row">
           <input
             type="email"
             name="email"
             placeholder="对方邮箱（@shu.edu.cn）"
             required
-            style="flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 6px;"
+            class="match-flow-input"
           >
           <button type="submit" class="btn btn-primary">发送申请</button>
         </div>
       </form>
 
       <% if (acceptedMatches && acceptedMatches.length > 0) { %>
-        <h3 style="margin-top: 32px; margin-bottom: 16px;">已匹配</h3>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
+        <h3 class="match-flow-section-title">已匹配</h3>
+        <div class="match-flow-list match-flow-list--loose">
           <% acceptedMatches.forEach(function(match) { %>
-            <div style="padding: 16px; background: var(--accent); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="match-flow-card match-flow-card--accepted">
               <div>
-                <p style="margin: 0; font-weight: 500;"><%= match.partner_nickname || match.partner_email %></p>
-                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--muted-foreground);">
+                <p class="match-flow-name match-flow-name--strong"><%= match.partner_nickname || match.partner_email %></p>
+                <p class="match-flow-meta">
                   匹配于 <%= new Date(match.matched_at).toLocaleDateString('zh-CN') %>
                 </p>
               </div>
-              <a href="/couple-match/result/<%= match.id %>" class="btn btn-secondary" style="padding: 8px 16px;">查看结果</a>
+              <a href="/couple-match/result/<%= match.id %>" class="btn btn-secondary btn-small">查看结果</a>
             </div>
           <% }); %>
         </div>
       <% } %>
 
       <% if (myRequests && myRequests.length > 0) { %>
-        <h3 style="margin-top: 32px; margin-bottom: 16px;">我发出的申请</h3>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
+        <h3 class="match-flow-section-title">我发出的申请</h3>
+        <div class="match-flow-list">
           <% myRequests.forEach(function(req) { %>
-            <div style="padding: 12px; border: 1px solid var(--border); border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="match-flow-card">
               <div>
-                <p style="margin: 0;"><%= req.nickname || req.email %></p>
-                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--muted-foreground);">
+                <p class="match-flow-name"><%= req.nickname || req.email %></p>
+                <p class="match-flow-meta">
                   <%= new Date(req.created_at).toLocaleString('zh-CN') %>
                 </p>
               </div>
-                <span style="padding: 4px 8px; font-size: 12px; border-radius: 4px; border: 1px solid transparent; box-sizing: border-box; <% if (req.status === 'pending') { %>background: var(--accent); color: var(--accent-foreground);<% } else if (req.status === 'accepted') { %>background: var(--success-bg); color: var(--success-foreground); border-color: var(--success-border);<% } else if (req.status === 'rejected') { %>background: var(--error-bg); color: var(--error-foreground); border-color: var(--error-border);<% } %>">
+              <span class="match-flow-status match-flow-status--<%= req.status %>">
                 <% if (req.status === 'pending') { %>待回复<% } else if (req.status === 'accepted') { %>已同意<% } else if (req.status === 'rejected') { %>已拒绝<% } %>
               </span>
             </div>
@@ -71,20 +71,20 @@
       <% } %>
 
       <% if (receivedRequests && receivedRequests.length > 0) { %>
-        <h3 style="margin-top: 32px; margin-bottom: 16px;">收到的申请</h3>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
+        <h3 class="match-flow-section-title">收到的申请</h3>
+        <div class="match-flow-list">
           <% receivedRequests.forEach(function(req) { %>
-            <div style="padding: 12px; border: 1px solid var(--border); border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="match-flow-card">
               <div>
-                <p style="margin: 0;"><%= req.nickname || req.email %></p>
-                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--muted-foreground);">
+                <p class="match-flow-name"><%= req.nickname || req.email %></p>
+                <p class="match-flow-meta">
                   <%= new Date(req.created_at).toLocaleString('zh-CN') %>
                 </p>
               </div>
               <% if (req.status === 'pending') { %>
-                <span style="color: var(--muted-foreground); font-size: 12px;">请在通知中心处理</span>
+                <span class="match-flow-pending-note">请在通知中心处理</span>
               <% } else { %>
-                <span style="padding: 4px 8px; font-size: 12px; border-radius: 4px; border: 1px solid transparent; box-sizing: border-box; <% if (req.status === 'accepted') { %>background: var(--success-bg); color: var(--success-foreground); border-color: var(--success-border);<% } else if (req.status === 'rejected') { %>background: var(--error-bg); color: var(--error-foreground); border-color: var(--error-border);<% } %>">
+                <span class="match-flow-status match-flow-status--<%= req.status %>">
                   <% if (req.status === 'accepted') { %>已同意<% } else if (req.status === 'rejected') { %>已拒绝<% } %>
                 </span>
               <% } %>

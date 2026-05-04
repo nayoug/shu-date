@@ -9,19 +9,19 @@
 <body>
   <%- include('partials/navbar') %>
 
-  <div class="container" style="max-width: 600px; padding-top: 40px;">
+  <div class="container match-flow-page">
     <div class="card">
-      <h2 style="margin-bottom: 24px;">匹配结果</h2>
+      <h2 class="match-flow-title">匹配结果</h2>
 
       <% if (typeof message !== 'undefined' && message) { %>
-        <div class="alert alert-<%= messageType || 'info' %>" style="margin-bottom: 20px;">
+        <div class="alert alert-<%= messageType || 'info' %>">
           <%= message %>
         </div>
       <% } %>
 
-      <div style="text-align: center; margin-bottom: 32px;">
-        <p style="color: var(--muted-foreground); margin-bottom: 8px;">与 <strong><%= partner.nickname || partner.email %></strong> 的匹配度</p>
-        <div style="font-size: 64px; font-weight: bold; color: var(--primary);">
+      <div class="couple-result-score">
+        <p class="couple-result-target">与 <strong><%= partner.nickname || partner.email %></strong> 的匹配度</p>
+        <div class="couple-result-total">
           <%= matchResult ? Math.round(matchResult.total) : '--' %>分
         </div>
       </div>
@@ -38,18 +38,18 @@
       </div>
       <% } %>
 
-      <div style="margin-bottom: 24px;">
-        <h3 style="margin-bottom: 16px;">对方信息</h3>
-        <div style="padding: 16px; background: var(--accent); border-radius: 8px;">
-          <p style="margin: 0 0 8px 0;"><strong>昵称：</strong><%= partner.nickname || '未设置' %></p>
-          <% if (partner.my_grade) { %><p style="margin: 0 0 8px 0;"><strong>年级：</strong><%= partner.my_grade %></p><% } %>
-          <% if (partner.gender) { %><p style="margin: 0 0 8px 0;"><strong>性别：</strong><%= partner.gender %></p><% } %>
-          <% if (partner.campus) { %><p style="margin: 0 0 8px 0;"><strong>校区：</strong><%= partner.campus %></p><% } %>
-          <% if (partner.lovetype_code) { %><p style="margin: 0 0 8px 0;"><strong>恋爱类型：</strong><%= partner.lovetype_code %> - <%= partner.loveTypeProfile?.nickname || partner.loveTypeProfile?.title || '' %></p><% } %>
+      <div class="couple-result-info">
+        <h3>对方信息</h3>
+        <div class="couple-result-panel">
+          <p><strong>昵称：</strong><%= partner.nickname || '未设置' %></p>
+          <% if (partner.my_grade) { %><p><strong>年级：</strong><%= partner.my_grade %></p><% } %>
+          <% if (partner.gender) { %><p><strong>性别：</strong><%= partner.gender %></p><% } %>
+          <% if (partner.campus) { %><p><strong>校区：</strong><%= partner.campus %></p><% } %>
+          <% if (partner.lovetype_code) { %><p><strong>恋爱类型：</strong><%= partner.lovetype_code %> - <%= partner.loveTypeProfile?.nickname || partner.loveTypeProfile?.title || '' %></p><% } %>
         </div>
       </div>
 
-      <div style="text-align: center;">
+      <div class="couple-result-actions">
         <a href="/couple-match" class="btn btn-secondary">返回</a>
       </div>
     </div>
