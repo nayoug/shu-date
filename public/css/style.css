@@ -1167,6 +1167,11 @@ tr:hover td {
   margin-bottom: 0;
 }
 
+.info-title {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
 .info-meta {
   color: var(--muted-foreground);
   font-size: 0.88rem;
@@ -1199,6 +1204,108 @@ tr:hover td {
 
 .info-section li + li {
   margin-top: 8px;
+}
+
+.message-page {
+  max-width: 640px;
+  padding-top: 96px;
+}
+
+.message-card {
+  text-align: center;
+}
+
+.message-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.message-code {
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.message-title {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.message-text {
+  color: var(--muted-foreground);
+  margin-bottom: 28px;
+}
+
+.message-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+.notification-page {
+  max-width: 600px;
+  padding-top: 40px;
+}
+
+.notification-title {
+  margin-bottom: 24px;
+}
+
+.notification-item {
+  border-bottom: 1px solid var(--border);
+  padding: 16px;
+}
+
+.notification-item--unread {
+  background: var(--accent);
+}
+
+.notification-row {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.notification-body {
+  flex: 1;
+}
+
+.notification-content {
+  margin: 0 0 8px;
+}
+
+.notification-time {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  margin: 0;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.notification-action {
+  margin-left: 16px;
+}
+
+.inline-form {
+  display: inline;
+}
+
+.notification-empty {
+  color: var(--muted-foreground);
+  padding: 40px 20px;
+  text-align: center;
 }
 
 /* ===== 动画 ===== */
