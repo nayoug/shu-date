@@ -14,46 +14,50 @@
     <div class="card">
       <h2>👥 用户管理</h2>
 
-      <div style="margin-bottom: 20px; padding: 15px; background: var(--info-bg); border-radius: 8px; border-left: 4px solid var(--info);">
-        <h4 style="margin: 0 0 10px 0; color: var(--info-foreground);">🔄 手动触发已截止匹配</h4>
-        <form action="/admin/match" method="POST" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <div class="admin-panel admin-panel--info">
+        <h4 class="admin-panel__title admin-panel__title--info">🔄 手动触发已截止匹配</h4>
+        <form action="/admin/match" method="POST" class="admin-form">
           <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
           <div>
-            <label style="font-size: 14px; color: var(--muted-foreground);">确认密码：</label>
+            <label class="admin-label" for="admin-match-password">确认密码：</label>
             <input type="password" name="confirmPassword" placeholder="请输入您的密码" required
-                   style="padding: 8px 12px; border: 1px solid var(--input); border-radius: 4px; width: 150px; background: var(--card); color: var(--foreground);">
+                   id="admin-match-password"
+                   class="admin-input">
           </div>
           <button type="submit" class="btn">🔄 执行匹配</button>
         </form>
-        <span style="margin-left: 15px; color: var(--muted-foreground); font-size: 12px;">将执行 <%= year %> 年第 <%= weekNumber %> 周</span>
+        <span class="admin-week-note">将执行 <%= year %> 年第 <%= weekNumber %> 周</span>
       </div>
 
-      <div style="margin-bottom: 20px; padding: 15px; background: var(--surface-soft); border-radius: 8px; border-left: 4px solid var(--warning);">
-        <h4 style="margin: 0 0 10px 0; color: var(--warning);">🔧 补跑匹配</h4>
-        <form action="/admin/match/rerun" method="POST" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <div class="admin-panel admin-panel--warning">
+        <h4 class="admin-panel__title admin-panel__title--warning">🔧 补跑匹配</h4>
+        <form action="/admin/match/rerun" method="POST" class="admin-form">
           <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
           <div>
-            <label style="font-size: 14px; color: var(--muted-foreground);">目标年份：</label>
+            <label class="admin-label" for="admin-rerun-year">目标年份：</label>
             <input type="number" name="targetYear" placeholder="留空=当前年" min="2020" max="2100"
-                   style="padding: 8px 12px; border: 1px solid var(--input); border-radius: 4px; width: 100px; background: var(--card); color: var(--foreground);">
+                   id="admin-rerun-year"
+                   class="admin-input admin-input--short">
           </div>
           <div>
-            <label style="font-size: 14px; color: var(--muted-foreground);">目标周数：</label>
+            <label class="admin-label" for="admin-rerun-week">目标周数：</label>
             <input type="number" name="targetWeek" placeholder="留空=当前周（0 起始）" min="0" max="53"
-                   style="padding: 8px 12px; border: 1px solid var(--input); border-radius: 4px; width: 100px; background: var(--card); color: var(--foreground);">
+                   id="admin-rerun-week"
+                   class="admin-input admin-input--short">
           </div>
           <div>
-            <label style="font-size: 14px; color: var(--muted-foreground);">确认密码：</label>
+            <label class="admin-label" for="admin-rerun-password">确认密码：</label>
             <input type="password" name="confirmPassword" placeholder="请输入密码确认" required
-                   style="padding: 8px 12px; border: 1px solid var(--input); border-radius: 4px; width: 150px; background: var(--card); color: var(--foreground);">
+                   id="admin-rerun-password"
+                   class="admin-input">
           </div>
           <div>
-            <label style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
-              <input type="checkbox" name="force" value="true">
-              <span style="color: var(--primary);">强制重跑 (删除已有记录)</span>
+            <label class="admin-checkbox-label" for="admin-rerun-force">
+              <input type="checkbox" name="force" value="true" id="admin-rerun-force">
+              <span class="admin-checkbox-text">强制重跑 (删除已有记录)</span>
             </label>
           </div>
-          <button type="submit" class="btn" style="background: var(--warning); color: var(--warning-foreground);">▶️ 执行补跑</button>
+          <button type="submit" class="btn btn-warning">▶️ 执行补跑</button>
         </form>
       </div>
 
@@ -82,7 +86,7 @@
         </tbody>
       </table>
 
-      <p style="margin-top: 20px; color: var(--muted-foreground);">
+      <p class="admin-summary">
         共 <%= users.length %> 位用户注册
       </p>
     </div>

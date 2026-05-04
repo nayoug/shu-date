@@ -1296,6 +1296,94 @@ tr:hover td {
   background: var(--table-row-hover);
 }
 
+.admin-panel {
+  border-left: 4px solid var(--info);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  padding: 15px;
+}
+
+.admin-panel--info {
+  background: var(--info-bg);
+  border-left-color: var(--info);
+}
+
+.admin-panel--warning {
+  background: var(--surface-soft);
+  border-left-color: var(--warning);
+}
+
+.admin-panel__title {
+  margin: 0 0 10px;
+}
+
+.admin-panel__title--info {
+  color: var(--info-foreground);
+}
+
+.admin-panel__title--warning {
+  color: var(--warning);
+}
+
+.admin-form {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-label {
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+
+.admin-input {
+  background: var(--card);
+  border: 1px solid var(--input);
+  border-radius: 4px;
+  color: var(--foreground);
+  padding: 8px 12px;
+  width: 150px;
+}
+
+.admin-input--short {
+  width: 100px;
+}
+
+.admin-week-note {
+  color: var(--muted-foreground);
+  display: inline-block;
+  font-size: 12px;
+  margin-left: 15px;
+  margin-top: 10px;
+}
+
+.admin-checkbox-label {
+  align-items: center;
+  display: flex;
+  font-size: 14px;
+  gap: 5px;
+}
+
+.admin-checkbox-text {
+  color: var(--primary);
+}
+
+.admin-summary {
+  color: var(--muted-foreground);
+  margin-top: 20px;
+}
+
+.btn-warning {
+  background: var(--warning);
+  color: var(--warning-foreground);
+}
+
+.btn-warning:hover {
+  background: var(--warning);
+  filter: brightness(0.96);
+}
+
 .btn-danger {
   background: var(--error);
   color: white;
