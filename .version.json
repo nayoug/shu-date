@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-04T14:21:04.904Z",
+  "generatedAt": "2026-05-04T14:28:09.551Z",
   "resources": {
     "css/account-pages.css": {
       "hash": "0caa3282",
@@ -41,6 +41,10 @@
     "js/couple-result.js": {
       "hash": "dacb5796",
       "version": "0.2.0-dacb5796"
+    },
+    "js/dev-tools.js": {
+      "hash": "13f1ebc8",
+      "version": "0.2.0-13f1ebc8"
     },
     "js/history-back.js": {
       "hash": "2eea60ee",
