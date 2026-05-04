@@ -37,10 +37,32 @@
     nextTab.focus();
   }
 
+  function setEmailGuideExpanded(toggle, expanded) {
+    var guideId = toggle.getAttribute('aria-controls');
+    var guide = guideId ? document.getElementById(guideId) : null;
+
+    if (!guide) return;
+
+    toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    guide.toggleAttribute('hidden', !expanded);
+  }
+
   document.addEventListener('click', function(event) {
     var tab = event.target.closest('[data-login-method-target]');
-    if (!tab) return;
-    setLoginMethod(tab.getAttribute('data-login-method-target'));
+    var emailGuideToggle;
+
+    if (tab) {
+      setLoginMethod(tab.getAttribute('data-login-method-target'));
+      return;
+    }
+
+    emailGuideToggle = event.target.closest('[data-email-guide-toggle]');
+    if (!emailGuideToggle) return;
+
+    setEmailGuideExpanded(
+      emailGuideToggle,
+      emailGuideToggle.getAttribute('aria-expanded') !== 'true'
+    );
   });
 
   document.addEventListener('keydown', function(event) {
@@ -77,5 +99,9 @@
     if (activeTab) {
       setLoginMethod(activeTab.getAttribute('data-login-method-target'));
     }
+
+    document.querySelectorAll('[data-email-guide-toggle]').forEach(function(toggle) {
+      setEmailGuideExpanded(toggle, toggle.getAttribute('aria-expanded') === 'true');
+    });
   });
 })();
