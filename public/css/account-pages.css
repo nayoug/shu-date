@@ -155,7 +155,7 @@
   font-size: 0.8rem;
   color: var(--primary);
   cursor: pointer;
-  font: inherit;
+  font-family: inherit;
   padding: 0;
   text-decoration: none;
 }

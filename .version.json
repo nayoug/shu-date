@@ -1,10 +1,10 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-04T04:24:27.145Z",
+  "generatedAt": "2026-05-04T14:16:36.533Z",
   "resources": {
     "css/account-pages.css": {
-      "hash": "6044a9dc",
-      "version": "0.2.0-6044a9dc"
+      "hash": "0caa3282",
+      "version": "0.2.0-0caa3282"
     },
     "css/dev-tools.css": {
       "hash": "1fdea12d",
