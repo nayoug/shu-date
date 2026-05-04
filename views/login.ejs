@@ -62,9 +62,11 @@
         </div>
         <div class="form-group email-with-help">
           <input class="form-control-center" type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="email" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required>
-          <a href="javascript:void(0)" class="email-help-link" onclick="toggleEmailGuide()">邮箱申请指引</a>
+          <button type="button" class="email-help-link" data-email-guide-toggle aria-controls="email-guide" aria-expanded="false">
+            邮箱申请指引
+          </button>
         </div>
-        <div id="email-guide" class="email-guide" style="display: none;">
+        <div id="email-guide" class="email-guide" hidden>
           <div class="email-guide-content">
             <p><strong>邮箱账号申请：</strong><a href="https://oauth.shu.edu.cn/" target="_blank">https://oauth.shu.edu.cn/</a></p>
             <p><strong>申请完成后登录上海大学邮件系统：</strong><a href="https://newmail.shu.edu.cn/coremail/" target="_blank">https://newmail.shu.edu.cn/coremail/</a></p>
@@ -100,15 +102,5 @@
   </div>
 
   <%- include('partials/site-footer') %>
-<script>
-function toggleEmailGuide() {
-  var guide = document.getElementById('email-guide');
-  if (guide.style.display === 'none') {
-    guide.style.display = 'block';
-  } else {
-    guide.style.display = 'none';
-  }
-}
-</script>
 </body>
 </html>

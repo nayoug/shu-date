@@ -1,10 +1,10 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-04T04:09:43.028Z",
+  "generatedAt": "2026-05-04T04:24:27.145Z",
   "resources": {
     "css/account-pages.css": {
-      "hash": "1b1d17ce",
-      "version": "0.2.0-1b1d17ce"
+      "hash": "6044a9dc",
+      "version": "0.2.0-6044a9dc"
     },
     "css/dev-tools.css": {
       "hash": "1fdea12d",
@@ -55,8 +55,8 @@
       "version": "0.2.0-2b474f11"
     },
     "js/login-tabs.js": {
-      "hash": "0ce13845",
-      "version": "0.2.0-0ce13845"
+      "hash": "7fa8f43a",
+      "version": "0.2.0-7fa8f43a"
     },
     "js/theme.js": {
       "hash": "c1b29b66",

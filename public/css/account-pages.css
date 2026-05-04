@@ -150,8 +150,13 @@
 }
 
 .email-help-link {
+  border: 0;
+  background: transparent;
   font-size: 0.8rem;
   color: var(--primary);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
   text-decoration: none;
 }
 
