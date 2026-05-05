@@ -543,6 +543,28 @@ function renderViewWithCsrf(req, res, view, model = {}) {
   return res.render(view, withCsrfToken(req, model));
 }
 
+function renderTemplate(res, view, locals = {}) {
+  return new Promise((resolve, reject) => {
+    res.render(view, locals, (renderErr, html) => {
+      if (renderErr) {
+        reject(renderErr);
+        return;
+      }
+      resolve(html);
+    });
+  });
+}
+
+async function renderWithLayout(res, view, locals = {}, status = 200) {
+  const body = await renderTemplate(res, view, locals);
+  const html = await renderTemplate(res, 'layout', { ...locals, body });
+  return res.status(status).send(html);
+}
+
+function renderViewWithCsrfInLayout(req, res, view, model = {}) {
+  return renderWithLayout(res, view, withCsrfToken(req, model));
+}
+
 function createCsrfValidator(redirectTo = '/admin') {
   return (req, res, next) => {
     // 兼容 _csrf（表单中常用） 和 csrfToken 两种字段名
@@ -570,31 +592,14 @@ const requireValidNotificationsCsrf = createCsrfValidator('/notifications');
 const requireValidDevLoginCsrf = createCsrfValidator('/');
 
 function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面暂时不可用') {
-  res.render(view, locals, (viewErr, body) => {
-    if (viewErr) {
-      console.error(`❌ 渲染 ${view} 内容失败:`, viewErr.message);
-      if (!res.headersSent) {
-        return res
-          .status(status)
-          .type('text/plain; charset=utf-8')
-          .send(locals.message || fallbackMessage);
-      }
-      return;
+  renderWithLayout(res, view, locals, status).catch(renderErr => {
+    console.error(`❌ 渲染 ${view} 失败:`, renderErr.message);
+    if (!res.headersSent) {
+      res
+        .status(status)
+        .type('text/plain; charset=utf-8')
+        .send(locals.message || fallbackMessage);
     }
-
-    res.status(status).render('layout', { ...locals, body }, (layoutErr, html) => {
-      if (!layoutErr) {
-        return res.send(html);
-      }
-
-      console.error('❌ 渲染 layout 失败:', layoutErr.message);
-      if (!res.headersSent) {
-        res
-          .status(status)
-          .type('text/plain; charset=utf-8')
-          .send(locals.message || fallbackMessage);
-      }
-    });
   });
 }
 
@@ -911,7 +916,7 @@ async function renderInfoPage(req, res, pageKey) {
   const page = INFO_PAGES[pageKey];
   const nav = await buildPublicNavigationModel(req);
 
-  res.render('info-page', {
+  return renderWithLayout(res, 'info-page', {
     ...nav,
     title: page.title,
     pageTitle: page.pageTitle,
@@ -1491,10 +1496,12 @@ app.get('/profile', isLoggedIn, wrapAsync(async (req, res) => {
 // 账户设置
 app.get('/settings', isLoggedIn, wrapAsync(async (req, res) => {
   const profile = await db.queryOne('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
-  res.render('settings', {
+  return renderWithLayout(res, 'settings', {
     user: req.user,
     nickname: req.session.nickname,
-    hasProfile: !!profile
+    hasProfile: !!profile,
+    pageTitle: '账户设置',
+    accountPage: true
   });
 }));
 
@@ -1515,13 +1522,15 @@ app.get('/notifications', isLoggedIn, wrapAsync(async (req, res) => {
     await db.execute('UPDATE notifications SET is_read = 1 WHERE user_id = $1 AND is_read = 0', [req.user.id]);
   }
 
-  renderViewWithCsrf(req, res, 'notifications', {
+  return renderViewWithCsrfInLayout(req, res, 'notifications', {
     user: req.user,
     nickname: req.session.nickname,
     hasProfile: req.user.hasProfile,
     notifications,
     message: req.query.msg,
-    messageType: req.query.type
+    messageType: req.query.type,
+    pageTitle: '通知中心',
+    devToolsStyles: true
   });
 }));
 

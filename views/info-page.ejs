@@ -1,39 +1,27 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <%- include('partials/document-head', { fullTitle: title + ' - 心有所SHU' }) %>
-</head>
-<body>
-  <%- include('partials/navbar') %>
+<div class="container info-page">
+  <div class="card">
+    <p class="info-meta">最后更新：<%= updatedAt %></p>
+    <h1 class="info-title"><%= pageTitle %></h1>
+    <p class="info-lead"><%= lead %></p>
 
-  <div class="container info-page">
-    <div class="card">
-      <p class="info-meta">最后更新：<%= updatedAt %></p>
-      <h1 class="info-title"><%= pageTitle %></h1>
-      <p class="info-lead"><%= lead %></p>
+    <% sections.forEach(function(section) { %>
+      <section class="info-section">
+        <h2><%= section.title %></h2>
 
-      <% sections.forEach(function(section) { %>
-        <section class="info-section">
-          <h2><%= section.title %></h2>
+        <% if (section.paragraphs) { %>
+          <% section.paragraphs.forEach(function(paragraph) { %>
+            <p><%= paragraph %></p>
+          <% }); %>
+        <% } %>
 
-          <% if (section.paragraphs) { %>
-            <% section.paragraphs.forEach(function(paragraph) { %>
-              <p><%= paragraph %></p>
+        <% if (section.bullets) { %>
+          <ul>
+            <% section.bullets.forEach(function(item) { %>
+              <li><%= item %></li>
             <% }); %>
-          <% } %>
-
-          <% if (section.bullets) { %>
-            <ul>
-              <% section.bullets.forEach(function(item) { %>
-                <li><%= item %></li>
-              <% }); %>
-            </ul>
-          <% } %>
-        </section>
-      <% }); %>
-    </div>
+          </ul>
+        <% } %>
+      </section>
+    <% }); %>
   </div>
-
-  <%- include('partials/site-footer') %>
-</body>
-</html>
+</div>
