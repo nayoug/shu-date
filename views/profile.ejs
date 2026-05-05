@@ -200,8 +200,8 @@
           <label><input type="radio" name="preferred_gender" value="不限" <%= profile && profile.preferred_gender === '不限' ? 'checked' : '' %>> C. 不限</label>
         </div>
         <div class="collapsible-note">
-          <span class="collapsible-trigger" onclick="toggleNote(this)">说明 <i class="arrow">▼</i></span>
-          <div class="collapsible-content" hidden>
+          <span class="collapsible-trigger" data-profile-action="toggle-note" role="button" tabindex="0" aria-controls="preferred-gender-note" aria-expanded="false">说明 <i class="arrow">▼</i></span>
+          <div id="preferred-gender-note" class="collapsible-content" hidden>
             <p>以上选项仅用于资料展示和匹配推荐。选择"其他"时，系统会优先与匹配偏好为"不限"的用户进行匹配。</p>
           </div>
         </div>
@@ -229,7 +229,7 @@
       <div class="form-group">
         <label>3(a). 我的年龄：</label>
         <div class="range-container">
-          <input type="range" class="range-slider" name="age" id="myAge" min="16" max="30" value="<%= profile && profile.age ? profile.age : 20 %>" oninput="updateMyAgeDisplay()">
+          <input type="range" class="range-slider" name="age" id="myAge" min="16" max="30" value="<%= profile && profile.age ? profile.age : 20 %>">
           <div class="range-labels">
             <span>16岁</span>
             <span>23岁</span>
@@ -242,7 +242,7 @@
       <div class="form-group">
         <label>(b). 我希望匹配到的对象年龄范围：</label>
         <div class="range-container">
-          <input type="range" class="range-slider" name="age_min" id="ageMin" min="16" max="30" value="<%= profile && profile.age_min ? profile.age_min : 18 %>" oninput="updateAgeRangeDisplay(this)">
+          <input type="range" class="range-slider" name="age_min" id="ageMin" min="16" max="30" value="<%= profile && profile.age_min ? profile.age_min : 18 %>">
           <div class="range-labels">
             <span>16岁</span>
             <span>23岁</span>
@@ -250,7 +250,7 @@
           </div>
           <div class="range-value" id="ageMinValue">最小 <%= profile && profile.age_min ? profile.age_min : 18 %> 岁</div>
 
-          <input type="range" class="range-slider" name="age_max" id="ageMax" min="16" max="30" value="<%= profile && profile.age_max ? profile.age_max : 28 %>" oninput="updateAgeRangeDisplay(this)">
+          <input type="range" class="range-slider" name="age_max" id="ageMax" min="16" max="30" value="<%= profile && profile.age_max ? profile.age_max : 28 %>">
           <div class="range-labels">
             <span>16岁</span>
             <span>23岁</span>
@@ -291,7 +291,7 @@
       <div class="form-group">
         <label>6(a). 我的身高（cm）：</label>
         <div class="range-container">
-          <input type="range" class="range-slider" name="height" id="myHeight" min="140" max="210" value="<%= profile && profile.height ? profile.height : 170 %>" oninput="updateMyHeightDisplay()">
+          <input type="range" class="range-slider" name="height" id="myHeight" min="140" max="210" value="<%= profile && profile.height ? profile.height : 170 %>">
           <div class="range-labels">
             <span>140cm</span>
             <span>175cm</span>
@@ -304,7 +304,7 @@
       <div class="form-group">
         <label>(b). 我对匹配对象的身高偏好（cm）：</label>
         <div class="range-container">
-          <input type="range" class="range-slider" name="preferred_height_min" id="preferredHeightMin" min="140" max="210" value="<%= profile && profile.preferred_height_min ? profile.preferred_height_min : 160 %>" oninput="updatePreferredHeightDisplay(this)">
+          <input type="range" class="range-slider" name="preferred_height_min" id="preferredHeightMin" min="140" max="210" value="<%= profile && profile.preferred_height_min ? profile.preferred_height_min : 160 %>">
           <div class="range-labels">
             <span>140cm</span>
             <span>175cm</span>
@@ -312,7 +312,7 @@
           </div>
           <div class="range-value" id="preferredHeightMinValue">最低 <%= profile && profile.preferred_height_min ? profile.preferred_height_min : 160 %> cm</div>
 
-          <input type="range" class="range-slider" name="preferred_height_max" id="preferredHeightMax" min="140" max="210" value="<%= profile && profile.preferred_height_max ? profile.preferred_height_max : 180 %>" oninput="updatePreferredHeightDisplay(this)">
+          <input type="range" class="range-slider" name="preferred_height_max" id="preferredHeightMax" min="140" max="210" value="<%= profile && profile.preferred_height_max ? profile.preferred_height_max : 180 %>">
           <div class="range-labels">
             <span>140cm</span>
             <span>175cm</span>
@@ -375,12 +375,12 @@
       <div class="form-group">
         <label>8. 我更看重伴侣的核心特质（可多选）：</label>
         <div class="interest-tags">
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="性格三观契合" <%= profile && profile.core_traits && profile.core_traits.includes('性格三观契合') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 性格三观契合</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="颜值气质" <%= profile && profile.core_traits && profile.core_traits.includes('颜值气质') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 颜值气质</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="学历学识" <%= profile && profile.core_traits && profile.core_traits.includes('学历学识') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 学历学识</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="经济能力" <%= profile && profile.core_traits && profile.core_traits.includes('经济能力') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 经济能力</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="家庭背景" <%= profile && profile.core_traits && profile.core_traits.includes('家庭背景') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 家庭背景</label>
-          <label class="interest-tag"><input type="checkbox" name="core_traits" value="兴趣爱好相投" <%= profile && profile.core_traits && profile.core_traits.includes('兴趣爱好相投') ? 'checked' : '' %> onclick="updateCoreTraitsCounter()"> 兴趣爱好相投</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="性格三观契合" <%= profile && profile.core_traits && profile.core_traits.includes('性格三观契合') ? 'checked' : '' %>> 性格三观契合</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="颜值气质" <%= profile && profile.core_traits && profile.core_traits.includes('颜值气质') ? 'checked' : '' %>> 颜值气质</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="学历学识" <%= profile && profile.core_traits && profile.core_traits.includes('学历学识') ? 'checked' : '' %>> 学历学识</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="经济能力" <%= profile && profile.core_traits && profile.core_traits.includes('经济能力') ? 'checked' : '' %>> 经济能力</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="家庭背景" <%= profile && profile.core_traits && profile.core_traits.includes('家庭背景') ? 'checked' : '' %>> 家庭背景</label>
+          <label class="interest-tag"><input type="checkbox" name="core_traits" value="兴趣爱好相投" <%= profile && profile.core_traits && profile.core_traits.includes('兴趣爱好相投') ? 'checked' : '' %>> 兴趣爱好相投</label>
         </div>
         <input type="hidden" id="coreTraitsGroupRequired" name="core_traits_group_required" required>
         <p class="interest-counter" id="coreTraitsCounter">最多选 3 项，已选 0 项</p>
@@ -882,33 +882,33 @@
         <div class="interest-category">
           <div class="interest-category-title">性格底色</div>
           <div class="interest-tags">
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="成熟稳重" <%= profile && profile.my_traits && profile.my_traits.includes('成熟稳重') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 成熟稳重</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="乐观豁达" <%= profile && profile.my_traits && profile.my_traits.includes('乐观豁达') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 乐观豁达</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="真诚坦率" <%= profile && profile.my_traits && profile.my_traits.includes('真诚坦率') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 真诚坦率</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="谦逊内敛" <%= profile && profile.my_traits && profile.my_traits.includes('谦逊内敛') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 谦逊内敛</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="内核强大" <%= profile && profile.my_traits && profile.my_traits.includes('内核强大') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 内核强大</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="成熟稳重" <%= profile && profile.my_traits && profile.my_traits.includes('成熟稳重') ? 'checked' : '' %>> 成熟稳重</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="乐观豁达" <%= profile && profile.my_traits && profile.my_traits.includes('乐观豁达') ? 'checked' : '' %>> 乐观豁达</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="真诚坦率" <%= profile && profile.my_traits && profile.my_traits.includes('真诚坦率') ? 'checked' : '' %>> 真诚坦率</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="谦逊内敛" <%= profile && profile.my_traits && profile.my_traits.includes('谦逊内敛') ? 'checked' : '' %>> 谦逊内敛</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="内核强大" <%= profile && profile.my_traits && profile.my_traits.includes('内核强大') ? 'checked' : '' %>> 内核强大</label>
           </div>
         </div>
         <div class="interest-category">
           <div class="interest-category-title">相处体验</div>
           <div class="interest-tags">
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="细心体贴" <%= profile && profile.my_traits && profile.my_traits.includes('细心体贴') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 细心体贴</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="有幽默感" <%= profile && profile.my_traits && profile.my_traits.includes('有幽默感') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 有幽默感</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="善于沟通" <%= profile && profile.my_traits && profile.my_traits.includes('善于沟通') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 善于沟通</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="有责任感" <%= profile && profile.my_traits && profile.my_traits.includes('有责任感') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 有责任感</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="情绪稳定" <%= profile && profile.my_traits && profile.my_traits.includes('情绪稳定') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 情绪稳定</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="细心体贴" <%= profile && profile.my_traits && profile.my_traits.includes('细心体贴') ? 'checked' : '' %>> 细心体贴</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="有幽默感" <%= profile && profile.my_traits && profile.my_traits.includes('有幽默感') ? 'checked' : '' %>> 有幽默感</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="善于沟通" <%= profile && profile.my_traits && profile.my_traits.includes('善于沟通') ? 'checked' : '' %>> 善于沟通</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="有责任感" <%= profile && profile.my_traits && profile.my_traits.includes('有责任感') ? 'checked' : '' %>> 有责任感</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="情绪稳定" <%= profile && profile.my_traits && profile.my_traits.includes('情绪稳定') ? 'checked' : '' %>> 情绪稳定</label>
           </div>
         </div>
         <div class="interest-category">
           <div class="interest-category-title">能力素养</div>
           <div class="interest-tags">
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="聪明理性" <%= profile && profile.my_traits && profile.my_traits.includes('聪明理性') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 聪明理性</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="积极上进" <%= profile && profile.my_traits && profile.my_traits.includes('积极上进') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 积极上进</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="高度自律" <%= profile && profile.my_traits && profile.my_traits.includes('高度自律') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 高度自律</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="执行力强" <%= profile && profile.my_traits && profile.my_traits.includes('执行力强') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 执行力强</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="长远规划" <%= profile && profile.my_traits && profile.my_traits.includes('长远规划') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 长远规划</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="处事果断" <%= profile && profile.my_traits && profile.my_traits.includes('处事果断') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 处事果断</label>
-            <label class="interest-tag"><input type="checkbox" name="my_traits" value="独立自主" <%= profile && profile.my_traits && profile.my_traits.includes('独立自主') ? 'checked' : '' %> onclick="updateMyTraitsCounter()"> 独立自主</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="聪明理性" <%= profile && profile.my_traits && profile.my_traits.includes('聪明理性') ? 'checked' : '' %>> 聪明理性</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="积极上进" <%= profile && profile.my_traits && profile.my_traits.includes('积极上进') ? 'checked' : '' %>> 积极上进</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="高度自律" <%= profile && profile.my_traits && profile.my_traits.includes('高度自律') ? 'checked' : '' %>> 高度自律</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="执行力强" <%= profile && profile.my_traits && profile.my_traits.includes('执行力强') ? 'checked' : '' %>> 执行力强</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="长远规划" <%= profile && profile.my_traits && profile.my_traits.includes('长远规划') ? 'checked' : '' %>> 长远规划</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="处事果断" <%= profile && profile.my_traits && profile.my_traits.includes('处事果断') ? 'checked' : '' %>> 处事果断</label>
+            <label class="interest-tag"><input type="checkbox" name="my_traits" value="独立自主" <%= profile && profile.my_traits && profile.my_traits.includes('独立自主') ? 'checked' : '' %>> 独立自主</label>
           </div>
         </div>
         <p class="trait-counter" id="myTraitsCounter">最多选 5 项，已选 <%= profile && profile.my_traits ? profile.my_traits.split(',').filter(t => t).length : 0 %> 项</p>
@@ -919,33 +919,33 @@
         <div class="interest-category">
           <div class="interest-category-title">性格底色</div>
           <div class="interest-tags">
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="成熟稳重" <%= profile && profile.partner_traits && profile.partner_traits.includes('成熟稳重') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 成熟稳重</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="乐观豁达" <%= profile && profile.partner_traits && profile.partner_traits.includes('乐观豁达') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 乐观豁达</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="真诚坦率" <%= profile && profile.partner_traits && profile.partner_traits.includes('真诚坦率') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 真诚坦率</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="谦逊内敛" <%= profile && profile.partner_traits && profile.partner_traits.includes('谦逊内敛') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 谦逊内敛</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="内核强大" <%= profile && profile.partner_traits && profile.partner_traits.includes('内核强大') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 内核强大</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="成熟稳重" <%= profile && profile.partner_traits && profile.partner_traits.includes('成熟稳重') ? 'checked' : '' %>> 成熟稳重</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="乐观豁达" <%= profile && profile.partner_traits && profile.partner_traits.includes('乐观豁达') ? 'checked' : '' %>> 乐观豁达</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="真诚坦率" <%= profile && profile.partner_traits && profile.partner_traits.includes('真诚坦率') ? 'checked' : '' %>> 真诚坦率</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="谦逊内敛" <%= profile && profile.partner_traits && profile.partner_traits.includes('谦逊内敛') ? 'checked' : '' %>> 谦逊内敛</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="内核强大" <%= profile && profile.partner_traits && profile.partner_traits.includes('内核强大') ? 'checked' : '' %>> 内核强大</label>
           </div>
         </div>
         <div class="interest-category">
           <div class="interest-category-title">相处体验</div>
           <div class="interest-tags">
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="细心体贴" <%= profile && profile.partner_traits && profile.partner_traits.includes('细心体贴') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 细心体贴</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="有幽默感" <%= profile && profile.partner_traits && profile.partner_traits.includes('有幽默感') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 有幽默感</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="善于沟通" <%= profile && profile.partner_traits && profile.partner_traits.includes('善于沟通') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 善于沟通</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="有责任感" <%= profile && profile.partner_traits && profile.partner_traits.includes('有责任感') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 有责任感</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="情绪稳定" <%= profile && profile.partner_traits && profile.partner_traits.includes('情绪稳定') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 情绪稳定</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="细心体贴" <%= profile && profile.partner_traits && profile.partner_traits.includes('细心体贴') ? 'checked' : '' %>> 细心体贴</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="有幽默感" <%= profile && profile.partner_traits && profile.partner_traits.includes('有幽默感') ? 'checked' : '' %>> 有幽默感</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="善于沟通" <%= profile && profile.partner_traits && profile.partner_traits.includes('善于沟通') ? 'checked' : '' %>> 善于沟通</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="有责任感" <%= profile && profile.partner_traits && profile.partner_traits.includes('有责任感') ? 'checked' : '' %>> 有责任感</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="情绪稳定" <%= profile && profile.partner_traits && profile.partner_traits.includes('情绪稳定') ? 'checked' : '' %>> 情绪稳定</label>
           </div>
         </div>
         <div class="interest-category">
           <div class="interest-category-title">能力素养</div>
           <div class="interest-tags">
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="聪明理性" <%= profile && profile.partner_traits && profile.partner_traits.includes('聪明理性') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 聪明理性</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="积极上进" <%= profile && profile.partner_traits && profile.partner_traits.includes('积极上进') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 积极上进</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="高度自律" <%= profile && profile.partner_traits && profile.partner_traits.includes('高度自律') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 高度自律</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="执行力强" <%= profile && profile.partner_traits && profile.partner_traits.includes('执行力强') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 执行力强</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="长远规划" <%= profile && profile.partner_traits && profile.partner_traits.includes('长远规划') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 长远规划</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="处事果断" <%= profile && profile.partner_traits && profile.partner_traits.includes('处事果断') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 处事果断</label>
-            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="独立自主" <%= profile && profile.partner_traits && profile.partner_traits.includes('独立自主') ? 'checked' : '' %> onclick="updatePartnerTraitsCounter()"> 独立自主</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="聪明理性" <%= profile && profile.partner_traits && profile.partner_traits.includes('聪明理性') ? 'checked' : '' %>> 聪明理性</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="积极上进" <%= profile && profile.partner_traits && profile.partner_traits.includes('积极上进') ? 'checked' : '' %>> 积极上进</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="高度自律" <%= profile && profile.partner_traits && profile.partner_traits.includes('高度自律') ? 'checked' : '' %>> 高度自律</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="执行力强" <%= profile && profile.partner_traits && profile.partner_traits.includes('执行力强') ? 'checked' : '' %>> 执行力强</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="长远规划" <%= profile && profile.partner_traits && profile.partner_traits.includes('长远规划') ? 'checked' : '' %>> 长远规划</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="处事果断" <%= profile && profile.partner_traits && profile.partner_traits.includes('处事果断') ? 'checked' : '' %>> 处事果断</label>
+            <label class="interest-tag"><input type="checkbox" name="partner_traits" value="独立自主" <%= profile && profile.partner_traits && profile.partner_traits.includes('独立自主') ? 'checked' : '' %>> 独立自主</label>
           </div>
         </div>
         <p class="trait-counter" id="partnerTraitsCounter">最多选 5 项，已选 <%= profile && profile.partner_traits ? profile.partner_traits.split(',').filter(t => t).length : 0 %> 项</p>
@@ -958,68 +958,68 @@
       <div class="interest-category">
         <div class="interest-category-title">户外与运动圈</div>
         <div class="interest-tags">
-          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-骑行" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-骑行') ? 'checked' : '' %> onclick="updateInterestCounter()"> 骑行</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-健身" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-健身') ? 'checked' : '' %> onclick="updateInterestCounter()"> 健身</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-露营" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-露营') ? 'checked' : '' %> onclick="updateInterestCounter()"> 露营</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-篮球" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-篮球') ? 'checked' : '' %> onclick="updateInterestCounter()"> 篮球</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-足球" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-足球') ? 'checked' : '' %> onclick="updateInterestCounter()"> 足球</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-赛车" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-赛车') ? 'checked' : '' %> onclick="updateInterestCounter()"> 赛车</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-徒步与登山" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-徒步与登山') ? 'checked' : '' %> onclick="updateInterestCounter()"> 徒步与登山</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-跑步与马拉松" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-跑步与马拉松') ? 'checked' : '' %> onclick="updateInterestCounter()"> 跑步与马拉松</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-滑板" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-滑板') ? 'checked' : '' %> onclick="updateInterestCounter()"> 滑板</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-游泳" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-游泳') ? 'checked' : '' %> onclick="updateInterestCounter()"> 游泳</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-跳舞" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-跳舞') ? 'checked' : '' %> onclick="updateInterestCounter()"> 跳舞</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-骑行" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-骑行') ? 'checked' : '' %>> 骑行</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-健身" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-健身') ? 'checked' : '' %>> 健身</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-露营" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-露营') ? 'checked' : '' %>> 露营</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-篮球" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-篮球') ? 'checked' : '' %>> 篮球</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-足球" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-足球') ? 'checked' : '' %>> 足球</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-赛车" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-赛车') ? 'checked' : '' %>> 赛车</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-徒步与登山" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-徒步与登山') ? 'checked' : '' %>> 徒步与登山</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-跑步与马拉松" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-跑步与马拉松') ? 'checked' : '' %>> 跑步与马拉松</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-滑板" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-滑板') ? 'checked' : '' %>> 滑板</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-游泳" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-游泳') ? 'checked' : '' %>> 游泳</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="户外与运动圈-跳舞" <%= profile && profile.interests && profile.interests.includes('户外与运动圈-跳舞') ? 'checked' : '' %>> 跳舞</label>
         </div>
       </div>
 
       <div class="interest-category">
         <div class="interest-category-title">泛娱乐与次文化圈</div>
         <div class="interest-tags">
-          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-综艺节目" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-综艺节目') ? 'checked' : '' %> onclick="updateInterestCounter()"> 综艺节目</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-桌游与跑团" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-桌游与跑团') ? 'checked' : '' %> onclick="updateInterestCounter()"> 桌游与跑团</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-电影与剧集" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-电影与剧集') ? 'checked' : '' %> onclick="updateInterestCounter()"> 电影与剧集</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-动漫与二次元" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-动漫与二次元') ? 'checked' : '' %> onclick="updateInterestCounter()"> 动漫与二次元</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-单机与主机游戏" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-单机与主机游戏') ? 'checked' : '' %> onclick="updateInterestCounter()"> 单机与主机游戏</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-电子竞技与PC主机游戏" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-电子竞技与PC主机游戏') ? 'checked' : '' %> onclick="updateInterestCounter()"> 电子竞技与PC主机游戏</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-综艺节目" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-综艺节目') ? 'checked' : '' %>> 综艺节目</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-桌游与跑团" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-桌游与跑团') ? 'checked' : '' %>> 桌游与跑团</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-电影与剧集" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-电影与剧集') ? 'checked' : '' %>> 电影与剧集</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-动漫与二次元" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-动漫与二次元') ? 'checked' : '' %>> 动漫与二次元</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-单机与主机游戏" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-单机与主机游戏') ? 'checked' : '' %>> 单机与主机游戏</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="泛娱乐与次文化圈-电子竞技与PC主机游戏" <%= profile && profile.interests && profile.interests.includes('泛娱乐与次文化圈-电子竞技与PC主机游戏') ? 'checked' : '' %>> 电子竞技与PC主机游戏</label>
         </div>
       </div>
 
       <div class="interest-category">
         <div class="interest-category-title">文艺类</div>
         <div class="interest-tags">
-          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-绘画与手工" <%= profile && profile.interests && profile.interests.includes('文艺类-绘画与手工') ? 'checked' : '' %> onclick="updateInterestCounter()"> 绘画与手工</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-音乐创作与乐器" <%= profile && profile.interests && profile.interests.includes('文艺类-音乐创作与乐器') ? 'checked' : '' %> onclick="updateInterestCounter()"> 音乐创作与乐器</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-历史与社科探讨" <%= profile && profile.interests && profile.interests.includes('文艺类-历史与社科探讨') ? 'checked' : '' %> onclick="updateInterestCounter()"> 历史与社科探讨</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-摄影" <%= profile && profile.interests && profile.interests.includes('文艺类-摄影') ? 'checked' : '' %> onclick="updateInterestCounter()"> 摄影</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-看展与逛博物馆" <%= profile && profile.interests && profile.interests.includes('文艺类-看展与逛博物馆') ? 'checked' : '' %> onclick="updateInterestCounter()"> 看展与逛博物馆</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-Vlog与短视频创作" <%= profile && profile.interests && profile.interests.includes('文艺类-Vlog与短视频创作') ? 'checked' : '' %> onclick="updateInterestCounter()"> Vlog与短视频创作</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-阅读" <%= profile && profile.interests && profile.interests.includes('文艺类-阅读') ? 'checked' : '' %> onclick="updateInterestCounter()"> 阅读</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-绘画与手工" <%= profile && profile.interests && profile.interests.includes('文艺类-绘画与手工') ? 'checked' : '' %>> 绘画与手工</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-音乐创作与乐器" <%= profile && profile.interests && profile.interests.includes('文艺类-音乐创作与乐器') ? 'checked' : '' %>> 音乐创作与乐器</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-历史与社科探讨" <%= profile && profile.interests && profile.interests.includes('文艺类-历史与社科探讨') ? 'checked' : '' %>> 历史与社科探讨</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-摄影" <%= profile && profile.interests && profile.interests.includes('文艺类-摄影') ? 'checked' : '' %>> 摄影</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-看展与逛博物馆" <%= profile && profile.interests && profile.interests.includes('文艺类-看展与逛博物馆') ? 'checked' : '' %>> 看展与逛博物馆</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-Vlog与短视频创作" <%= profile && profile.interests && profile.interests.includes('文艺类-Vlog与短视频创作') ? 'checked' : '' %>> Vlog与短视频创作</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="文艺类-阅读" <%= profile && profile.interests && profile.interests.includes('文艺类-阅读') ? 'checked' : '' %>> 阅读</label>
         </div>
       </div>
 
       <div class="interest-category">
         <div class="interest-category-title">生活与社交</div>
         <div class="interest-tags">
-          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-探店与美食" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-探店与美食') ? 'checked' : '' %> onclick="updateInterestCounter()"> 探店与美食</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-旅行与打卡" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-旅行与打卡') ? 'checked' : '' %> onclick="updateInterestCounter()"> 旅行与打卡</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-猫狗等宠物" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-猫狗等宠物') ? 'checked' : '' %> onclick="updateInterestCounter()"> 猫狗等宠物</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-烹饪与烘焙" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-烹饪与烘焙') ? 'checked' : '' %> onclick="updateInterestCounter()"> 烹饪与烘焙</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-咖啡" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-咖啡') ? 'checked' : '' %> onclick="updateInterestCounter()"> 咖啡</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-茶文化" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-茶文化') ? 'checked' : '' %> onclick="updateInterestCounter()"> 茶文化</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-KTV" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-KTV') ? 'checked' : '' %> onclick="updateInterestCounter()"> KTV</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-剧本杀与密室逃脱" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-剧本杀与密室逃脱') ? 'checked' : '' %> onclick="updateInterestCounter()"> 剧本杀与密室逃脱</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-音乐Live与演唱会" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-音乐Live与演唱会') ? 'checked' : '' %> onclick="updateInterestCounter()"> 音乐Live与演唱会</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-City Walk" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-City Walk') ? 'checked' : '' %> onclick="updateInterestCounter()"> City Walk</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-探店与美食" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-探店与美食') ? 'checked' : '' %>> 探店与美食</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-旅行与打卡" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-旅行与打卡') ? 'checked' : '' %>> 旅行与打卡</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-猫狗等宠物" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-猫狗等宠物') ? 'checked' : '' %>> 猫狗等宠物</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-烹饪与烘焙" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-烹饪与烘焙') ? 'checked' : '' %>> 烹饪与烘焙</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-咖啡" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-咖啡') ? 'checked' : '' %>> 咖啡</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-茶文化" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-茶文化') ? 'checked' : '' %>> 茶文化</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-KTV" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-KTV') ? 'checked' : '' %>> KTV</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-剧本杀与密室逃脱" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-剧本杀与密室逃脱') ? 'checked' : '' %>> 剧本杀与密室逃脱</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-音乐Live与演唱会" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-音乐Live与演唱会') ? 'checked' : '' %>> 音乐Live与演唱会</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="生活方式与社交圈-City Walk" <%= profile && profile.interests && profile.interests.includes('生活方式与社交圈-City Walk') ? 'checked' : '' %>> City Walk</label>
         </div>
       </div>
 
       <div class="interest-category">
         <div class="interest-category-title">极客与硬核</div>
         <div class="interest-tags">
-          <label class="interest-tag"><input type="checkbox" name="interests" value="极客与硬核圈-科学探索" <%= profile && profile.interests && profile.interests.includes('极客与硬核圈-科学探索') ? 'checked' : '' %> onclick="updateInterestCounter()"> 科学探索</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="极客与硬核圈-硬件DIY与数码" <%= profile && profile.interests && profile.interests.includes('极客与硬核圈-硬件DIY与数码') ? 'checked' : '' %> onclick="updateInterestCounter()"> 硬件DIY与数码</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="极客与硬核圈-编程与算法开发" <%= profile && profile.interests && profile.interests.includes('极客与硬核圈-编程与算法开发') ? 'checked' : '' %> onclick="updateInterestCounter()"> 编程与算法开发</label>
-          <label class="interest-tag"><input type="checkbox" name="interests" value="极客与硬核圈-金融投资与商业分析" <%= profile && profile.interests && profile.interests.includes('极客与硬核圈-金融投资与商业分析') ? 'checked' : '' %> onclick="updateInterestCounter()"> 金融投资与商业分析</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="极客与硬核圈-科学探索" <%= profile && profile.interests && profile.interests.includes('极客与硬核圈-科学探索') ? 'checked' : '' %>> 科学探索</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="极客与硬核圈-硬件DIY与数码" <%= profile && profile.interests && profile.interests.includes('极客与硬核圈-硬件DIY与数码') ? 'checked' : '' %>> 硬件DIY与数码</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="极客与硬核圈-编程与算法开发" <%= profile && profile.interests && profile.interests.includes('极客与硬核圈-编程与算法开发') ? 'checked' : '' %>> 编程与算法开发</label>
+          <label class="interest-tag"><input type="checkbox" name="interests" value="极客与硬核圈-金融投资与商业分析" <%= profile && profile.interests && profile.interests.includes('极客与硬核圈-金融投资与商业分析') ? 'checked' : '' %>> 金融投资与商业分析</label>
         </div>
       </div>
       <p class="interest-counter" id="interestCounter">最多选 5 项，已选 0 项</p>
