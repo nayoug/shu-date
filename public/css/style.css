@@ -1796,17 +1796,6 @@ tr:hover td {
   box-sizing: border-box;
 }
 
-/* 伪元素填充间隙，保持 hover 连续性 */
-.dropdown-menu::before {
-  content: '';
-  position: absolute;
-  top: -4px;
-  left: 0;
-  right: 0;
-  height: 4px;
-  pointer-events: auto;
-}
-
 .dropdown-menu a {
   display: block;
   padding: 10px 16px;
@@ -1818,12 +1807,6 @@ tr:hover td {
 
 .dropdown-menu a:hover {
   background: var(--muted);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .dropdown:hover .dropdown-menu {
-    display: block;
-  }
 }
 
 .dropdown-menu.show {
