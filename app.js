@@ -543,6 +543,14 @@ function renderViewWithCsrf(req, res, view, model = {}) {
   return res.render(view, withCsrfToken(req, model));
 }
 
+function createTemplateRenderError(view, phase, cause) {
+  const error = new Error(`${phase} 模板 ${view} 渲染失败: ${cause.message}`);
+  error.cause = cause;
+  error.view = view;
+  error.phase = phase;
+  return error;
+}
+
 function renderTemplate(res, view, locals = {}) {
   return new Promise((resolve, reject) => {
     res.render(view, locals, (renderErr, html) => {
@@ -556,8 +564,21 @@ function renderTemplate(res, view, locals = {}) {
 }
 
 async function renderWithLayout(res, view, locals = {}, status = 200) {
-  const body = await renderTemplate(res, view, locals);
-  const html = await renderTemplate(res, 'layout', { ...locals, body });
+  let body;
+  let html;
+
+  try {
+    body = await renderTemplate(res, view, locals);
+  } catch (renderErr) {
+    throw createTemplateRenderError(view, '内容片段', renderErr);
+  }
+
+  try {
+    html = await renderTemplate(res, 'layout', { ...locals, body });
+  } catch (renderErr) {
+    throw createTemplateRenderError('layout', '页面壳层', renderErr);
+  }
+
   return res.status(status).send(html);
 }
 
@@ -593,7 +614,7 @@ const requireValidDevLoginCsrf = createCsrfValidator('/');
 
 function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面暂时不可用') {
   renderWithLayout(res, view, locals, status).catch(renderErr => {
-    console.error(`❌ 渲染 ${view} 失败:`, renderErr.message);
+    console.error(`❌ ${renderErr.message}`);
     if (!res.headersSent) {
       res
         .status(status)
@@ -920,6 +941,7 @@ async function renderInfoPage(req, res, pageKey) {
     ...nav,
     title: page.title,
     pageTitle: page.pageTitle,
+    fullTitle: `${page.title} - 心有所SHU`,
     lead: page.lead,
     sections: page.sections,
     updatedAt: INFO_PAGE_UPDATED_AT
