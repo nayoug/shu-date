@@ -3,7 +3,8 @@
 <head>
   <%- include('partials/document-head', {
     pageTitle: typeof title !== 'undefined' ? title : '忘记密码',
-    accountPage: true
+    accountPage: true,
+    authValidationScript: true
   }) %>
 </head>
 <body>
@@ -27,10 +28,10 @@
         </div>
       <% } %>
 
-      <form action="/forgot" method="POST">
+      <form action="/forgot" method="POST" data-auth-validation>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
-          <input class="form-control-center" type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required>
+          <input class="form-control-center" type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" data-auth-field="shu-email" required>
         </div>
         <button type="submit" class="btn btn-full">发送重置链接</button>
       </form>

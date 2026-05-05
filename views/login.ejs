@@ -4,7 +4,8 @@
   <%- include('partials/document-head', {
     pageTitle: '登录',
     accountPage: true,
-    loginTabsScript: true
+    loginTabsScript: true,
+    authValidationScript: true
   }) %>
 </head>
 <body>
@@ -55,13 +56,13 @@
       </div>
 
       <!-- 注册表单 -->
-      <form action="/register" method="POST" id="login-panel-register" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>" data-login-method-panel="register" role="tabpanel" aria-labelledby="login-tab-register" aria-hidden="<%= (loginMethod === 'register') ? 'false' : 'true' %>" <%= (loginMethod === 'register') ? '' : 'hidden' %>>
+      <form action="/register" method="POST" id="login-panel-register" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>" data-login-method-panel="register" data-auth-validation role="tabpanel" aria-labelledby="login-tab-register" aria-hidden="<%= (loginMethod === 'register') ? 'false' : 'true' %>" <%= (loginMethod === 'register') ? '' : 'hidden' %>>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
-          <input class="form-control-center" type="text" name="nickname" placeholder="昵称" value="<%= typeof nickname !== 'undefined' ? nickname : '' %>" autocomplete="nickname" aria-label="昵称" required>
+          <input class="form-control-center" type="text" name="nickname" placeholder="昵称" value="<%= typeof nickname !== 'undefined' ? nickname : '' %>" autocomplete="nickname" aria-label="昵称" data-auth-field="nickname" required>
         </div>
         <div class="form-group email-with-help">
-          <input class="form-control-center" type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="email" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required>
+          <input class="form-control-center" type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="email" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" data-auth-field="shu-email" required>
           <button type="button" class="email-help-link" data-email-guide-toggle aria-controls="email-guide" aria-expanded="false">
             邮箱申请指引
           </button>
@@ -74,22 +75,22 @@
           </div>
         </div>
         <div class="form-group">
-          <input class="form-control-center" type="password" name="password" placeholder="设置密码（至少6位）" autocomplete="new-password" aria-label="设置密码" required minlength="6">
+          <input class="form-control-center" type="password" name="password" placeholder="设置密码（至少6位）" autocomplete="new-password" aria-label="设置密码" data-auth-field="password" required minlength="6">
         </div>
         <div class="form-group">
-          <input class="form-control-center" type="password" name="confirmPassword" placeholder="再次输入密码确认" autocomplete="new-password" aria-label="确认密码" required minlength="6">
+          <input class="form-control-center" type="password" name="confirmPassword" placeholder="再次输入密码确认" autocomplete="new-password" aria-label="确认密码" data-auth-field="confirm-password" data-auth-match="password" required minlength="6">
         </div>
         <button type="submit" class="btn btn-full">注册</button>
       </form>
 
       <!-- 登录表单 -->
-      <form action="/login" method="POST" id="login-panel-login" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>" data-login-method-panel="login" role="tabpanel" aria-labelledby="login-tab-login" aria-hidden="<%= (loginMethod === 'login') ? 'false' : 'true' %>" <%= (loginMethod === 'login') ? '' : 'hidden' %>>
+      <form action="/login" method="POST" id="login-panel-login" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>" data-login-method-panel="login" data-auth-validation role="tabpanel" aria-labelledby="login-tab-login" aria-hidden="<%= (loginMethod === 'login') ? 'false' : 'true' %>" <%= (loginMethod === 'login') ? '' : 'hidden' %>>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
-          <input class="form-control-center" type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="登录邮箱" autocapitalize="none" autocorrect="off" inputmode="email" required>
+          <input class="form-control-center" type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="登录邮箱" autocapitalize="none" autocorrect="off" inputmode="email" data-auth-field="email" required>
         </div>
         <div class="form-group">
-          <input class="form-control-center" type="password" name="password" placeholder="登录密码" autocomplete="current-password" aria-label="登录密码" required>
+          <input class="form-control-center" type="password" name="password" placeholder="登录密码" autocomplete="current-password" aria-label="登录密码" data-auth-field="login-password" required>
         </div>
         <button type="submit" class="btn btn-full">登录</button>
         <a href="/forgot" class="forgot-password">忘记密码？</a>
