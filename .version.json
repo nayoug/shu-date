@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-05T03:19:37.308Z",
+  "generatedAt": "2026-05-05T03:24:23.472Z",
   "resources": {
     "css/account-pages.css": {
       "hash": "0caa3282",
@@ -15,8 +15,8 @@
       "version": "0.2.0-cd7871cc"
     },
     "css/style.css": {
-      "hash": "2b756a06",
-      "version": "0.2.0-2b756a06"
+      "hash": "e8c5ff05",
+      "version": "0.2.0-e8c5ff05"
     },
     "favicon.ico": {
       "hash": "5ecd6c3b",
