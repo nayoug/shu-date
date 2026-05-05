@@ -1,39 +1,20 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <%- include('partials/document-head', { devToolsStyles: true }) %>
+  <%- include('partials/document-head', {
+    pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : (typeof title !== 'undefined' ? title : ''),
+    fullTitle: typeof fullTitle !== 'undefined' ? fullTitle : '',
+    accountPage: typeof accountPage !== 'undefined' && accountPage,
+    loginTabsScript: typeof loginTabsScript !== 'undefined' && loginTabsScript,
+    authValidationScript: typeof authValidationScript !== 'undefined' && authValidationScript,
+    historyBackScript: typeof historyBackScript !== 'undefined' && historyBackScript,
+    devToolsStyles: typeof devToolsStyles !== 'undefined' ? devToolsStyles : true
+  }) %>
 </head>
-<body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="/" class="logo">心有所<span>SHU</span></a>
-      <div class="nav-links">
-        <% if (typeof user !== 'undefined' && user) { %>
-          <a href="/profile">我的资料</a>
-          <a href="/matches">匹配结果</a>
-          <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-            <a href="/admin">管理</a>
-          <% } %>
-          <a href="/logout" class="btn">退出</a>
-        <% } else { %>
-          <a href="/login" class="btn">登录</a>
-        <% } %>
-      </div>
-    </div>
-  </nav>
-
-  <div class="container layout-main">
-    <% if (typeof message !== 'undefined' && message) { %>
-      <div class="alert alert-<%= messageType || 'info' %>"><%= message %></div>
-    <% } %>
-
-    <%- body %>
-  </div>
-
-  <footer class="footer">
-    <p>© 2026 心有所SHU - 上海大学校园交友匹配系统</p>
-  </footer>
-
+<body<% if (typeof bodyClass !== 'undefined' && bodyClass) { %> class="<%= bodyClass %>"<% } %>>
+  <%- include('partials/navbar') %>
+  <%- body %>
+  <%- include('partials/site-footer') %>
   <% if (typeof isDev !== 'undefined' && isDev) { %>
   <%- include('partials/dev-tools') %>
   <% } %>
