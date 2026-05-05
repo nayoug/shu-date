@@ -96,7 +96,10 @@ function updateTagCounter(name, counterId, max = 5) {
   document.getElementById(counterId).textContent = `最多选 ${max} 项，已选 ${count} 项`;
 
   checkboxes.forEach(cb => {
-    cb.closest('.interest-tag').classList.toggle('selected', cb.checked);
+    const tag = cb.closest('.interest-tag');
+    if (!tag) return;
+    tag.classList.toggle('selected', cb.checked);
+    tag.classList.toggle('checked', cb.checked);
   });
 
   if (count >= max) {
@@ -138,6 +141,46 @@ document.addEventListener('DOMContentLoaded', function() {
   updatePartnerTraitsCounter();
   //updateQuotaDisplay();
   updateCoreTraitsCounter();
+
+  document.querySelectorAll('.collapsible-trigger[data-profile-action="toggle-note"]').forEach(trigger => {
+    trigger.addEventListener('click', function() {
+      toggleNote(trigger);
+    });
+    trigger.addEventListener('keydown', function(event) {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      toggleNote(trigger);
+    });
+  });
+
+  const bindRangeInput = function(id, handler) {
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.addEventListener('input', function() {
+      handler(input);
+    });
+  };
+  bindRangeInput('myAge', updateMyAgeDisplay);
+  bindRangeInput('ageMin', updateAgeRangeDisplay);
+  bindRangeInput('ageMax', updateAgeRangeDisplay);
+  bindRangeInput('myHeight', updateMyHeightDisplay);
+  bindRangeInput('preferredHeightMin', updatePreferredHeightDisplay);
+  bindRangeInput('preferredHeightMax', updatePreferredHeightDisplay);
+
+  const checkboxCounterHandlers = {
+    core_traits: updateCoreTraitsCounter,
+    my_traits: updateMyTraitsCounter,
+    partner_traits: updatePartnerTraitsCounter,
+    interests: updateInterestCounter,
+  };
+  Object.entries(checkboxCounterHandlers).forEach(([name, handler]) => {
+    document.querySelectorAll(`input[name="${name}"]`).forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        handler();
+        updatePagination();
+      });
+    });
+  });
 
   // 为所有 required 的 select 绑定 change 事件，清除红框
   document.querySelectorAll('select[required]').forEach(select => {
