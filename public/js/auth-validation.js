@@ -4,7 +4,25 @@
   var nextErrorId = 0;
 
   function getFieldLabel(field) {
-    return field.getAttribute('aria-label') || field.getAttribute('placeholder') || field.name || '该字段';
+    var label;
+    var labels;
+    var index;
+
+    if (field.id) {
+      labels = document.querySelectorAll('label');
+      for (index = 0; index < labels.length; index += 1) {
+        if (labels[index].htmlFor === field.id) {
+          label = labels[index];
+          break;
+        }
+      }
+    }
+
+    return field.getAttribute('aria-label') ||
+      (label ? label.textContent.trim() : '') ||
+      field.getAttribute('placeholder') ||
+      field.name ||
+      '该字段';
   }
 
   function ensureErrorElement(field) {
