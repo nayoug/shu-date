@@ -5,17 +5,9 @@
 
   function getFieldLabel(field) {
     var label;
-    var labels;
-    var index;
 
-    if (field.id) {
-      labels = document.querySelectorAll('label');
-      for (index = 0; index < labels.length; index += 1) {
-        if (labels[index].htmlFor === field.id) {
-          label = labels[index];
-          break;
-        }
-      }
+    if (field.labels && field.labels.length > 0) {
+      label = field.labels[0];
     }
 
     return field.getAttribute('aria-label') ||
