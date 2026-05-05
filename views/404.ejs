@@ -1,27 +1,15 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <%- include('partials/document-head', { pageTitle: typeof title !== 'undefined' ? title : '页面不存在' }) %>
-</head>
-<body>
-  <%- include('partials/navbar') %>
-
-  <div class="container message-page">
-    <div class="card message-card">
-      <div class="message-icon">🧭</div>
-      <p class="message-code">
-        <%= typeof statusCode !== 'undefined' ? statusCode : 404 %>
-      </p>
-      <h1 class="message-title">这个页面不在这里</h1>
-      <p class="message-text">
-        <%= typeof message !== 'undefined' && message ? message : '你访问的页面不存在，可能已被移动或删除。' %>
-      </p>
-      <div class="message-actions">
-        <a href="/" class="btn">回到首页</a>
-        <a href="/login" class="btn btn-secondary">去登录</a>
-      </div>
+<div class="container message-page">
+  <div class="card message-card">
+    <div class="message-icon">🧭</div>
+    <p class="message-code">
+      <%= typeof statusCode !== 'undefined' ? statusCode : 404 %>
+    </p>
+    <h1 class="message-title">这个页面不在这里</h1>
+    <p class="message-text">
+      <%= typeof message !== 'undefined' && message ? message : '你访问的页面不存在，可能已被移动或删除。' %>
+    </p>
+    <div class="message-actions">
+      <a href="/" class="btn">回到首页</a>
+      <a href="/login" class="btn btn-secondary">去登录</a>
     </div>
   </div>
-  <%- include('partials/site-footer') %>
-</body>
-</html>

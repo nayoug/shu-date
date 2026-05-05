@@ -570,18 +570,31 @@ const requireValidNotificationsCsrf = createCsrfValidator('/notifications');
 const requireValidDevLoginCsrf = createCsrfValidator('/');
 
 function renderSafely(res, status, view, locals = {}, fallbackMessage = '页面暂时不可用') {
-  res.status(status).render(view, locals, (renderErr, html) => {
-    if (!renderErr) {
-      return res.send(html);
+  res.render(view, locals, (viewErr, body) => {
+    if (viewErr) {
+      console.error(`❌ 渲染 ${view} 内容失败:`, viewErr.message);
+      if (!res.headersSent) {
+        return res
+          .status(status)
+          .type('text/plain; charset=utf-8')
+          .send(locals.message || fallbackMessage);
+      }
+      return;
     }
 
-    console.error(`❌ 渲染 ${view} 失败:`, renderErr.message);
-    if (!res.headersSent) {
-      res
-        .status(status)
-        .type('text/plain; charset=utf-8')
-        .send(locals.message || fallbackMessage);
-    }
+    res.status(status).render('layout', { ...locals, body }, (layoutErr, html) => {
+      if (!layoutErr) {
+        return res.send(html);
+      }
+
+      console.error('❌ 渲染 layout 失败:', layoutErr.message);
+      if (!res.headersSent) {
+        res
+          .status(status)
+          .type('text/plain; charset=utf-8')
+          .send(locals.message || fallbackMessage);
+      }
+    });
   });
 }
 
@@ -2829,7 +2842,8 @@ app.use((err, req, res, next) => {
   renderSafely(res, 500, 'error', {
     title: '服务器异常',
     statusCode: 500,
-    message: isProduction ? '服务器开了点小差，请稍后再试。' : err.message
+    message: isProduction ? '服务器开了点小差，请稍后再试。' : err.message,
+    historyBackScript: true
   }, isProduction ? '服务器内部错误' : err.message);
 });
 

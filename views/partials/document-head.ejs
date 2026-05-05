@@ -7,6 +7,7 @@
   const includeAccountStyles = typeof accountPage !== 'undefined' && accountPage;
   const includeLoginTabsScript = typeof loginTabsScript !== 'undefined' && loginTabsScript;
   const includeAuthValidationScript = typeof authValidationScript !== 'undefined' && authValidationScript;
+  const includeHistoryBackScript = typeof historyBackScript !== 'undefined' && historyBackScript;
   const includeDevToolsStyles = typeof devToolsStyles !== 'undefined' && devToolsStyles && typeof isDev !== 'undefined' && isDev;
 %>
 <meta charset="UTF-8">
@@ -25,4 +26,7 @@
 <% } %>
 <% if (includeAuthValidationScript) { %>
   <script src="/js/auth-validation.js?v=0.2.0" defer></script>
+<% } %>
+<% if (includeHistoryBackScript) { %>
+  <script src="/js/history-back.js?v=0.2.0" defer></script>
 <% } %>
