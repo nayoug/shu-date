@@ -6,6 +6,7 @@
   const resolvedDocumentTitle = providedFullTitle || (resolvedTitle ? `${resolvedTitle} - 心有所SHU` : '心有所SHU');
   const includeAccountStyles = typeof accountPage !== 'undefined' && accountPage;
   const includeLoginTabsScript = typeof loginTabsScript !== 'undefined' && loginTabsScript;
+  const includeAuthValidationScript = typeof authValidationScript !== 'undefined' && authValidationScript;
   const includeDevToolsStyles = typeof devToolsStyles !== 'undefined' && devToolsStyles && typeof isDev !== 'undefined' && isDev;
 %>
 <meta charset="UTF-8">
@@ -21,4 +22,7 @@
 <% } %>
 <% if (includeLoginTabsScript) { %>
   <script src="/js/login-tabs.js?v=0.2.0" defer></script>
+<% } %>
+<% if (includeAuthValidationScript) { %>
+  <script src="/js/auth-validation.js?v=0.2.0" defer></script>
 <% } %>

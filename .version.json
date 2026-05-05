@@ -1,10 +1,10 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-05T03:24:23.472Z",
+  "generatedAt": "2026-05-05T11:58:05.073Z",
   "resources": {
     "css/account-pages.css": {
-      "hash": "0caa3282",
-      "version": "0.2.0-0caa3282"
+      "hash": "643fdd11",
+      "version": "0.2.0-643fdd11"
     },
     "css/dev-tools.css": {
       "hash": "1fdea12d",
@@ -73,6 +73,10 @@
     "js/profile.js": {
       "hash": "bb887713",
       "version": "0.2.0-bb887713"
+    },
+    "js/auth-validation.js": {
+      "hash": "22953945",
+      "version": "0.2.0-22953945"
     }
   }
 }

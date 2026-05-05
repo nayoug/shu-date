@@ -3,7 +3,8 @@
 <head>
   <%- include('partials/document-head', {
     pageTitle: typeof title !== 'undefined' ? title : '重置密码',
-    accountPage: true
+    accountPage: true,
+    authValidationScript: true
   }) %>
 </head>
 <body>
@@ -22,13 +23,13 @@
         </div>
       <% } %>
 
-      <form action="/reset/<%= code %>" method="POST">
+      <form action="/reset/<%= code %>" method="POST" data-auth-validation novalidate>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
-          <input class="form-control-center" type="password" name="password" placeholder="新密码（至少6位）" autocomplete="new-password" aria-label="新密码" required minlength="6">
+          <input class="form-control-center" type="password" name="password" placeholder="新密码（至少6位）" autocomplete="new-password" aria-label="新密码" data-auth-field="password" required minlength="6">
         </div>
         <div class="form-group">
-          <input class="form-control-center" type="password" name="confirmPassword" placeholder="确认新密码" autocomplete="new-password" aria-label="确认新密码" required>
+          <input class="form-control-center" type="password" name="confirmPassword" placeholder="确认新密码" autocomplete="new-password" aria-label="确认新密码" data-auth-field="confirm-password" data-auth-match="password" required>
         </div>
         <button type="submit" class="btn btn-full">重置密码</button>
       </form>
