@@ -3,7 +3,8 @@
 <head>
   <%- include('partials/document-head', {
     pageTitle: '注销账号',
-    accountPage: true
+    accountPage: true,
+    authValidationScript: true
   }) %>
 </head>
 <body>
@@ -25,15 +26,15 @@
         </div>
       <% } %>
 
-      <form action="/settings/delete" method="POST">
+      <form action="/settings/delete" method="POST" data-auth-validation>
         <div class="form-group form-group--compact">
-          <label>邮箱</label>
-          <input type="email" name="email" placeholder="请输入您的邮箱">
+          <label for="delete-account-email">邮箱</label>
+          <input id="delete-account-email" type="email" name="email" placeholder="请输入您的邮箱" autocomplete="username" autocapitalize="none" autocorrect="off" inputmode="email" data-auth-field="email" required>
         </div>
 
         <div class="form-group form-group--final">
-          <label>密码</label>
-          <input type="password" name="password" placeholder="请输入您的密码">
+          <label for="delete-account-password">密码</label>
+          <input id="delete-account-password" type="password" name="password" placeholder="请输入您的密码" autocomplete="current-password" data-auth-field="login-password" required>
         </div>
 
         <% if (typeof csrfToken !== 'undefined') { %>

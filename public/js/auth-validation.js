@@ -4,7 +4,17 @@
   var nextErrorId = 0;
 
   function getFieldLabel(field) {
-    return field.getAttribute('aria-label') || field.getAttribute('placeholder') || field.name || '该字段';
+    var label;
+
+    if (field.labels && field.labels.length > 0) {
+      label = field.labels[0];
+    }
+
+    return field.getAttribute('aria-label') ||
+      (label ? label.textContent.trim() : '') ||
+      field.getAttribute('placeholder') ||
+      field.name ||
+      '该字段';
   }
 
   function ensureErrorElement(field) {
