@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-05T03:12:10.799Z",
+  "generatedAt": "2026-05-05T03:19:37.308Z",
   "resources": {
     "css/account-pages.css": {
       "hash": "0caa3282",
@@ -11,8 +11,8 @@
       "version": "0.2.0-1fdea12d"
     },
     "css/profile.css": {
-      "hash": "d8311a5c",
-      "version": "0.2.0-d8311a5c"
+      "hash": "cd7871cc",
+      "version": "0.2.0-cd7871cc"
     },
     "css/style.css": {
       "hash": "2b756a06",
@@ -71,8 +71,8 @@
       "version": "0.2.0-c1b29b66"
     },
     "js/profile.js": {
-      "hash": "8b6724ef",
-      "version": "0.2.0-8b6724ef"
+      "hash": "bb887713",
+      "version": "0.2.0-bb887713"
     }
   }
 }

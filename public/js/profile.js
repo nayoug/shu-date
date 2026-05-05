@@ -29,13 +29,13 @@
 
 function toggleNote(trigger) {
   const content = trigger.nextElementSibling;
+  if (!content) return;
   const arrow = trigger.querySelector('.arrow');
-  if (content.hidden) {
-    content.hidden = false;
-    arrow.style.transform = 'rotate(180deg)';
-  } else {
-    content.hidden = true;
-    arrow.style.transform = 'rotate(0deg)';
+  const shouldExpand = content.hidden;
+  content.hidden = !shouldExpand;
+  trigger.setAttribute('aria-expanded', String(shouldExpand));
+  if (arrow) {
+    arrow.style.transform = shouldExpand ? 'rotate(180deg)' : 'rotate(0deg)';
   }
 }
 
@@ -143,6 +143,10 @@ document.addEventListener('DOMContentLoaded', function() {
   updateCoreTraitsCounter();
 
   document.querySelectorAll('.collapsible-trigger[data-profile-action="toggle-note"]').forEach(trigger => {
+    const content = trigger.nextElementSibling;
+    if (content) {
+      trigger.setAttribute('aria-expanded', String(!content.hidden));
+    }
     trigger.addEventListener('click', function() {
       toggleNote(trigger);
     });

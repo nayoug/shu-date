@@ -766,6 +766,14 @@ body.profile-page {
 .collapsible-trigger:hover {
   text-decoration: underline;
 }
+.collapsible-trigger:focus-visible {
+  border-radius: 6px;
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+.collapsible-trigger:focus:not(:focus-visible) {
+  outline: none;
+}
 .collapsible-trigger .arrow {
   font-size: 12px;
   transition: transform 0.2s;

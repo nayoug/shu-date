@@ -200,8 +200,8 @@
           <label><input type="radio" name="preferred_gender" value="不限" <%= profile && profile.preferred_gender === '不限' ? 'checked' : '' %>> C. 不限</label>
         </div>
         <div class="collapsible-note">
-          <span class="collapsible-trigger" data-profile-action="toggle-note" role="button" tabindex="0">说明 <i class="arrow">▼</i></span>
-          <div class="collapsible-content" hidden>
+          <span class="collapsible-trigger" data-profile-action="toggle-note" role="button" tabindex="0" aria-controls="preferred-gender-note" aria-expanded="false">说明 <i class="arrow">▼</i></span>
+          <div id="preferred-gender-note" class="collapsible-content" hidden>
             <p>以上选项仅用于资料展示和匹配推荐。选择"其他"时，系统会优先与匹配偏好为"不限"的用户进行匹配。</p>
           </div>
         </div>
