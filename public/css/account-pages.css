@@ -109,19 +109,6 @@
   text-align: center;
 }
 
-.form-group--invalid input {
-  border-color: var(--error-border);
-  box-shadow: 0 0 0 3px rgba(232, 90, 90, 0.15);
-}
-
-.auth-field-error {
-  margin: 6px 0 0;
-  color: var(--error-foreground);
-  font-size: 0.78rem;
-  line-height: 1.4;
-  text-align: center;
-}
-
 .btn-full {
   width: 100%;
 }

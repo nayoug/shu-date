@@ -383,6 +383,7 @@ body {
   color: var(--error-foreground);
   font-size: 0.78rem;
   line-height: 1.4;
+  text-align: center;
 }
 
 /* 复选框组 */
