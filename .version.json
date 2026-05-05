@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-05T11:58:05.073Z",
+  "generatedAt": "2026-05-05T12:06:46.363Z",
   "resources": {
     "css/account-pages.css": {
       "hash": "643fdd11",
@@ -75,8 +75,8 @@
       "version": "0.2.0-bb887713"
     },
     "js/auth-validation.js": {
-      "hash": "22953945",
-      "version": "0.2.0-22953945"
+      "hash": "741dd6b3",
+      "version": "0.2.0-741dd6b3"
     }
   }
 }

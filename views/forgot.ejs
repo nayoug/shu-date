@@ -28,7 +28,7 @@
         </div>
       <% } %>
 
-      <form action="/forgot" method="POST" data-auth-validation novalidate>
+      <form action="/forgot" method="POST" data-auth-validation>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
           <input class="form-control-center" type="email" name="email" placeholder="学校邮箱 (@shu.edu.cn)" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="学校邮箱" autocapitalize="none" autocorrect="off" inputmode="email" data-auth-field="shu-email" required>

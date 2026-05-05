@@ -118,6 +118,8 @@
     var submitted = false;
     var fields = Array.prototype.slice.call(form.querySelectorAll('[data-auth-field]'));
 
+    form.noValidate = true;
+
     fields.forEach(function(field) {
       var validate = function() {
         var message = validateField(form, field);

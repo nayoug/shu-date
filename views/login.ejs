@@ -56,7 +56,7 @@
       </div>
 
       <!-- 注册表单 -->
-      <form action="/register" method="POST" id="login-panel-register" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>" data-login-method-panel="register" data-auth-validation novalidate role="tabpanel" aria-labelledby="login-tab-register" aria-hidden="<%= (loginMethod === 'register') ? 'false' : 'true' %>" <%= (loginMethod === 'register') ? '' : 'hidden' %>>
+      <form action="/register" method="POST" id="login-panel-register" class="login-form <%= (loginMethod === 'register') ? 'active' : '' %>" data-login-method-panel="register" data-auth-validation role="tabpanel" aria-labelledby="login-tab-register" aria-hidden="<%= (loginMethod === 'register') ? 'false' : 'true' %>" <%= (loginMethod === 'register') ? '' : 'hidden' %>>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
           <input class="form-control-center" type="text" name="nickname" placeholder="昵称" value="<%= typeof nickname !== 'undefined' ? nickname : '' %>" autocomplete="nickname" aria-label="昵称" data-auth-field="nickname" required>
@@ -84,7 +84,7 @@
       </form>
 
       <!-- 登录表单 -->
-      <form action="/login" method="POST" id="login-panel-login" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>" data-login-method-panel="login" data-auth-validation novalidate role="tabpanel" aria-labelledby="login-tab-login" aria-hidden="<%= (loginMethod === 'login') ? 'false' : 'true' %>" <%= (loginMethod === 'login') ? '' : 'hidden' %>>
+      <form action="/login" method="POST" id="login-panel-login" class="login-form <%= (loginMethod === 'login') ? 'active' : '' %>" data-login-method-panel="login" data-auth-validation role="tabpanel" aria-labelledby="login-tab-login" aria-hidden="<%= (loginMethod === 'login') ? 'false' : 'true' %>" <%= (loginMethod === 'login') ? '' : 'hidden' %>>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
           <input class="form-control-center" type="email" name="email" placeholder="你的学校邮箱" value="<%= typeof email !== 'undefined' ? email : '' %>" autocomplete="username" aria-label="登录邮箱" autocapitalize="none" autocorrect="off" inputmode="email" data-auth-field="email" required>
