@@ -361,6 +361,30 @@ body {
   margin-top: 6px;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.form-group--invalid input {
+  border-color: var(--error-border);
+  box-shadow: 0 0 0 3px rgba(232, 90, 90, 0.15);
+}
+
+.auth-field-error {
+  margin: 6px 0 0;
+  color: var(--error-foreground);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 /* 复选框组 */
 .checkbox-group {
   display: flex;
@@ -1106,8 +1130,15 @@ body {
 }
 
 .match-flow-row {
+  align-items: flex-start;
   display: flex;
   gap: 12px;
+}
+
+.match-flow-field {
+  flex: 1;
+  margin-bottom: 0;
+  width: 100%;
 }
 
 .match-flow-input {

@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <%- include('partials/document-head', { pageTitle: '情侣匹配', devToolsStyles: true }) %>
+  <%- include('partials/document-head', {
+    pageTitle: '情侣匹配',
+    devToolsStyles: true,
+    authValidationScript: true
+  }) %>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -20,16 +24,25 @@
         输入对方邮箱，向TA发送情侣匹配申请。双方完成问卷后，在通知中心同意即可查看匹配结果。
       </p>
 
-      <form method="POST" action="/couple-match/request" class="match-flow-form">
+      <form method="POST" action="/couple-match/request" class="match-flow-form" data-auth-validation>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="match-flow-row">
-          <input
-            type="email"
-            name="email"
-            placeholder="对方邮箱（@shu.edu.cn）"
-            required
-            class="match-flow-input"
-          >
+          <div class="form-group match-flow-field">
+            <label class="sr-only" for="couple-match-email">对方学校邮箱</label>
+            <input
+              id="couple-match-email"
+              type="email"
+              name="email"
+              placeholder="对方邮箱（@shu.edu.cn）"
+              autocomplete="username"
+              autocapitalize="none"
+              autocorrect="off"
+              inputmode="email"
+              data-auth-field="shu-email"
+              required
+              class="match-flow-input"
+            >
+          </div>
           <button type="submit" class="btn btn-primary">发送申请</button>
         </div>
       </form>
