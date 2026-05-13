@@ -373,6 +373,26 @@ function calculateMatchDetails(myProfile, theirProfile) {
   };
 }
 
+// ============ 历史匹配查询 ============
+
+// 获取指定用户在过去所有周次中已经匹配过的人（双向查询）
+async function getPreviouslyMatchedUserIds(userId) {
+  const userIdInt = parseInt(userId, 10);
+  if (isNaN(userIdInt)) return new Set();
+
+  const pastMatches = await dbModule.query(`
+    SELECT DISTINCT
+      CASE
+        WHEN user_id_1 = $1 THEN user_id_2
+        ELSE user_id_1
+      END AS matched_user_id
+    FROM matches
+    WHERE user_id_1 = $1 OR user_id_2 = $1
+  `, [userIdInt]);
+
+  return new Set(pastMatches.map(row => row.matched_user_id));
+}
+
 // ============ 数据库查询接口 ============
 
 async function findMatches(userId, targetYear = null, targetWeek = null, options = {}) {
@@ -402,7 +422,11 @@ async function findMatches(userId, targetYear = null, targetWeek = null, options
 
   if (allProfiles.length === 0) return [];
 
-  const candidates = filterCandidates(myProfile, allProfiles);
+  // 排除历史已匹配过的人
+  const previouslyMatched = await getPreviouslyMatchedUserIds(userIdInt);
+  const notPreviouslyMatched = allProfiles.filter(p => !previouslyMatched.has(p.user_id));
+
+  const candidates = filterCandidates(myProfile, notPreviouslyMatched);
   if (candidates.length === 0) return [];
 
   const scored = candidates.map(candidate => {
@@ -586,5 +610,6 @@ module.exports = {
   calculateMatchScore,
   calculateMatchDetails,
   filterCandidates,
-  getCoupleMatch
+  getCoupleMatch,
+  getPreviouslyMatchedUserIds
 };
