@@ -184,6 +184,21 @@ await pool.query(`
   )
 `);
 
+// 每周匹配确认记录表（用于追踪历史确认状态）
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS weekly_confirmations (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    confirm_year INTEGER NOT NULL,
+    confirm_week INTEGER NOT NULL,
+    confirmed_at TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE(user_id, confirm_year, confirm_week)
+  )
+`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_weekly_confirmations_user ON weekly_confirmations (user_id)`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_weekly_confirmations_year_week ON weekly_confirmations (confirm_year, confirm_week)`);
+
 // 为现有数据添加 match_year 列（迁移）
 await pool.query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS match_year INTEGER`);
 await pool.query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS match_comment TEXT`);

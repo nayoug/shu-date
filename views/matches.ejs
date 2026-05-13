@@ -85,11 +85,47 @@
     </div>
     <% } %>
 
+    <% if (lastWeekEntry) { %>
+    <div class="card">
+      <h3 class="match-section-title match-section-title--simple">上周</h3>
+      <% if (lastWeekEntry.status === 'matched') { %>
+      <a href="/matches/detail/<%= lastWeekEntry.matchId %>" class="match-card match-card--link">
+        <div class="match-week">第<%= lastWeekEntry.weekNumber %>周</div>
+        <div class="match-info">
+          <div class="match-partner"><%= lastWeekEntry.partner.nickname || lastWeekEntry.partner.email %></div>
+          <% if (lastWeekEntry.score !== null && lastWeekEntry.score !== undefined) { %>
+          <% const scoreTone = lastWeekEntry.score >= 70 ? 'high' : (lastWeekEntry.score >= 50 ? 'medium' : 'low'); %>
+          <div class="match-score match-score--compact match-score--<%= scoreTone %>">
+            <%= Math.round(lastWeekEntry.score) %>分
+          </div>
+          <% } %>
+        </div>
+        <div class="match-card__action">查看详情 →</div>
+      </a>
+      <% } else if (lastWeekEntry.status === 'no_match') { %>
+      <div class="match-card match-card--no-match">
+        <div class="match-week">第<%= lastWeekEntry.weekNumber %>周</div>
+        <div class="match-info">
+          <div class="match-status match-status--warn">上周没匹配到合适的同学，下周再来吧～</div>
+        </div>
+      </div>
+      <% } %>
+    </div>
+    <% } %>
+
     <% if (historyList && historyList.length > 0) { %>
     <div class="card match-history-section">
       <h3 class="match-section-title match-section-title--simple match-section-title--muted">历史匹配</h3>
       <div class="match-list">
         <% historyList.forEach(function(m) { %>
+        <% if (m.status === 'no_match') { %>
+        <div class="match-card match-card--no-match">
+          <div class="match-week">第<%= m.weekNumber %>周</div>
+          <div class="match-info">
+            <div class="match-status match-status--warn">第<%= m.weekNumber %>周没匹配到合适的同学，下周再来吧～</div>
+          </div>
+        </div>
+        <% } else { %>
         <a href="/matches/detail/<%= m.matchId %>" class="match-card match-card--link">
           <div class="match-week">第<%= m.weekNumber %>周</div>
           <div class="match-info">
@@ -103,6 +139,7 @@
           </div>
           <div class="match-card__action">查看详情 →</div>
         </a>
+        <% } %>
         <% }); %>
       </div>
     </div>
