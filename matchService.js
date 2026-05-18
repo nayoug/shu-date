@@ -423,7 +423,9 @@ async function findMatches(userId, targetYear = null, targetWeek = null, options
   if (allProfiles.length === 0) return [];
 
   // 排除历史已匹配过的人
-  const previouslyMatched = await getPreviouslyMatchedUserIds(userIdInt);
+  const previouslyMatched = options.previouslyMatchedUserIds instanceof Set
+    ? options.previouslyMatchedUserIds
+    : await getPreviouslyMatchedUserIds(userIdInt);
   const notPreviouslyMatched = allProfiles.filter(p => !previouslyMatched.has(p.user_id));
 
   const candidates = filterCandidates(myProfile, notPreviouslyMatched);
