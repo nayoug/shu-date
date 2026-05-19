@@ -1954,11 +1954,14 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
   if (lastWeekMatch) {
     lastWeekEntry = { ...lastWeekMatch, status: 'matched' };
   } else {
-    // 查询用户上周是否确认了匹配
+    // 查询用户上周是否确认了匹配（优先查 weekly_confirmations，回退查 users 表历史字段）
     const lastWeekConfirmed = await db.queryOne(
       `SELECT 1 FROM weekly_confirmations WHERE user_id = $1 AND confirm_year = $2 AND confirm_week = $3`,
       [req.user.id, lastWeekYear, lastWeekNumber]
     );
+    if (!lastWeekConfirmed && req.user.weekly_match_year === lastWeekYear && req.user.weekly_match_week === lastWeekNumber) {
+      lastWeekConfirmed = { dummy: 1 };
+    }
     if (lastWeekConfirmed) {
       lastWeekEntry = { year: lastWeekYear, weekNumber: lastWeekNumber, status: 'no_match', matchId: null, partner: null, score: null };
     }
@@ -1968,10 +1971,15 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
   const historyList = matchList.filter(m => !(m.year === weekInfo.year && m.weekNumber === weekInfo.week) && !(m.year === lastWeekYear && m.weekNumber === lastWeekNumber));
 
   // 查询用户所有确认但无匹配的周（用于补入历史记录）
+  // 优先从 weekly_confirmations 读取；回退取 users 表的历史确认字段
   const confirmedWeeks = await db.query(`
     SELECT confirm_year, confirm_week
     FROM weekly_confirmations
     WHERE user_id = $1
+    UNION
+    SELECT weekly_match_year AS confirm_year, weekly_match_week AS confirm_week
+    FROM users
+    WHERE id = $1 AND weekly_match_year > 0 AND weekly_match_week > 0
     ORDER BY confirm_year DESC, confirm_week DESC
   `, [req.user.id]);
 
