@@ -199,6 +199,15 @@ await pool.query(`
 await pool.query(`CREATE INDEX IF NOT EXISTS idx_weekly_confirmations_user ON weekly_confirmations (user_id)`);
 await pool.query(`CREATE INDEX IF NOT EXISTS idx_weekly_confirmations_year_week ON weekly_confirmations (confirm_year, confirm_week)`);
 
+// 回填历史确认记录到 weekly_confirmations
+await pool.query(`
+  INSERT INTO weekly_confirmations (user_id, confirm_year, confirm_week, confirmed_at)
+  SELECT id, weekly_match_year, weekly_match_week, COALESCE(weekly_match_confirmed_at, NOW())
+  FROM users
+  WHERE weekly_match_year > 0 AND weekly_match_week > 0
+  ON CONFLICT (user_id, confirm_year, confirm_week) DO NOTHING
+`);
+
 // 为现有数据添加 match_year 列（迁移）
 await pool.query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS match_year INTEGER`);
 await pool.query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS match_comment TEXT`);
