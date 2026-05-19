@@ -14,6 +14,7 @@ const {
   getCurrentConfirmationWindowByTuesday19,
   getLastClosedConfirmationWindowByTuesday19,
   getConfirmationWindowForWeek,
+  getLastClosedWeekByTuesday19,
   isConfirmationIncludedInWindow
 } = require('./weekNumber');
 require('dotenv').config();
@@ -1787,6 +1788,13 @@ app.post('/confirm-match', isLoggedIn, requireValidCsrf, wrapAsync(async (req, r
     [currentWeekInfo.year, currentWeekInfo.week, req.user.id]
   );
 
+  // 记录到 weekly_confirmations 表（用于追踪历史确认状态）
+  await db.execute(`
+    INSERT INTO weekly_confirmations (user_id, confirm_year, confirm_week)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (user_id, confirm_year, confirm_week) DO NOTHING
+  `, [req.user.id, currentWeekInfo.year, currentWeekInfo.week]);
+
   res.redirect('/?msg=已确认参与本周匹配&type=success');
 }));
 
@@ -1936,8 +1944,69 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     }
   }
 
-  // 历史匹配（排除本周）
-  const historyList = matchList.filter(m => !(m.year === weekInfo.year && m.weekNumber === weekInfo.week));
+  // 计算上周信息（用于单独显示"上周"区域）
+  let lastWeekEntry = null;
+  const lastWeekInfo = getLastClosedWeekByTuesday19();
+  const lastWeekYear = lastWeekInfo.year;
+  const lastWeekNumber = lastWeekInfo.week;
+  // 如果上周有匹配记录，则为 matched 状态
+  const lastWeekMatch = matchList.find(m => m.year === lastWeekYear && m.weekNumber === lastWeekNumber);
+  if (lastWeekMatch) {
+    lastWeekEntry = { ...lastWeekMatch, status: 'matched' };
+  } else {
+    // 查询用户上周是否确认了匹配（优先查 weekly_confirmations，回退查 users 表历史字段）
+    const lastWeekConfirmed = await db.queryOne(
+      `SELECT 1 FROM weekly_confirmations WHERE user_id = $1 AND confirm_year = $2 AND confirm_week = $3`,
+      [req.user.id, lastWeekYear, lastWeekNumber]
+    );
+    if (!lastWeekConfirmed && req.user.weekly_match_year === lastWeekYear && req.user.weekly_match_week === lastWeekNumber) {
+      lastWeekConfirmed = { dummy: 1 };
+    }
+    if (lastWeekConfirmed) {
+      lastWeekEntry = { year: lastWeekYear, weekNumber: lastWeekNumber, status: 'no_match', matchId: null, partner: null, score: null };
+    }
+  }
+
+  // 历史匹配（排除本周和上周）
+  const historyList = matchList.filter(m => !(m.year === weekInfo.year && m.weekNumber === weekInfo.week) && !(m.year === lastWeekYear && m.weekNumber === lastWeekNumber));
+
+  // 查询用户所有确认但无匹配的周（用于补入历史记录）
+  // 优先从 weekly_confirmations 读取；回退取 users 表的历史确认字段
+  const confirmedWeeks = await db.query(`
+    SELECT confirm_year, confirm_week
+    FROM weekly_confirmations
+    WHERE user_id = $1
+    UNION
+    SELECT weekly_match_year AS confirm_year, weekly_match_week AS confirm_week
+    FROM users
+    WHERE id = $1 AND weekly_match_year > 0 AND weekly_match_week > 0
+    ORDER BY confirm_year DESC, confirm_week DESC
+  `, [req.user.id]);
+
+  // 补入已确认但无匹配的周（排除本周和上周）
+  const matchedYearsWeeks = new Set(matchList.map(m => `${m.year}-${m.weekNumber}`));
+  const confirmedNoMatchEntries = [];
+  for (const row of confirmedWeeks) {
+    const key = `${row.confirm_year}-${row.confirm_week}`;
+    const isNotCurrentOrLastWeek = !(row.confirm_year === weekInfo.year && row.confirm_week === weekInfo.week) &&
+                                    !(row.confirm_year === lastWeekYear && row.confirm_week === lastWeekNumber);
+    if (isNotCurrentOrLastWeek && !matchedYearsWeeks.has(key)) {
+      confirmedNoMatchEntries.push({
+        matchId: null,
+        year: row.confirm_year,
+        weekNumber: row.confirm_week,
+        status: 'no_match',
+        partner: null,
+        score: null
+      });
+    }
+  }
+
+  // 合并历史匹配和未匹配记录
+  const fullHistoryList = [...historyList, ...confirmedNoMatchEntries].sort((a, b) => {
+    if (a.year !== b.year) return b.year - a.year;
+    return b.weekNumber - a.weekNumber;
+  });
 
   res.render('matches', {
     title: '匹配结果',
@@ -1945,8 +2014,9 @@ app.get('/matches', isLoggedIn, wrapAsync(async (req, res) => {
     nickname: req.session.nickname,
     hasProfile: true,
     showPassword: true,
-    historyList,
+    historyList: fullHistoryList,
     currentWeekEntry,
+    lastWeekEntry,
     isAdmin: req.isAdmin,
     weeklyMatchEnabled,
     hasWeeklyRelease,
