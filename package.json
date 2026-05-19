@@ -2,6 +2,7 @@
   "name": "xin-yousuo-shu",
   "version": "0.2.0",
   "description": "上海大学校园交友匹配网站",
+  "license": "MIT",
   "main": "app.js",
   "engines": {
     "node": "^18.18.0 || ^20.9.0 || >=22.0.0"
