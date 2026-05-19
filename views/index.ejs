@@ -14,8 +14,7 @@
     <div class="hero">
       <h1>心有所SHU</h1>
       <p class="subtitle">上大同学之间的互相认识，从这里开始</p>
-      <p class="hero__status-note">小范围内测中</p>
-      <% if (typeof nextMatchTime !== 'undefined' && typeof now !== 'undefined') { %>
+            <% if (typeof nextMatchTime !== 'undefined' && typeof now !== 'undefined') { %>
         <% const timeLeft = nextMatchTime - now; %>
         <% const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24)); %>
         <% const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); %>

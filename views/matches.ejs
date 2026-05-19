@@ -145,7 +145,7 @@
     </div>
     <% } %>
 
-    <% if ((!historyList || historyList.length === 0) && !currentWeekEntry) { %>
+    <% if ((!historyList || historyList.length === 0) && !currentWeekEntry && !lastWeekEntry) { %>
     <div class="card match-empty-card">
       <div class="match-empty-icon">🔍</div>
       <h2>暂无匹配记录</h2>
